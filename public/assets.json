@@ -1,0 +1,26 @@
+[
+  {
+    "id": "cyber",
+    "name": "Cyberwear Set",
+    "image": "/bgs/bg_pink2.png",
+    "description": "Futuristic outfit for digital rebels.",
+    "price": "500",
+    "category": "set"
+  },
+  {
+    "id": "lace",
+    "name": "Elle UHD Head",
+    "image": "/bgs/bg_gray.png",
+    "description": "Elegant, moody lacework fashion.",
+    "price": "1500",
+    "category": "body"
+  },
+  {
+    "id": "armor",
+    "name": "Fantasy Armor",
+    "image": "/bgs/bg_pink.png",
+    "description": "Stylized roleplay-ready armor.",
+    "price": "2500",
+    "category": "set"
+  }
+]
