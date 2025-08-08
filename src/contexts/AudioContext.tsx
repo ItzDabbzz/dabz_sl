@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useRef, useState, useEffect } from 'react';
 
 interface AudioContextType {
-    audioRef: React.RefObject<HTMLAudioElement>;
+    audioRef: React.RefObject<HTMLAudioElement | null>;
     isPlaying: boolean;
     currentTime: number;
     duration: number;
@@ -80,7 +80,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 src="/music/MrSuicideSheep_Best_of_2023_Music_Mix.mp3"
                 loop
                 preload="auto"
-                volume={volume}
             />
         </AudioContext.Provider>
     );
