@@ -30,7 +30,7 @@ export default function SignIn() {
 	const params = useSearchParams();
 
 	return (
-		<Card className="max-w-md rounded-none">
+		<Card className="max-w-md min-w-[350px] rounded-none">
 			<CardHeader>
 				<CardTitle className="text-lg md:text-xl">Sign In</CardTitle>
 				<CardDescription className="text-xs md:text-sm">
