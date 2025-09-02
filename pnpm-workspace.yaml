@@ -1,3 +1,11 @@
+packages:
+  - "packages/*"
+
+evergreen-bundled-dependencies:
+  - next
+  - react
+  - react-dom
+
 onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'

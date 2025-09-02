@@ -1,0 +1,69 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1756502386336,
+      "tag": "0000_last_thundra",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1756504028444,
+      "tag": "0001_dark_roughhouse",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756504757383,
+      "tag": "0002_many_colossus",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1756697370732,
+      "tag": "0003_boring_annihilus",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1756703012615,
+      "tag": "0004_eminent_hawkeye",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1756749645321,
+      "tag": "0005_great_joystick",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1756809789848,
+      "tag": "0006_icy_meggan",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1756846503030,
+      "tag": "0007_previous_doomsday",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1756849488465,
+      "tag": "0008_slow_mister_sinister",
+      "breakpoints": true
+    }
+  ]
+}
