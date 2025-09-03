@@ -1,14 +1,5 @@
 {
-  "version": 2,
-  "buildCommand": "pnpm --filter @dabzsl/core build",
   "installCommand": "pnpm install --frozen-lockfile",
-  "outputDirectory": "packages/core/.next",
-  "github": {"enabled": true},
-  "functions": {
-    "api/*.js": {
-      "runtime": "edge",
-      "memory": 128,
-      "maxDuration": 10
-    }
-  }
+  "buildCommand": "pnpm -r --filter @dabzsl/shared --filter @dabzsl/core build",
+  "framework": "nextjs"
 }
