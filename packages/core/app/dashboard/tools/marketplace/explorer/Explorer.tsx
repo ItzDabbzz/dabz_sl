@@ -55,6 +55,12 @@ export default function Explorer() {
   const [editDraft, setEditDraft] = useState<Partial<Item> & { id?: string }>({});
   const commandRef = useRef<HTMLDivElement | null>(null);
 
+  // NEW filters
+  const [lastImportedIds, setLastImportedIds] = useState<string[]>([]);
+  const [justImported, setJustImported] = useState(false);
+  const [onlyUncategorized, setOnlyUncategorized] = useState(false);
+  const [sinceMinutes, setSinceMinutes] = useState<number | null>(null);
+
   // NEW: track when categories finished loading
   const [catsLoaded, setCatsLoaded] = useState(false);
 
@@ -91,7 +97,7 @@ export default function Explorer() {
     }
   };
 
-  const loadItems = async (opts?: { categoryId?: string; q?: string; limit?: number; offset?: number; sort?: "most" | "least"; preserveDetails?: boolean }) => {
+  const loadItems = async (opts?: { categoryId?: string; q?: string; limit?: number; offset?: number; sort?: "most" | "least"; preserveDetails?: boolean; ids?: string[]; uncategorized?: boolean; sinceMinutes?: number | null }) => {
     setLoading(true);
     const sp = new URLSearchParams();
     const limit = opts?.limit ?? page.limit;
@@ -101,6 +107,12 @@ export default function Explorer() {
     sp.set("limit", String(limit));
     sp.set("offset", String(offset));
     sp.set("sort", (opts?.sort ?? sort) as string);
+    const idsArg = opts?.ids ?? (justImported ? lastImportedIds : []);
+    if (idsArg && idsArg.length) sp.set("ids", idsArg.join(","));
+    const unc = opts?.uncategorized ?? onlyUncategorized;
+    if (unc) sp.set("uncategorized", "true");
+    const sm = opts?.sinceMinutes ?? sinceMinutes;
+    if (typeof sm === "number" && sm > 0) sp.set("sinceMinutes", String(sm));
     const res = await fetch(`/api/tools/marketplace/items?${sp.toString()}`, { credentials: "include" });
     setLoading(false);
     if (res.ok) {
@@ -112,6 +124,27 @@ export default function Explorer() {
       if (!opts?.preserveDetails) setDetailsOpen({});
     }
   };
+
+  // Load last imported ids from session and subscribe to future imports
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("mp:lastImportedIds");
+      const ids = raw ? (JSON.parse(raw) as string[]) : [];
+      if (Array.isArray(ids)) setLastImportedIds(ids);
+    } catch {}
+    const onImported = (e: any) => {
+      const ids: string[] = e?.detail?.ids || [];
+      if (Array.isArray(ids) && ids.length) {
+        setLastImportedIds(ids);
+        setJustImported(true);
+        // Auto-refresh to show the batch
+        loadItems({ offset: 0, ids, preserveDetails: false });
+      }
+    };
+    window.addEventListener("mp:itemsImported" as any, onImported);
+    return () => window.removeEventListener("mp:itemsImported" as any, onImported);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Prefetch current categories for the first few visible items to avoid initial delay when opening picker
   useEffect(() => {
@@ -176,18 +209,18 @@ export default function Explorer() {
     })();
   }, [items]);
 
-  // Live search: debounce on q/categoryId/sort changes
+  // Live search: debounce on filter changes too
   const searchDebounceRef = useRef<number | null>(null);
   useEffect(() => {
     if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current);
     searchDebounceRef.current = window.setTimeout(() => {
-      loadItems({ q, categoryId, offset: 0, sort });
+      loadItems({ q, categoryId, offset: 0, sort, ids: justImported ? lastImportedIds : [], uncategorized: onlyUncategorized, sinceMinutes });
     }, 300);
     return () => {
       if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, categoryId, page.limit, sort]);
+  }, [q, categoryId, page.limit, sort, justImported, onlyUncategorized, sinceMinutes, lastImportedIds]);
 
   const exportXlsx = () => {
     const rows = items.map((it) => ({
@@ -466,6 +499,44 @@ export default function Explorer() {
                   >
                     Least rated
                   </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* NEW: Batch and filters */}
+              <Button
+                variant={justImported ? "default" : "outline"}
+                className="h-9"
+                disabled={!lastImportedIds.length}
+                title={lastImportedIds.length ? `Filter to last imported batch (${lastImportedIds.length})` : "No recent import in this session"}
+                onClick={() => {
+                  const next = !justImported;
+                  setJustImported(next);
+                  loadItems({ offset: 0, ids: next ? lastImportedIds : [], preserveDetails: false });
+                }}
+              >
+                Just imported
+              </Button>
+              <Button
+                variant={onlyUncategorized ? "default" : "outline"}
+                className="h-9"
+                onClick={() => {
+                  const next = !onlyUncategorized;
+                  setOnlyUncategorized(next);
+                  loadItems({ offset: 0, uncategorized: next, preserveDetails: false });
+                }}
+              >
+                Uncategorized
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-9">
+                    Time: {sinceMinutes ? (sinceMinutes >= 1440 ? "24h" : sinceMinutes >= 60 ? "1h" : `${sinceMinutes}m`) : "Any"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => { setSinceMinutes(null); loadItems({ offset: 0, sinceMinutes: null }); }}>Any</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setSinceMinutes(10); loadItems({ offset: 0, sinceMinutes: 10 }); }}>Last 10m</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setSinceMinutes(60); loadItems({ offset: 0, sinceMinutes: 60 }); }}>Last 1h</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setSinceMinutes(1440); loadItems({ offset: 0, sinceMinutes: 1440 }); }}>Last 24h</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               {loading && <Badge variant="secondary">Loading…</Badge>}

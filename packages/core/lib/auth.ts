@@ -54,6 +54,17 @@ const baseURL: string | undefined =
 
 const cookieDomain: string | undefined = process.env.COOKIE_DOMAIN || undefined;
 
+import {
+    adminAccessControl,
+    ownerAdminRole,
+    developerAdminRole,
+    adminAdminRole,
+    modAdminRole,
+    trustedAdminRole,
+    creatorAdminRole,
+    userAdminRole,
+} from "./admin-access";
+
 export const auth = betterAuth({
     appName: "DABZ SL Tools",
     baseURL,
@@ -105,10 +116,6 @@ export const auth = betterAuth({
         },
     },
     socialProviders: {
-        // facebook: {
-        // 	clientId: process.env.FACEBOOK_CLIENT_ID || "",
-        // 	clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
-        // },
         github: {
             clientId: process.env.GITHUB_CLIENT_ID || "",
             clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
@@ -117,26 +124,6 @@ export const auth = betterAuth({
             clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
         },
-        // discord: {
-        // 	clientId: process.env.DISCORD_CLIENT_ID || "",
-        // 	clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
-        // },
-        // microsoft: {
-        // 	clientId: process.env.MICROSOFT_CLIENT_ID || "",
-        // 	clientSecret: process.env.MICROSOFT_CLIENT_SECRET || "",
-        // },
-        // twitch: {
-        // 	clientId: process.env.TWITCH_CLIENT_ID || "",
-        // 	clientSecret: process.env.TWITCH_CLIENT_SECRET || "",
-        // },
-        // twitter: {
-        // 	clientId: process.env.TWITTER_CLIENT_ID || "",
-        // 	clientSecret: process.env.TWITTER_CLIENT_SECRET || "",
-        // },
-        // paypal: {
-        // 	clientId: process.env.PAYPAL_CLIENT_ID || "",
-        // 	clientSecret: process.env.PAYPAL_CLIENT_SECRET || "",
-        // },
     },
     plugins: [
         organization({
@@ -198,6 +185,19 @@ export const auth = betterAuth({
                 .split(",")
                 .map((s) => s.trim())
                 .filter(Boolean),
+            // Map our desired roles to the Admin plugin
+            ac: adminAccessControl,
+            roles: {
+                owner: ownerAdminRole,
+                developer: developerAdminRole,
+                admin: adminAdminRole,
+                mod: modAdminRole,
+                trusted: trustedAdminRole,
+                creator: creatorAdminRole,
+                user: userAdminRole,
+            },
+            adminRoles: ["owner", "developer", "admin"],
+            defaultRole: "user",
         }),
         multiSession(),
         oAuthProxy(),

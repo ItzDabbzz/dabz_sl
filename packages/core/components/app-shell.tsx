@@ -7,7 +7,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useSession } from "@/lib/auth-client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LayoutDashboard, Boxes, Server, FileDiff, BadgeCheck, KeyRound, Webhook, Settings, PanelLeftClose, PanelLeftOpen, ChevronDown, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Boxes, Server, FileDiff, BadgeCheck, KeyRound, Webhook, Settings, PanelLeftClose, PanelLeftOpen, ChevronDown, ShoppingBag, ShieldCheck, Tag } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/logo";
 
 function useLocalStorageBoolean(key: string, initial: boolean) {
@@ -27,7 +28,9 @@ function useLocalStorageBoolean(key: string, initial: boolean) {
 }
 
 // Sidebar groups with items
-const navSections = [
+export type NavItem = { href: string; title: string; icon: LucideIcon };
+export type NavSection = { id: string; title: string; items: ReadonlyArray<NavItem> };
+const navSections: ReadonlyArray<NavSection> = [
   {
     id: "overview",
     title: "Overview",
@@ -47,7 +50,8 @@ const navSections = [
     id: "sl-tools",
     title: "Second Life Tools",
     items: [
-      { href: "/dashboard/tools/marketplace", title: "Marketplace", icon: ShoppingBag },
+      { href: "/dashboard/tools/marketplace/explorer", title: "Marketplace Explorer", icon: ShoppingBag },
+      { href: "/dashboard/tools/marketplace/categories", title: "Marketplace Categories", icon: Tag },
       { href: "/dashboard/tools/marketplace-scrape", title: "Scrape & Import", icon: Server },
     ],
   },
@@ -60,11 +64,9 @@ const navSections = [
       { href: "/api-docs", title: "API Docs", icon: FileDiff },
     ],
   },
-] as const;
+];
 
-type Section = (typeof navSections)[number];
-
-function CollapsibleSection({ section, collapsed, pathname }: { section: Section; collapsed: boolean; pathname: string | null; }) {
+function CollapsibleSection({ section, collapsed, pathname }: { section: NavSection; collapsed: boolean; pathname: string | null; }) {
   const [open, setOpen] = useLocalStorageBoolean(`sidebar:group:${section.id}`, true);
   // When the whole sidebar is collapsed, just don't render the section header; items are shown in flattened view outside.
   if (collapsed) return null;
@@ -115,19 +117,31 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [session]);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  const role = (session as any)?.user?.role ?? "user";
+  const isStaff = useMemo(() => new Set(["owner", "developer", "admin"]).has(role), [role]);
+
+  // Sections, conditionally including Admin for staff
+  const sections: ReadonlyArray<NavSection> = useMemo(() => {
+    const base: NavSection[] = [...navSections];
+    if (isStaff) {
+      base.push({ id: "staff", title: "Staff", items: [{ href: "/dashboard/admin", title: "Admin", icon: ShieldCheck }] });
+    }
+    return base;
+  }, [isStaff]);
+
   // Flattened items for collapsed sidebar
-  const flatItems = useMemo(() => navSections.flatMap((s) => s.items), []);
+  const flatItems: NavItem[] = useMemo(() => sections.flatMap((s) => [...s.items]), [sections]);
 
   return (
     <div className="h-dvh flex bg-background text-foreground">
       {/* Sidebar */}
       <aside
         className={
-          (collapsed ? "w-16" : "w-64") +
+          (collapsed ? "w-16" : "w-80") +
           " h-dvh sticky top-0 shrink-0 border-r border-border flex flex-col transition-[width] duration-200 overflow-hidden"
         }
       >
-        <div className="h-14 flex items-center gap-2 px-3 border-b border-border">
+        <div className="h-24 flex items-center gap-2 px-3 border-b border-border">
           <button
             className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted"
             onClick={() => setCollapsed((v) => !v)}
@@ -146,7 +160,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Expanded: grouped & collapsible */}
           {!collapsed && (
             <div className="space-y-2">
-              {navSections.map((section) => (
+              {sections.map((section) => (
                 <CollapsibleSection key={section.id} section={section} collapsed={collapsed} pathname={pathname} />
               ))}
             </div>
@@ -179,7 +193,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mt-auto border-t border-border/60 px-2 py-2">
           <div className="flex items-center gap-2">
             <Link
-              href="/userprofile"
+              href="/dashboard/userprofile"
               className="group inline-flex items-center gap-2 rounded-full p-1 hover:bg-muted/60 transition-colors"
               title="Account"
             >
@@ -194,7 +208,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <div className="ml-auto flex items-center gap-1.5">
               <Link
-                href="/userprofile"
+                href="/dashboard/userprofile"
                 className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
                 title="Settings"
               >

@@ -81,7 +81,12 @@ export default function Importer() {
       setItems([]);
       setAssign({});
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("mp:itemsImported"));
+        const ids: string[] = Array.isArray(data.items) ? data.items.map((x: any) => x.id).filter(Boolean) : [];
+        try {
+          sessionStorage.setItem("mp:lastImportedIds", JSON.stringify(ids));
+          sessionStorage.setItem("mp:lastImportedAt", String(Date.now()));
+        } catch {}
+        window.dispatchEvent(new CustomEvent("mp:itemsImported", { detail: { ids, at: Date.now() } } as any));
         window.dispatchEvent(new CustomEvent("mp:categoriesChanged"));
       }
     } catch (e: any) {

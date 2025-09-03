@@ -11,6 +11,17 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 
 type Category = { id: string; primary: string; sub: string };
 
+/*
+
+  TODO: Category TODO
+  - Rename category (primary + sub)
+  - More intuitive ui for editing sub categories
+  - Delete category (with confirmation)
+  - Collapse all / Expand all quick buttons along with sorting options
+  - Add indepth JSDoc and comments explaining things
+
+*/
+
 export default function CategoriesEditor() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [primary, setPrimary] = useState("");

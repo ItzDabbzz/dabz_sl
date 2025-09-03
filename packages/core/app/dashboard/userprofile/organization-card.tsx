@@ -265,34 +265,34 @@ export function OrganizationCard(props: {
 																		),
 																	}
 																	: prev,
-																);
-														}}
+															);
+													}}
 													/>
 													<Button
 														variant="destructive"
 														size="sm"
 														onClick={async () => {
-															const p = organization.removeTeam({ teamId: team.id });
-															toast.promise(p, {
-																loading: "Removing team...",
-																success: "Team removed",
-																error: (e) => e.error?.message || "Failed to remove team",
-															});
-															await p;
-															setOptimisticOrg((prev) =>
-																prev
-																	? {
-																		...prev,
-																		teams: (prev.teams || []).filter((t) => t.id !== team.id),
-																	}
-																	: prev,
-															);
-															if (activeTeamId === team.id) setActiveTeamId(null);
-														}}
-													>
-														<Trash2 size={16} />
-													</Button>
-												</>
+														const p = organization.removeTeam({ teamId: team.id });
+														toast.promise(p, {
+															loading: "Removing team...",
+															success: "Team removed",
+															error: (e) => e.error?.message || "Failed to remove team",
+														});
+														await p;
+														setOptimisticOrg((prev) =>
+															prev
+																? {
+																	...prev,
+																	teams: (prev.teams || []).filter((t) => t.id !== team.id),
+																}
+															: prev,
+														);
+														if (activeTeamId === team.id) setActiveTeamId(null);
+													}}
+												>
+													<Trash2 size={16} />
+												</Button>
+											</>
 											)}
 										</div>
 									</div>
@@ -322,57 +322,57 @@ export function OrganizationCard(props: {
 							<div className="flex flex-col gap-2">
 								<AnimatePresence>
 									{optimisticOrg?.invitations
-										.filter((invitation) => invitation.status === "pending")
-										.map((invitation) => (
-											<motion.div
-												key={invitation.id}
-												className="flex items-center justify-between rounded-md border p-2 sm:p-3"
-												variants={inviteVariants}
-												initial="hidden"
-												animate="visible"
-												exit="exit"
-												layout
-											>
-												<div className="min-w-0">
-													<p className="text-sm font-medium truncate">{invitation.email}</p>
-													<div className="mt-0.5">
-														<Badge variant="secondary" className="text-[10px] uppercase">{invitation.role}</Badge>
+											.filter((invitation) => invitation.status === "pending")
+											.map((invitation) => (
+												<motion.div
+													key={invitation.id}
+													className="flex items-center justify-between rounded-md border p-2 sm:p-3"
+													variants={inviteVariants}
+													initial="hidden"
+													animate="visible"
+													exit="exit"
+													layout
+												>
+													<div className="min-w-0">
+														<p className="text-sm font-medium truncate">{invitation.email}</p>
+														<div className="mt-0.5">
+															<Badge variant="secondary" className="text-[10px] uppercase">{invitation.role}</Badge>
+														</div>
 													</div>
-												</div>
-												<div className="flex items-center gap-2">
-													<Button
-														disabled={isRevoking.includes(invitation.id)}
-														size="sm"
-														variant="destructive"
-														onClick={() => {
-															organization.cancelInvitation(
-																{
-																	invitationId: invitation.id,
-																},
-																{
-																	onRequest: () => {
-																		setIsRevoking((prev) => [...prev, invitation.id]);
+													<div className="flex items-center gap-2">
+														<Button
+															disabled={isRevoking.includes(invitation.id)}
+															size="sm"
+															variant="destructive"
+															onClick={() => {
+																organization.cancelInvitation(
+																	{
+																		invitationId: invitation.id,
 																	},
-																	onSuccess: () => {
-																		toast.message("Invitation revoked successfully");
-																		setIsRevoking((prev) => prev.filter((id) => id !== invitation.id));
-																		setOptimisticOrg((prev) =>
-																			prev
-																				? {
-																					...prev,
-																					invitations: prev.invitations.filter(
-																						(inv) => inv.id !== invitation.id,
-																					),
-																				}
-																			: prev,
-																		);
+																	{
+																		onRequest: () => {
+																			setIsRevoking((prev) => [...prev, invitation.id]);
+																		},
+																		onSuccess: () => {
+																			toast.message("Invitation revoked successfully");
+																			setIsRevoking((prev) => prev.filter((id) => id !== invitation.id));
+																			setOptimisticOrg((prev) =>
+																				prev
+																					? {
+																						...prev,
+																						invitations: prev.invitations.filter(
+																							(inv) => inv.id !== invitation.id,
+																						),
+																					}
+																				: prev,
+																			);
 																	},
 																	onError: (ctx) => {
 																		toast.error(ctx.error.message);
 																		setIsRevoking((prev) => prev.filter((id) => id !== invitation.id));
 																	},
-																},
-															);
+																	},
+																);
 														}}
 													>
 														{isRevoking.includes(invitation.id) ? (
@@ -633,8 +633,8 @@ function InviteMemberDialog({
 												});
 											}
 										},
-									},
-								});
+									}
+                                });
 								toast.promise(invite, {
 									loading: "Inviting member...",
 									success: "Member invited successfully",

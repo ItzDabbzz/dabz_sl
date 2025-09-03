@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { mpItems, mpCategories, mpItemCategories } from "@/schemas/sl-schema";
-import { and, count, eq, inArray, sql, desc, asc } from "drizzle-orm";
+import { and, count, eq, inArray, sql, desc, asc, notInArray, isNull } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 
 async function getUserFromRequest(req: NextRequest) {
@@ -19,8 +19,17 @@ export async function GET(req: NextRequest) {
     const sort = (searchParams.get("sort") || "most").toLowerCase(); // most | least
     const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "25", 10)));
     const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10));
+    const uncategorized = (searchParams.get("uncategorized") || "").toLowerCase() === "true";
+    const sinceMinutes = parseInt(searchParams.get("sinceMinutes") || "", 10);
+    const idsParam = (searchParams.get("ids") || "").trim();
+    const idList = idsParam ? idsParam.split(",").map((s) => s.trim()).filter(Boolean) : [];
 
     let where = and(eq(mpItems.ownerUserId as any, user.id as any) as any);
+
+    // Filter by specific ids (batch view)
+    if (idList.length) {
+      where = and(where, inArray(mpItems.id as any, idList as any) as any);
+    }
 
     // Filter by category via join table
     if (categoryId) {
@@ -31,6 +40,23 @@ export async function GET(req: NextRequest) {
       const ids = itemIdRows.map((r: any) => r.itemId);
       if (!ids.length) return NextResponse.json({ items: [], total: 0, limit, offset });
       where = and(where, inArray(mpItems.id as any, ids as any) as any);
+    }
+
+    // Uncategorized: exclude any item that appears in join table
+    if (uncategorized) {
+      const withCats = await db
+        .select({ itemId: mpItemCategories.itemId })
+        .from(mpItemCategories);
+      const withIds = withCats.map((r: any) => r.itemId);
+      if (withIds.length) {
+        where = and(where, notInArray(mpItems.id as any, withIds as any) as any);
+      }
+    }
+
+    // Time filter: items created in the last N minutes
+    if (!Number.isNaN(sinceMinutes) && sinceMinutes > 0) {
+      const since = new Date(Date.now() - sinceMinutes * 60_000);
+      where = and(where, sql`${mpItems.createdAt} >= ${since}` as any);
     }
 
     // Text search on title/description
@@ -48,7 +74,6 @@ export async function GET(req: NextRequest) {
       .from(mpItems)
       .where(where as any)) as any;
 
-    // Try to order by ratings (may fail if columns are not migrated yet)
     let query = db.select().from(mpItems).where(where as any) as any;
     if (sort === "most") {
       query = query.orderBy(desc(mpItems.ratingCount as any), desc(mpItems.ratingAvg as any));
@@ -60,7 +85,6 @@ export async function GET(req: NextRequest) {
       const itemRows = await query.limit(limit as any).offset(offset as any);
       return NextResponse.json({ items: itemRows, total, limit, offset });
     } catch (err: any) {
-      // Fallback: if rating columns don't exist (PG 42703), run without ordering and select only known columns
       const pgCode = err?.code || err?.cause?.code;
       if (pgCode === "42703") {
         const fallbackRows = await db

@@ -55,7 +55,6 @@ import {
 } from "@/components/ui/table";
 import QRCode from "react-qr-code";
 import CopyButton from "@/components/ui/copy-button";
-import { ApiKeyManager } from "@/components/api-key-manager";
 
 export default function UserCard(props: {
 	session: Session | null;
@@ -270,7 +269,7 @@ export default function UserCard(props: {
 														setTwoFaPassword("");
 													}}
 												>
-													Show QR Code
+												Show QR Code
 												</Button>
 											</div>
 										)}
@@ -292,7 +291,7 @@ export default function UserCard(props: {
 										)}
 										<span className="md:text-sm text-xs">
 											{session?.user.twoFactorEnabled
-												? "Disable 2FA"
+													? "Disable 2FA"
 												: "Enable 2FA"}
 										</span>
 									</Button>
@@ -301,7 +300,7 @@ export default function UserCard(props: {
 									<DialogHeader>
 										<DialogTitle>
 											{session?.user.twoFactorEnabled
-												? "Disable 2FA"
+													? "Disable 2FA"
 												: "Enable 2FA"}
 										</DialogTitle>
 										<DialogDescription>
@@ -381,9 +380,9 @@ export default function UserCard(props: {
 																},
 															},
 														});
-														return;
-													}
-													const res = await client.twoFactor.enable({
+													return;
+												}
+												const res = await client.twoFactor.enable({
 														password: twoFaPassword,
 														fetchOptions: {
 															onError(context) {
@@ -427,7 +426,7 @@ export default function UserCard(props: {
 							await client.admin.stopImpersonating();
 							setIsSignOut(false);
 							toast.info("Impersonation stopped successfully");
-							router.push("/admin");
+							router.push("/dashboard/admin");
 						}}
 						disabled={isSignOut}
 					>
@@ -673,43 +672,43 @@ function EditUserDialog() {
 							</div>
 						</div>
 					</div>
-				</div>
-				<DialogFooter>
-					<Button
-						disabled={isLoading}
-						onClick={async () => {
-							startTransition(async () => {
-								await client.updateUser({
-									image: image ? await convertImageToBase64(image) : undefined,
-									name: name ? name : undefined,
-									fetchOptions: {
-										onSuccess: () => {
-											toast.success("User updated successfully");
+					<DialogFooter>
+						<Button
+							disabled={isLoading}
+							onClick={async () => {
+								startTransition(async () => {
+									await client.updateUser({
+										image: image ? await convertImageToBase64(image) : undefined,
+										name: name ? name : undefined,
+										fetchOptions: {
+											onSuccess: () => {
+												toast.success("User updated successfully");
+											},
+											onError: (error) => {
+												toast.error(error.error.message);
+											},
 										},
-										onError: (error) => {
-											toast.error(error.error.message);
-										},
-									},
+									});
+									startTransition(() => {
+										setName("");
+										router.refresh();
+										setImage(null);
+										setImagePreview(null);
+										setOpen(false);
+									});
 								});
-								startTransition(() => {
-									setName("");
-									router.refresh();
-									setImage(null);
-									setImagePreview(null);
-									setOpen(false);
-								});
-							});
-						}}
-					>
-						{isLoading ? (
-							<Loader2 size={15} className="animate-spin" />
-						) : (
-							"Update"
-						)}
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
+							}}
+						>
+							{isLoading ? (
+								<Loader2 size={15} className="animate-spin" />
+							) : (
+								"Update"
+							)}
+						</Button>
+					</DialogFooter>
+                    </div>
+				</DialogContent>
+			</Dialog>
 	);
 }
 
@@ -852,7 +851,7 @@ function ListPasskeys() {
 														},
 													},
 												});
-											}}
+										}}
 										>
 											{isDeletePasskey ? (
 												<Loader2 size={15} className="animate-spin" />

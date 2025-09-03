@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
-import Importer from "../marketplace/Importer";
-import Scraper from "../marketplace/Scraper";
+import Importer from "./Importer";
+import Scraper from "./Scraper";
 
 export const dynamic = "force-dynamic";
 
@@ -34,8 +34,8 @@ export default async function MarketplaceScrapePage() {
           <h1 className="text-2xl font-bold tracking-tight">Scrape & Import</h1>
           <p className="text-muted-foreground">Run scrapes and import JSON data for your marketplace items.</p>
         </div>
-        <Link href="/dashboard/tools/marketplace" className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-muted">
-          Back to Marketplace
+        <Link href="/dashboard/tools/marketplace/explorer" className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-muted">
+          Back to Explorer
         </Link>
       </div>
 
