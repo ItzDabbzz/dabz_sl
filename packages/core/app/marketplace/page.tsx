@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import ClientExplorer from "./ClientExplorer";
 
 export default function Page() {
-  return <ClientExplorer />;
+    return (
+        <Suspense>
+            <ClientExplorer />
+        </Suspense>
+    );
 }
