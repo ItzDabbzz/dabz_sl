@@ -7,6 +7,10 @@ import { SignInButton, SignInFallback } from "@/components/sign-in-btn";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { unstable_cache } from "next/cache";
+import { db } from "@/lib/db";
+import { mpCategories, mpItemCategories, mpItems } from "@/schemas/sl-schema";
+import { count, sql } from "drizzle-orm";
 
 // Real session fetcher (returns null if not logged in)
 async function getSession() {
@@ -56,6 +60,45 @@ type HomeFeed = {
   exchange_rate_updated_unix?: number;
   exchange_rate_updated_slt?: string;
 };
+
+// Marketplace stats type
+type MarketplaceStats = {
+  totalItems: number;
+  totalCategories: number;
+  distinctPrimaries: number;
+  distinctSubs: number;
+  itemsWithCategories: number;
+  uncategorizedItems: number;
+  lastItemUpdateIso: string | null;
+};
+
+// Cached stats (10 min)
+const getMarketplaceStats = unstable_cache(async (): Promise<MarketplaceStats> => {
+  const [{ value: totalItems }] = (await db.select({ value: count() }).from(mpItems)) as any;
+  const [{ value: totalCategories }] = (await db.select({ value: count() }).from(mpCategories)) as any;
+  const [{ value: distinctPrimaries }] = (await db
+    .select({ value: sql<number>`count(distinct ${mpCategories.primary})` })
+    .from(mpCategories)) as any;
+  const [{ value: distinctSubs }] = (await db
+    .select({ value: sql<number>`count(distinct ${mpCategories.sub})` })
+    .from(mpCategories)) as any;
+  const [{ value: itemsWithCategories }] = (await db
+    .select({ value: sql<number>`count(distinct ${mpItemCategories.itemId})` })
+    .from(mpItemCategories)) as any;
+  const uncategorizedItems = Math.max(0, Number(totalItems || 0) - Number(itemsWithCategories || 0));
+  const [{ value: lastItemUpdateIso }] = (await db
+    .select({ value: sql<string>`coalesce(max(${mpItems.updatedAt}), max(${mpItems.createdAt}))` })
+    .from(mpItems)) as any;
+  return {
+    totalItems: Number(totalItems || 0),
+    totalCategories: Number(totalCategories || 0),
+    distinctPrimaries: Number(distinctPrimaries || 0),
+    distinctSubs: Number(distinctSubs || 0),
+    itemsWithCategories: Number(itemsWithCategories || 0),
+    uncategorizedItems,
+    lastItemUpdateIso: lastItemUpdateIso ? String(lastItemUpdateIso) : null,
+  };
+}, ["marketplace:stats"], { revalidate: 600, tags: ["marketplace:stats"] });
 
 type LindexWindow = { min_rate?: number; max_rate?: number; l_volume?: number; us_volume?: number };
 
@@ -163,8 +206,24 @@ function timeAgoFromUnix(unix?: number) {
   return `${d}d ago`;
 }
 
+// Helper for ISO string dates
+function timeAgoFromIso(iso?: string | null) {
+  if (!iso) return "n/a";
+  const ms = new Date(iso).getTime();
+  if (!Number.isFinite(ms)) return "n/a";
+  const diff = Date.now() - ms;
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const d = Math.floor(hr / 24);
+  return `${d}d ago`;
+}
+
 export default async function Home() {
-  const [session, live] = await Promise.all([getSession(), getLiveData()]);
+  const [session, live, mpStats] = await Promise.all([getSession(), getLiveData(), getMarketplaceStats()]);
   const home = live.home;
   const lindex = live.lindex;
 
@@ -203,7 +262,7 @@ export default async function Home() {
       <main className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center gap-10 px-6 text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
           <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-          Live demo
+          Live Alpha
         </span>
 
         <h1 className="text-balance font-extrabold tracking-tight text-4xl sm:text-6xl md:text-7xl">
@@ -351,6 +410,78 @@ export default async function Home() {
             <Badge variant="outline" className="text-[10px]">Homepage updated {timeAgoFromUnix(home?.inworld_updated_unix || home?.signups_updated_unix || home?.exchange_rate_updated_unix)}</Badge>
             <Badge variant="outline" className="text-[10px]">LindeX updated {timeAgoFromUnix(lindex?.updated_unix)}</Badge>
             <a className="underline underline-offset-4 hover:no-underline" href="https://wiki.secondlife.com/wiki/Linden_Lab_Official:Live_Data_Feeds" target="_blank" rel="noopener noreferrer">Source</a>
+          </div>
+        </section>
+
+        {/* Marketplace Stats */}
+        <section className="mt-10 w-full text-left">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Marketplace stats</h2>
+            <Badge variant="outline" className="text-xs">Cached ~10m</Badge>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Total items</CardTitle>
+                <CardDescription>All imported listings</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-3xl font-extrabold">{formatNumber(mpStats.totalItems)}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Total categories</CardTitle>
+                <CardDescription>Primary + sub combinations</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-3xl font-extrabold">{formatNumber(mpStats.totalCategories)}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Primary groups</CardTitle>
+                <CardDescription>Distinct primary labels</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-3xl font-extrabold">{formatNumber(mpStats.distinctPrimaries)}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Subcategories</CardTitle>
+                <CardDescription>Distinct sub labels</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-3xl font-extrabold">{formatNumber(mpStats.distinctSubs)}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Categorized items</CardTitle>
+                <CardDescription>Items linked to any category</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-3xl font-extrabold">{formatNumber(mpStats.itemsWithCategories)}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Uncategorized</CardTitle>
+                <CardDescription>Items needing review</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-3xl font-extrabold">{formatNumber(mpStats.uncategorizedItems)}</div>
+                <div className="mt-2">
+                  <Badge variant="secondary" className="text-[11px]">Last change {timeAgoFromIso(mpStats.lastItemUpdateIso)}</Badge>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 

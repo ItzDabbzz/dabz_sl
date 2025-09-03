@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { mpCategories } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { revalidateTag } from "next/cache";
 
 async function getScope() {
   const ses = await auth.api.getSession({ headers: await headers() });
@@ -52,6 +53,8 @@ export async function POST(req: NextRequest) {
         );
       row = existing[0];
     }
+    // Invalidate marketplace stats cache
+    revalidateTag("marketplace:stats");
     return NextResponse.json({ item: row }, { status: 201 });
   } catch (e: any) {
     if (e?.message === "unauthorized")

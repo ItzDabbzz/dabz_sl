@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { mpItems, mpCategories, mpItemCategories } from "@/schemas/sl-schema";
 import { and, count, eq, inArray, sql, desc, asc, notInArray, isNull } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { revalidateTag } from "next/cache";
 
 async function getUserFromRequest(req: NextRequest) {
   const ses = await auth.api.getSession({ headers: req.headers as any });
@@ -202,6 +203,9 @@ export async function POST(req: NextRequest) {
       results.push(row);
     }
 
+    // Invalidate stats cache after import
+    revalidateTag("marketplace:stats");
+
     return NextResponse.json({ items: results }, { status: 201 });
   } catch (e: any) {
     if (e?.message === "unauthorized") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -230,6 +234,7 @@ export async function PATCH(req: NextRequest) {
       .where(eq(mpItems.id as any, id as any) as any)
       .returning();
 
+    revalidateTag("marketplace:stats");
     return NextResponse.json({ item: row });
   } catch (e: any) {
     if (e?.message === "unauthorized") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -250,6 +255,7 @@ export async function DELETE(req: NextRequest) {
     await db.delete(mpItemCategories).where(eq(mpItemCategories.itemId as any, id as any) as any);
     const [row] = await db.delete(mpItems).where(eq(mpItems.id as any, id as any) as any).returning();
 
+    revalidateTag("marketplace:stats");
     return NextResponse.json({ item: row });
   } catch (e: any) {
     if (e?.message === "unauthorized") return NextResponse.json({ error: "unauthorized" }, { status: 401 });

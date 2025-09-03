@@ -4,6 +4,7 @@ import { mpCategories, mpItemCategories } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { revalidateTag } from "next/cache";
 
 async function getScope() {
   const ses = await auth.api.getSession({ headers: (await headers()) as any });
@@ -21,6 +22,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       .set({ ...(primary ? { primary } : {}), ...(sub ? { sub } : {}) })
       .where(and(eq(mpCategories.id as any, id as any) as any, eq(mpCategories.ownerUserId as any, userId as any) as any) as any)
       .returning();
+    revalidateTag("marketplace:stats");
     return NextResponse.json({ item: row });
   } catch (e: any) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
@@ -37,6 +39,7 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
     await db
       .delete(mpCategories as any)
       .where(and(eq(mpCategories.id as any, id as any) as any, eq(mpCategories.ownerUserId as any, userId as any) as any) as any);
+    revalidateTag("marketplace:stats");
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });

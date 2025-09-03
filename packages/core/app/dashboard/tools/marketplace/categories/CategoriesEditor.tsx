@@ -52,7 +52,6 @@ type Category = { id: string; primary: string; sub: string };
   - [x] More intuitive ui for editing sub categories (inline chip editing)
   - [x] Delete category (with confirmation)
   - [x] Collapse all / Expand all quick buttons along with sorting options
-  - [ ] Add indepth JSDoc and comments explaining things (initial pass added)
 
 */
 

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { mpItemCategories, mpItems, mpCategories } from "@/schemas/sl-schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { revalidateTag } from "next/cache";
 
 async function getUserFromRequest(req: NextRequest) {
   const ses = await auth.api.getSession({ headers: req.headers as any });
@@ -70,6 +71,7 @@ export async function PUT(
       } catch {}
     }
 
+    revalidateTag("marketplace:stats");
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
