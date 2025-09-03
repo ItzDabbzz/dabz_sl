@@ -5,6 +5,7 @@ import { getBlogEditorUser } from "@/lib/blog-auth";
 import { and, eq } from "drizzle-orm";
 import { resend } from "@/lib/email/resend";
 import { absoluteUrl } from "@/lib/absolute-url";
+import { revalidatePath } from "next/cache";
 
 export async function POST(req: NextRequest) {
     const user = await getBlogEditorUser();
@@ -60,6 +61,14 @@ export async function POST(req: NextRequest) {
     if (published && sendAnnouncement) {
         await trySendPublishAnnouncement(post.id, postSlug, title, excerpt);
     }
+
+    // Revalidate dashboards and public surfaces
+    revalidatePath("/dashboard/blog/manage");
+    revalidatePath("/blog");
+    revalidatePath("/blog/public");
+    revalidatePath("/blog/rss");
+    revalidatePath("/sitemap.xml");
+    if (post.slug && post.published) revalidatePath(`/blog/${post.slug}`);
 
     return Response.json({ id: post.id, slug: post.slug });
 }
@@ -119,6 +128,16 @@ export async function PUT(req: NextRequest) {
         const effectiveTitle = title || prev?.title;
         await trySendPublishAnnouncement(id, effectiveSlug, effectiveTitle, excerpt || prev?.excerpt);
     }
+
+    // Revalidate dashboards and public surfaces (handle slug change)
+    revalidatePath("/dashboard/blog/manage");
+    revalidatePath("/blog");
+    revalidatePath("/blog/public");
+    revalidatePath("/blog/rss");
+    revalidatePath("/sitemap.xml");
+    if (prev?.slug) revalidatePath(`/blog/${prev.slug}`);
+    const newSlug = slug || prev?.slug;
+    if (newSlug) revalidatePath(`/blog/${newSlug}`);
 
     return new Response("ok");
 }
@@ -187,7 +206,20 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return new Response("missing_id", { status: 400 });
+
+    // Capture slug for revalidation
+    const [prev] = await db.select({ slug: blogPosts.slug }).from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
+
     await db.delete(blogPostCategories).where(eq(blogPostCategories.postId, id));
     await db.delete(blogPosts).where(eq(blogPosts.id, id));
+
+    // Revalidate dashboards and public surfaces
+    revalidatePath("/dashboard/blog/manage");
+    revalidatePath("/blog");
+    revalidatePath("/blog/public");
+    revalidatePath("/blog/rss");
+    revalidatePath("/sitemap.xml");
+    if (prev?.slug) revalidatePath(`/blog/${prev.slug}`);
+
     return new Response("ok");
 }

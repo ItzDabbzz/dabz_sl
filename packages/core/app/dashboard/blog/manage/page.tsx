@@ -32,6 +32,12 @@ export async function bulkAction(formData: FormData) {
     const ids = formData.getAll("ids") as string[];
     if (!ids.length) return;
 
+    // Collect slugs upfront (needed for revalidation even if rows are deleted)
+    const slugRows = await db
+        .select({ id: blogPosts.id, slug: blogPosts.slug })
+        .from(blogPosts)
+        .where(inArray(blogPosts.id, ids));
+
     if (action === "publish") {
         await db
             .update(blogPosts)
@@ -46,7 +52,16 @@ export async function bulkAction(formData: FormData) {
         await db.delete(blogPostCategories).where(inArray(blogPostCategories.postId, ids));
         await db.delete(blogPosts).where(inArray(blogPosts.id, ids));
     }
+
+    // Revalidate dashboards and public surfaces
     revalidatePath("/dashboard/blog/manage");
+    revalidatePath("/blog");
+    revalidatePath("/blog/public");
+    revalidatePath("/blog/rss");
+    revalidatePath("/sitemap.xml");
+    for (const r of slugRows) {
+        if (r.slug) revalidatePath(`/blog/${r.slug}`);
+    }
 }
 
 export default async function ManageBlog({
@@ -212,102 +227,66 @@ export default async function ManageBlog({
                             </div>
                         </div>
 
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-10">Select</TableHead>
-                                        <TableHead>Title</TableHead>
-                                        <TableHead>Slug</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">
-                                            Updated
-                                        </TableHead>
-                                        <TableHead className="w-0"></TableHead>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[50px]"></TableHead>
+                                    <TableHead>Title</TableHead>
+                                    <TableHead className="hidden sm:table-cell">Slug</TableHead>
+                                    <TableHead className="hidden md:table-cell">Status</TableHead>
+                                    <TableHead className="hidden lg:table-cell">Updated</TableHead>
+                                    <TableHead className="w-[50px]"></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {posts.map((p) => (
+                                    <TableRow key={p.id}>
+                                        <TableCell>
+                                            <input type="checkbox" name="ids" value={p.id} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="font-medium">{p.title}</div>
+                                            <div className="text-xs text-muted-foreground line-clamp-1">{p.excerpt}</div>
+                                        </TableCell>
+                                        <TableCell className="hidden sm:table-cell">{p.slug}</TableCell>
+                                        <TableCell className="hidden md:table-cell">
+                                            {p.published ? (
+                                                <Badge variant="secondary">Published</Badge>
+                                            ) : (
+                                                <Badge variant="outline">Draft</Badge>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="hidden lg:table-cell">
+                                            {p.updatedAt ? new Date(p.updatedAt).toLocaleString() : "—"}
+                                        </TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" aria-label="More">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/dashboard/blog/edit?id=${p.id}`}>Edit</Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/blog/${p.slug}`} target="_blank">View</Link>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {posts.map((p) => (
-                                        <TableRow key={p.id}>
-                                            <TableCell>
-                                                <input
-                                                    type="checkbox"
-                                                    name="ids"
-                                                    value={p.id}
-                                                    className="h-4 w-4"
-                                                />
-                                            </TableCell>
-                                            <TableCell className="font-medium">
-                                                <Link
-                                                    className="hover:underline"
-                                                    href={`/dashboard/blog/edit/${p.id}`}
-                                                >
-                                                    {p.title}
-                                                </Link>
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground">
-                                                /{p.slug}
-                                            </TableCell>
-                                            <TableCell>
-                                                {p.published ? (
-                                                    <Badge>Published</Badge>
-                                                ) : (
-                                                    <Badge variant="secondary">
-                                                        Draft
-                                                    </Badge>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-right text-muted-foreground">
-                                                {p.updatedAt
-                                                    ? new Date(
-                                                          p.updatedAt as any,
-                                                      ).toLocaleString()
-                                                    : "—"}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            className="h-8 w-8"
-                                                        >
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem asChild>
-                                                            <Link
-                                                                href={`/dashboard/blog/edit/${p.id}`}
-                                                            >
-                                                                Edit
-                                                            </Link>
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem asChild>
-                                                            <Link
-                                                                href={`/blog/${p.slug}`}
-                                                            >
-                                                                View
-                                                            </Link>
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {posts.length === 0 && (
-                                        <TableRow>
-                                            <TableCell
-                                                colSpan={6}
-                                                className="text-center text-sm text-muted-foreground"
-                                            >
-                                                No posts found.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                ))}
+                                {posts.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
+                                            No posts found.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : null}
+                            </TableBody>
+                        </Table>
                     </form>
                 </CardContent>
             </Card>

@@ -60,7 +60,12 @@ export async function saveSettings(formData: FormData) {
         });
     }
 
+    // Revalidate settings page and public surfaces impacted by settings
     revalidatePath("/dashboard/blog/settings");
+    revalidatePath("/blog");
+    revalidatePath("/blog/public");
+    revalidatePath("/blog/rss");
+    revalidatePath("/sitemap.xml");
 }
 
 export default async function BlogSettingsPage() {

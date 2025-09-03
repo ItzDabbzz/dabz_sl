@@ -18,6 +18,14 @@ function slugify(v: string) {
         .replace(/(^-|-$)+/g, "");
 }
 
+function revalidateBlogSurfaces() {
+    revalidatePath("/dashboard/blog/categories");
+    revalidatePath("/blog");
+    revalidatePath("/blog/public");
+    revalidatePath("/blog/rss");
+    revalidatePath("/sitemap.xml");
+}
+
 export async function createCategory(formData: FormData) {
     "use server";
     const user = await getBlogEditorUser();
@@ -64,7 +72,7 @@ export async function createCategory(formData: FormData) {
             .insert(blogCategories)
             .values({ name, slug, description, visibility: visibility as any });
     } catch {}
-    revalidatePath("/dashboard/blog/categories");
+    revalidateBlogSurfaces();
 }
 
 export async function updateCategory(formData: FormData) {
@@ -120,7 +128,7 @@ export async function updateCategory(formData: FormData) {
             })
             .where(eq(blogCategories.id, id));
     } catch {}
-    revalidatePath("/dashboard/blog/categories");
+    revalidateBlogSurfaces();
 }
 
 export async function deleteCategory(formData: FormData) {
@@ -132,7 +140,7 @@ export async function deleteCategory(formData: FormData) {
     try {
         await db.delete(blogCategories).where(eq(blogCategories.id, id));
     } catch {}
-    revalidatePath("/dashboard/blog/categories");
+    revalidateBlogSurfaces();
 }
 
 export default async function BlogCategoriesPage() {
