@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigsTable, type ConfigItem } from "./components/table";
 import { absoluteUrl } from "@/lib/absolute-url";
+import WorkInProgressNotice from "@/components/wip-notice";
 
 export default async function ConfigsPage() {
   const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
@@ -19,6 +20,7 @@ export default async function ConfigsPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <h1 className="text-xl font-semibold">Configs</h1>
+      <WorkInProgressNotice className="-mt-2" message="This Second Life database section is under active development and not in a working state." />
       <Card>
         <CardHeader>
           <CardTitle>Recent Configs</CardTitle>

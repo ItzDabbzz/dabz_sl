@@ -48,6 +48,7 @@ const navSections = [
     title: "Second Life Tools",
     items: [
       { href: "/dashboard/tools/marketplace", title: "Marketplace", icon: ShoppingBag },
+      { href: "/dashboard/tools/marketplace-scrape", title: "Scrape & Import", icon: Server },
     ],
   },
   {

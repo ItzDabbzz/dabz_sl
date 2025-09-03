@@ -81,3 +81,22 @@ Here are some helpful links if you want to dive deeper:
 If you run into issues or have suggestions, feel free to open an issue or submit a pull request on the [GitHub repo](https://github.com/better-auth/better-auth).
 
 Happy coding!
+
+---
+
+Monorepo workspace (pnpm) for dabz_sl
+
+Packages:
+
+- packages/core (Next.js app)
+- packages/scraper-cli (CLI)
+- packages/shared-data (shared library)
+
+Commands:
+
+- pnpm dev (run core)
+- pnpm -r build (build all)
+
+Vercel:
+
+- vercel.json targets packages/core via @vercel/next

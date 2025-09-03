@@ -6,6 +6,7 @@ import { ApiKeysTable, type ApiKeyItem } from "./components/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { absoluteUrl } from "@/lib/absolute-url";
+import WorkInProgressNotice from "@/components/wip-notice";
 
 export default async function ApiKeysPage() {
   const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
@@ -37,6 +38,7 @@ export default async function ApiKeysPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <h1 className="text-xl font-semibold">API Keys</h1>
+      <WorkInProgressNotice className="-mt-2" message="This Second Life database section is under active development and not in a working state." />
       <Card>
         <CardHeader>
           <CardTitle>Keys</CardTitle>

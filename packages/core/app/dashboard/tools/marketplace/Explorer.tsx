@@ -44,7 +44,6 @@ export default function Explorer() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState<Page>({ limit: 25, offset: 0, total: 0 });
-  const [editing, setEditing] = useState<{ id: string; categoryIds: string[] } | null>(null);
   const [detailsOpen, setDetailsOpen] = useState<Record<string, boolean>>({});
   const [preview, setPreview] = useState<{ open: boolean; images: string[]; index: number; title: string }>(
     { open: false, images: [], index: 0, title: "" }
@@ -55,6 +54,74 @@ export default function Explorer() {
   const [editOpen, setEditOpen] = useState(false);
   const [editDraft, setEditDraft] = useState<Partial<Item> & { id?: string }>({});
   const commandRef = useRef<HTMLDivElement | null>(null);
+
+  // NEW: track when categories finished loading
+  const [catsLoaded, setCatsLoaded] = useState(false);
+
+  // NEW: cache of selected category IDs per itemId for quick display/save
+  const [itemCats, setItemCats] = useState<Record<string, string[]>>({});
+
+  // Map category id -> category for labels
+  const catById = useMemo(() => {
+    const map: Record<string, Category> = {};
+    for (const c of categories) map[c.id] = c;
+    return map;
+  }, [categories]);
+
+  // Helper to fetch an item's current categories (lazy)
+  const fetchItemCats = async (id: string) => {
+    try {
+      const res = await fetch(`/api/tools/marketplace/items/${id}/categories`, { credentials: "include" });
+      if (!res.ok) return;
+      const data = await res.json();
+      const ids: string[] = Array.isArray(data?.items) ? data.items.map((r: any) => r.id) : [];
+      setItemCats((m) => ({ ...m, [id]: ids }));
+    } catch {}
+  };
+
+  const loadCategories = async () => {
+    // use lighter endpoint optimized for the picker
+    const res = await fetch("/api/tools/marketplace/items/categories", { credentials: "include" });
+    if (res.ok) {
+      const data = await res.json();
+      setCategories(data.items || []);
+      setCatsLoaded(true);
+    } else {
+      setCatsLoaded(true);
+    }
+  };
+
+  const loadItems = async (opts?: { categoryId?: string; q?: string; limit?: number; offset?: number; sort?: "most" | "least"; preserveDetails?: boolean }) => {
+    setLoading(true);
+    const sp = new URLSearchParams();
+    const limit = opts?.limit ?? page.limit;
+    const offset = opts?.offset ?? page.offset;
+    if (opts?.categoryId ?? categoryId) sp.set("categoryId", (opts?.categoryId ?? categoryId)!);
+    if (opts?.q ?? q) sp.set("q", (opts?.q ?? q)!);
+    sp.set("limit", String(limit));
+    sp.set("offset", String(offset));
+    sp.set("sort", (opts?.sort ?? sort) as string);
+    const res = await fetch(`/api/tools/marketplace/items?${sp.toString()}`, { credentials: "include" });
+    setLoading(false);
+    if (res.ok) {
+      const data = await res.json();
+      const itemsData: Item[] = data.items || [];
+      setItems(itemsData);
+      setPage({ limit: data.limit || limit, offset: data.offset || offset, total: data.total || 0 });
+      // Only reset expanded rows on explicit user-driven fetches
+      if (!opts?.preserveDetails) setDetailsOpen({});
+    }
+  };
+
+  // Prefetch current categories for the first few visible items to avoid initial delay when opening picker
+  useEffect(() => {
+    const ids = items.slice(0, 8).map((i) => i.id);
+    ids.forEach((id) => {
+      if (itemCats[id] === undefined) fetchItemCats(id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
+
   // Keyboard shortcut: Cmd/Ctrl+K to open category combobox and focus input
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -78,57 +145,36 @@ export default function Explorer() {
     return cat ? `${cat.primary} › ${cat.sub}` : "All Categories";
   }, [categoryId, categories]);
 
-  const loadCategories = async () => {
-    const res = await fetch("/api/tools/marketplace/categories", { credentials: "include" });
-    if (res.ok) {
-      const data = await res.json();
-      setCategories(data.items || []);
-    }
-  };
-
-  const loadItems = async (opts?: { categoryId?: string; q?: string; limit?: number; offset?: number; sort?: "most" | "least" }) => {
-    setLoading(true);
-    const sp = new URLSearchParams();
-    const limit = opts?.limit ?? page.limit;
-    const offset = opts?.offset ?? page.offset;
-    if (opts?.categoryId ?? categoryId) sp.set("categoryId", (opts?.categoryId ?? categoryId)!);
-    if (opts?.q ?? q) sp.set("q", (opts?.q ?? q)!);
-    sp.set("limit", String(limit));
-    sp.set("offset", String(offset));
-    sp.set("sort", (opts?.sort ?? sort) as string);
-    const res = await fetch(`/api/tools/marketplace/items?${sp.toString()}`, { credentials: "include" });
-    setLoading(false);
-    if (res.ok) {
-      const data = await res.json();
-      const itemsData: Item[] = data.items || [];
-      setItems(itemsData);
-      setPage({ limit: data.limit || limit, offset: data.offset || offset, total: data.total || 0 });
-      const hasFilter = Boolean((opts?.q ?? q) || (opts?.categoryId ?? categoryId));
-      setDetailsOpen(hasFilter ? Object.fromEntries(itemsData.map((i) => [i.id, true])) : {});
-    }
-  };
-
+  // Load categories and first page on mount
   useEffect(() => {
     loadCategories();
     loadItems({ offset: 0 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // After items load, batch fetch their category ids once
   useEffect(() => {
-     const onImported = () => loadItems({ offset: 0 });
-     const onCats = () => loadCategories();
-     if (typeof window !== "undefined") {
-       window.addEventListener("mp:itemsImported", onImported);
-       window.addEventListener("mp:categoriesChanged", onCats);
-     }
-     return () => {
-       if (typeof window !== "undefined") {
-         window.removeEventListener("mp:itemsImported", onImported);
-         window.removeEventListener("mp:categoriesChanged", onCats);
-       }
-     };
-     // eslint-disable-next-line react-hooks/exhaustive-deps
-   }, [page.limit]);
+    const need = items.filter((i) => itemCats[i.id] === undefined).map((i) => i.id);
+    if (!need.length) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/tools/marketplace/items/categories/batch`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ itemIds: need }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const grouped: Record<string, string[]> = {};
+        for (const m of (data?.mappings || []) as Array<{ itemId: string; categoryId: string }>) {
+          if (!grouped[m.itemId]) grouped[m.itemId] = [];
+          grouped[m.itemId].push(m.categoryId);
+        }
+        setItemCats((old) => ({ ...old, ...grouped }));
+      } catch {}
+    })();
+  }, [items]);
 
   // Live search: debounce on q/categoryId/sort changes
   const searchDebounceRef = useRef<number | null>(null);
@@ -171,39 +217,119 @@ export default function Explorer() {
     XLSX.writeFile(wb, "marketplace-items.xlsx");
   };
 
-   const onPrev = () => page.offset > 0 && loadItems({ offset: Math.max(0, page.offset - page.limit) });
-   const onNext = () => page.offset + page.limit < page.total && loadItems({ offset: page.offset + page.limit });
-
-  const toggleEditCategory = (id: string) => setEditing({ id, categoryIds: [] });
-  const saveEditCategory = async () => {
-    if (!editing) return;
-    await fetch(`/api/tools/marketplace/items/${editing.id}/categories`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ categoryIds: editing.categoryIds }),
-    });
-    setEditing(null);
-    loadItems();
-    if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("mp:categoriesChanged"));
-  };
-
+  // Image preview helpers
   const openPreview = (images?: string[] | null, title?: string) => {
     const imgs = (images || []).filter(Boolean);
     if (!imgs.length) return;
     setPreview({ open: true, images: imgs, index: 0, title: title || "Images" });
   };
-
   const nextImg = () => setPreview((p) => ({ ...p, index: (p.index + 1) % p.images.length }));
   const prevImg = () => setPreview((p) => ({ ...p, index: (p.index - 1 + p.images.length) % p.images.length }));
 
-  useEffect(() => {
-    // check admin
-    fetch("/api/tools/marketplace/admin", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => setIsAdmin(!!d.isAdmin))
-      .catch(() => setIsAdmin(false));
-  }, []);
+  // Inline category picker for each item: shows badges and a searchable popover; saves on close
+  function CategoryPicker({ itemId }: { itemId: string }) {
+    const [open, setOpen] = useState(false);
+    const [draft, setDraft] = useState<string[] | null>(null);
+
+    const selectedFromStore = itemCats[itemId];
+    const selected = draft ?? selectedFromStore ?? [];
+
+    useEffect(() => {
+      if (open) {
+        // Ensure data is ready when opening
+        if (!catsLoaded) void loadCategories();
+        if (itemCats[itemId] === undefined) void fetchItemCats(itemId);
+        // Initialize draft from store on open
+        setDraft(selectedFromStore ?? []);
+      } else {
+        // Reset draft when closing
+        setDraft(null);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
+    const toggle = (id: string) => {
+      setDraft((d) => {
+        const base = d ?? selected;
+        return base.includes(id) ? base.filter((x) => x !== id) : [...base, id];
+      });
+    };
+
+    const save = async (finalIds: string[]) => {
+      try {
+        await fetch(`/api/tools/marketplace/items/${itemId}/categories`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ categoryIds: finalIds }),
+        });
+        setItemCats((m) => ({ ...m, [itemId]: finalIds }));
+      } catch {
+        // ignore
+      }
+    };
+
+    const onOpenChange = (o: boolean) => {
+      if (open && !o) {
+        // Closing: persist if changed
+        const before = selectedFromStore ?? [];
+        const after = draft ?? before;
+        const changed =
+          before.length !== after.length || before.some((b) => !after.includes(b));
+        if (changed) void save(after);
+      }
+      setOpen(o);
+    };
+
+    const labelFor = (id: string) => {
+      const c = catById[id];
+      return c ? `${c.primary} › ${c.sub}` : id;
+    };
+
+    const nothingLoaded = !catsLoaded || selectedFromStore === undefined;
+
+    return (
+      <div className="space-y-1">
+        <div className="flex flex-wrap gap-1 min-h-[1.25rem]">
+          {selected.length ? (
+            selected.map((id) => (
+              <Badge key={id} variant="secondary" title={labelFor(id)}>
+                {labelFor(id)}
+              </Badge>
+            ))
+          ) : nothingLoaded ? (
+            <span className="text-xs text-muted-foreground">Loading…</span>
+          ) : (
+            <span className="text-xs text-muted-foreground">None</span>
+          )}
+        </div>
+        <Popover open={open} onOpenChange={onOpenChange}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-7 px-2">Manage</Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[320px] p-0">
+            <Command>
+              <CommandInput placeholder="Search categories…" />
+              <CommandList>
+                <CommandEmpty>No results.</CommandEmpty>
+                <CommandGroup heading="Categories">
+                  {categories.map((c) => (
+                    <CommandItem key={c.id} value={`${c.primary} ${c.sub}`} onSelect={() => toggle(c.id)}>
+                      <Check className={cn("mr-2 h-4 w-4", selected.includes(c.id) ? "opacity-100" : "opacity-0")} />
+                      {c.primary} › {c.sub}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  }
+
+  const onPrev = () => page.offset > 0 && loadItems({ offset: Math.max(0, page.offset - page.limit) });
+  const onNext = () => page.offset + page.limit < page.total && loadItems({ offset: page.offset + page.limit });
 
   const startEdit = (it: Item) => {
     setEditDraft({ id: it.id, title: it.title, price: it.price, version: it.version ?? undefined, description: it.description ?? undefined });
@@ -357,6 +483,7 @@ export default function Explorer() {
                   <th className="px-3 py-2 text-left">Price</th>
                   <th className="px-3 py-2 text-left">Rating</th>
                   <th className="px-3 py-2 text-left">Creator</th>
+                  <th className="px-3 py-2 text-left">Categories</th>{/* NEW column */}
                   <th className="px-3 py-2 text-left">URL</th>
                   <th className="px-3 py-2 text-left">Images</th>
                   <th className="px-3 py-2 text-right">Actions</th>
@@ -369,9 +496,16 @@ export default function Explorer() {
                       <td className="px-3 py-2 max-w-[28rem]">
                         <div className="font-medium line-clamp-1">{it.title}</div>
                         <div className="mt-1">
-                          <Button variant="ghost" size="sm" className="px-2 h-7"
-                            onClick={() => setDetailsOpen((o) => ({ ...o, [it.id]: !o[it.id] }))
-                            }>{detailsOpen[it.id] ? "Hide details" : "Details"}</Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="px-2 h-7"
+                            onClick={() =>
+                              setDetailsOpen((o) => ({ ...o, [it.id]: !o[it.id] }))
+                            }
+                          >
+                            {detailsOpen[it.id] ? "Hide details" : "Details"}
+                          </Button>
                         </div>
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">{it.version || "-"}</td>
@@ -380,7 +514,7 @@ export default function Explorer() {
                         {typeof it.ratingCount === "number" && it.ratingCount > 0 ? (
                           <span>
                             ★ {(() => {
-                              const avg = typeof it.ratingAvg === "string" ? parseFloat(it.ratingAvg) : (it.ratingAvg || 0);
+                              const avg = typeof it.ratingAvg === "string" ? parseFloat(it.ratingAvg) : it.ratingAvg || 0;
                               return avg.toFixed(1);
                             })()} ({it.ratingCount})
                           </span>
@@ -390,28 +524,38 @@ export default function Explorer() {
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
                         {it.creator?.name ? (
-                          <a
-                            href={it.store || it.creator?.link || "#"}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="underline"
-                          >
+                          <a href={it.store || it.creator?.link || "#"} target="_blank" rel="noreferrer" className="underline">
                             {it.creator.name}
                           </a>
-                        ) : ""}
+                        ) : (
+                          ""
+                        )}
                       </td>
-                      <td className="px-3 py-2"><a href={it.url} target="_blank" rel="noreferrer" className="underline">Open</a></td>
+                      <td className="px-3 py-2 align-top">
+                        <CategoryPicker itemId={it.id} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <a href={it.url} target="_blank" rel="noreferrer" className="underline">
+                          Open
+                        </a>
+                      </td>
                       <td className="px-3 py-2">
                         {it.images?.length ? (
                           <div className="flex items-center gap-1">
                             {it.images.slice(0, 3).map((src, idx) => (
-                              <button key={idx} className="h-8 w-8 overflow-hidden rounded border" onClick={() => openPreview(it.images || [], it.title)}>
+                              <button
+                                key={idx}
+                                className="h-8 w-8 overflow-hidden rounded border"
+                                onClick={() => openPreview(it.images || [], it.title)}
+                              >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={src} alt={it.title} className="h-full w-full object-cover" />
                               </button>
                             ))}
                             {it.images.length > 3 && (
-                              <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => openPreview(it.images || [], it.title)}>+{it.images.length - 3}</Button>
+                              <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => openPreview(it.images || [], it.title)}>
+                                +{it.images.length - 3}
+                              </Button>
                             )}
                           </div>
                         ) : (
@@ -419,25 +563,29 @@ export default function Explorer() {
                         )}
                       </td>
                       <td className="px-3 py-2 text-right space-x-2 whitespace-nowrap">
-                        <Button variant="outline" size="sm" onClick={() => setDetailsOpen((o) => ({ ...o, [it.id]: !o[it.id] }))}>{detailsOpen[it.id] ? "Collapse" : "Details"}</Button>
-                        <Button variant="outline" size="sm" onClick={() => toggleEditCategory(it.id)}>Categorize</Button>
+                        <Button variant="outline" size="sm" onClick={() => setDetailsOpen((o) => ({ ...o, [it.id]: !o[it.id] }))}>
+                          {detailsOpen[it.id] ? "Collapse" : "Details"}
+                        </Button>
                         {isAdmin && (
                           <>
-                            <Button variant="outline" size="sm" onClick={() => startEdit(it)}>Edit</Button>
-                            <Button variant="destructive" size="sm" onClick={() => removeItem(it.id)}>Remove</Button>
+                            <Button variant="outline" size="sm" onClick={() => startEdit(it)}>
+                              Edit
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => removeItem(it.id)}>
+                              Remove
+                            </Button>
                           </>
                         )}
                       </td>
                     </tr>
                     {detailsOpen[it.id] && (
                       <tr className="border-t">
-                        <td colSpan={8} className="px-3 py-3 bg-muted/20">
+                        {/* colSpan increased by 1 due to new Categories column */}
+                        <td colSpan={9} className="px-3 py-3 bg-muted/20">
                           <div className="grid gap-3 md:grid-cols-3">
                             <div className="md:col-span-2">
                               <div className="text-xs uppercase text-muted-foreground mb-1">Description</div>
-                              <div className="prose prose-sm max-w-none whitespace-pre-wrap">
-                                {it.description || "No description"}
-                              </div>
+                              <div className="prose prose-sm max-w-none whitespace-pre-wrap">{it.description || "No description"}</div>
                             </div>
                             <div className="space-y-2">
                               <div className="text-xs uppercase text-muted-foreground">Images</div>
@@ -450,7 +598,9 @@ export default function Explorer() {
                                     </button>
                                   ))}
                                   {it.images.length > 4 && (
-                                    <Button variant="outline" size="sm" onClick={() => openPreview(it.images || [], it.title)}>+{it.images.length - 4} more</Button>
+                                    <Button variant="outline" size="sm" onClick={() => openPreview(it.images || [], it.title)}>
+                                      +{it.images.length - 4} more
+                                    </Button>
                                   )}
                                 </div>
                               ) : (
@@ -465,7 +615,10 @@ export default function Explorer() {
                 ))}
                 {!items.length && (
                   <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">No items</td>
+                    {/* colSpan increased by 1 due to new Categories column */}
+                    <td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">
+                      No items
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -473,15 +626,22 @@ export default function Explorer() {
           </div>
 
           <div className="mt-3 flex items-center justify-between text-sm">
-            <div className="text-muted-foreground">{page.offset + 1}-{Math.min(page.offset + page.limit, page.total)} of {page.total}</div>
+            <div className="text-muted-foreground">
+              {page.offset + 1}-{Math.min(page.offset + page.limit, page.total)} of {page.total}
+            </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" className="h-8" disabled={page.offset === 0} onClick={onPrev}>Previous</Button>
-              <Button variant="outline" className="h-8" disabled={page.offset + page.limit >= page.total} onClick={onNext}>Next</Button>
+              <Button variant="outline" className="h-8" disabled={page.offset === 0} onClick={onPrev}>
+                Previous
+              </Button>
+              <Button variant="outline" className="h-8" disabled={page.offset + page.limit >= page.total} onClick={onNext}>
+                Next
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Preview dialog remains */}
       <Dialog open={preview.open} onOpenChange={(o) => setPreview((p) => ({ ...p, open: o }))}>
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
@@ -501,50 +661,7 @@ export default function Explorer() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign Categories</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-80 overflow-hidden rounded-md border">
-            <Command>
-              <CommandInput placeholder="Search categories..." />
-              <CommandList>
-                {primaries.map((p) => (
-                  <CommandGroup key={p} heading={p}>
-                    {subsFor(p).map((s) => {
-                      const checked = editing?.categoryIds.includes(s.id) ?? false;
-                      return (
-                        <CommandItem
-                          key={s.id}
-                          value={`${p} ${s.sub}`}
-                          onSelect={() => {
-                            setEditing((old) => {
-                              if (!old) return old;
-                              const set = new Set(old.categoryIds);
-                              if (set.has(s.id)) set.delete(s.id); else set.add(s.id);
-                              return { ...old, categoryIds: Array.from(set) };
-                            });
-                          }}
-                        >
-                          <Check className={cn("mr-2 h-4 w-4", checked ? "opacity-100" : "opacity-0")} />
-                          {s.sub}
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                ))}
-              </CommandList>
-            </Command>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
-            <Button onClick={saveEditCategory}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit dialog */}
+      {/* Edit dialog remains */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>

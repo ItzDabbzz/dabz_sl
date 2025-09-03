@@ -1,5 +1,5 @@
 {
-  "name": "dabz_sl_workspace",
+  "name": "dabz.sl",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -8,5 +8,11 @@
     "lint": "pnpm --filter @dabz/core lint",
     "typecheck": "pnpm --filter @dabz/core typecheck"
   },
-  "packageManager": "pnpm@9.12.0"
+  "packageManager": "pnpm@9.12.0",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "playwright": "^1.55.0",
+    "tsx": "^4.20.5",
+    "typescript": "5.9.2"
+  }
 }

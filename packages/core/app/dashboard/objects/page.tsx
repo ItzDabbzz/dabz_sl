@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { MasterObjectsTable, type MasterObject } from "./components/columns";
 import { absoluteUrl } from "@/lib/absolute-url";
+import WorkInProgressNotice from "@/components/wip-notice";
 
 export default async function ObjectsPage() {
   const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
@@ -22,6 +23,7 @@ export default async function ObjectsPage() {
         <h1 className="text-xl font-semibold">Master Objects</h1>
         <Link href="/dashboard/objects/new" className="text-sm underline">New Object</Link>
       </div>
+      <WorkInProgressNotice className="mb-2" message="This Second Life database section is under active development and not in a working state." />
       <Card>
         <CardHeader>
           <CardTitle>Objects</CardTitle>

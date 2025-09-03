@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { mpItemCategories } from "@/schemas/sl-schema";
+import { mpItemCategories, mpItems, mpCategories } from "@/schemas/sl-schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 
@@ -10,11 +10,52 @@ async function getUserFromRequest(req: NextRequest) {
   return ses.user;
 }
 
+// Fetch existing categories for an item
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getUserFromRequest(req);
+    const { id } = await ctx.params;
+
+    // Ensure item belongs to the user
+    const [item] = await db
+      .select({ id: mpItems.id, ownerUserId: mpItems.ownerUserId })
+      .from(mpItems)
+      .where(eq(mpItems.id as any, id as any) as any);
+    if (!item || (item as any).ownerUserId !== (user as any).id) {
+      return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+
+    const rows = await db
+      .select({
+        id: mpCategories.id,
+        primary: mpCategories.primary,
+        sub: mpCategories.sub,
+      })
+      .from(mpItemCategories)
+      .innerJoin(
+        mpCategories,
+        eq(mpItemCategories.categoryId as any, mpCategories.id as any) as any
+      )
+      .where(eq(mpItemCategories.itemId as any, id as any) as any);
+
+    return NextResponse.json({ items: rows });
+  } catch (e: any) {
+    if (e?.message === "unauthorized") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
+}
+
 // Bulk replace categories for an item
-export async function PUT(req: NextRequest, ctx: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
   try {
     await getUserFromRequest(req);
-    const id = ctx.params.id;
+    const { id } = await ctx.params;
     const body = await req.json();
     const categoryIds: string[] = Array.isArray(body?.categoryIds) ? body.categoryIds : [];
 

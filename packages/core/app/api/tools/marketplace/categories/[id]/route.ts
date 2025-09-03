@@ -11,10 +11,10 @@ async function getScope() {
   return { userId: ses.user.id };
 }
 
-export async function PATCH(req: NextRequest, ctx: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await getScope();
-    const id = ctx.params.id;
+    const { id } = await ctx.params;
     const { primary, sub } = await req.json();
     const [row] = await db
       .update(mpCategories)
@@ -27,10 +27,10 @@ export async function PATCH(req: NextRequest, ctx: { params: { id: string } }) {
   }
 }
 
-export async function DELETE(req: NextRequest, ctx: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await getScope();
-    const id = ctx.params.id;
+    const { id } = await ctx.params;
     // Remove mappings first
     await db.delete(mpItemCategories as any).where(eq(mpItemCategories.categoryId as any, id as any) as any);
     // Then delete the category (scoped to owner)

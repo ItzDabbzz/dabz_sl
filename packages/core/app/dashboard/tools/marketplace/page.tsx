@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
-import Importer from "./Importer";
 import Explorer from "./Explorer";
+import CategoriesEditor from "./CategoriesEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +31,10 @@ export default async function MarketplaceTool() {
         </div>
       ) : (
         <>
-          <Importer />
+          <div className="rounded-lg border p-4 space-y-4">
+            <h2 className="font-semibold">Categories</h2>
+            <CategoriesEditor />
+          </div>
           <div className="rounded-lg border p-4 space-y-4">
             <h2 className="font-semibold">Explore</h2>
             <Explorer />
