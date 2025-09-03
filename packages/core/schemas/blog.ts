@@ -7,6 +7,7 @@ import {
     index,
     uniqueIndex,
     integer,
+    jsonb,
 } from "drizzle-orm/pg-core";
 
 // Blog categories (flat list for now)
@@ -17,6 +18,8 @@ export const blogCategories = pgTable(
         slug: text("slug").notNull(),
         name: text("name").notNull(),
         description: text("description"),
+        // Visibility rules (public/login/restricted with role/org/team/user/email whitelists)
+        visibility: jsonb("visibility"),
         createdAt: timestamp("created_at", { withTimezone: true })
             .defaultNow()
             .notNull(),

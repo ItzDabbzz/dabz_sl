@@ -33,3 +33,36 @@ export const myCustomRole = ac.newRole({
   team: ["create", "update"],
   // Add more permissions for this custom role
 });
+
+export type ViewerContext = {
+  isLoggedIn: boolean;
+  role?: string | null;
+  orgId?: string | null;
+  teamIds?: string[];
+  userId?: string | null;
+  email?: string | null;
+};
+
+export type CategoryVisibility = {
+  mode?: "public" | "login" | "restricted";
+  roles?: string[];
+  orgIds?: string[];
+  teamIds?: string[];
+  userIds?: string[];
+  emails?: string[];
+};
+
+export function canViewCategory(visibility: CategoryVisibility | null | undefined, viewer: ViewerContext): boolean {
+  const v = visibility || { mode: "public" };
+  const mode = v.mode || "public";
+  if (mode === "public") return true;
+  if (mode === "login") return !!viewer.isLoggedIn;
+  // restricted: allow if any matcher hits
+  const checks: boolean[] = [];
+  if (v.roles?.length) checks.push(!!viewer.role && v.roles.includes(viewer.role!));
+  if (v.orgIds?.length) checks.push(!!viewer.orgId && v.orgIds.includes(viewer.orgId!));
+  if (v.teamIds?.length) checks.push((viewer.teamIds || []).some((t) => v.teamIds!.includes(t)));
+  if (v.userIds?.length) checks.push(!!viewer.userId && v.userIds.includes(viewer.userId!));
+  if (v.emails?.length) checks.push(!!viewer.email && v.emails.includes(viewer.email!));
+  return checks.some(Boolean);
+}

@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { user } from "@/schemas/auth-schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Heart } from "lucide-react";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { canViewCategory } from "@/lib/permissions";
 
 export const revalidate = 60; // ISR for public list
 
@@ -23,22 +26,46 @@ export default async function BlogIndex({
     const c = params?.c?.split(",").filter(Boolean);
     const page = Math.max(1, Number(params?.p || 1) || 1);
 
-    // Optional category filtering -> list of matching post IDs
+    // current viewer
+    const ses = await auth.api.getSession({ headers: await headers() }).catch(() => null as any);
+    const viewer = {
+        isLoggedIn: !!ses?.user,
+        role: (ses as any)?.user?.role || null,
+        orgId: (ses as any)?.session?.activeOrganizationId || null,
+        teamIds: (ses as any)?.session?.activeTeamId ? [(ses as any)?.session?.activeTeamId] : [],
+        userId: (ses as any)?.user?.id || null,
+        email: (ses as any)?.user?.email || null,
+    };
+
+    // Fetch all categories and filter by visibility for this viewer
+    const allCats = await db
+        .select({ id: blogCategories.id, name: blogCategories.name, slug: blogCategories.slug, visibility: (blogCategories as any).visibility })
+        .from(blogCategories)
+        .orderBy(blogCategories.name);
+    const visibleCats = allCats.filter((cat: any) => canViewCategory(cat.visibility as any, viewer));
+
+    // Optional category filtering -> list of matching post IDs (respect only visible categories)
     let filteredPostIds: string[] | null = null;
     if (c && c.length) {
-        const rows = await db
-            .select({ id: blogPosts.id })
-            .from(blogPosts)
-            .innerJoin(
-                blogPostCategories,
-                eq(blogPostCategories.postId, blogPosts.id),
-            )
-            .innerJoin(
-                blogCategories,
-                eq(blogPostCategories.categoryId, blogCategories.id),
-            )
-            .where(and(eq(blogPosts.published, true), inArray(blogCategories.slug, c)));
-        filteredPostIds = Array.from(new Set(rows.map((r) => r.id)));
+        const allowedSlugs = new Set(visibleCats.map((x) => x.slug));
+        const effective = c.filter((slug) => allowedSlugs.has(slug));
+        if (effective.length === 0) {
+            filteredPostIds = [];
+        } else {
+            const rows = await db
+                .select({ id: blogPosts.id })
+                .from(blogPosts)
+                .innerJoin(
+                    blogPostCategories,
+                    eq(blogPostCategories.postId, blogPosts.id),
+                )
+                .innerJoin(
+                    blogCategories,
+                    eq(blogPostCategories.categoryId, blogCategories.id),
+                )
+                .where(and(eq(blogPosts.published, true), inArray(blogCategories.slug, effective)));
+            filteredPostIds = Array.from(new Set(rows.map((r) => r.id)));
+        }
     }
 
     // Total count
@@ -75,7 +102,7 @@ export default async function BlogIndex({
         .from(blogPosts)
         .leftJoin(user, eq(user.id, blogPosts.authorUserId))
         .where(
-            filteredPostIds
+            filteredPostIds !== null
                 ? and(eq(blogPosts.published, true), inArray(blogPosts.id, filteredPostIds))
                 : eq(blogPosts.published, true),
         )
@@ -86,7 +113,7 @@ export default async function BlogIndex({
     const posts = rows;
     const visibleIds = posts.map((p) => p.id);
 
-    // Categories for visible posts
+    // Categories for visible posts (filter by visibility too)
     const catsMap = new Map<string, { name: string; slug: string }[]>();
     if (visibleIds.length) {
         const catRows = await db
@@ -94,6 +121,7 @@ export default async function BlogIndex({
                 postId: blogPostCategories.postId,
                 name: blogCategories.name,
                 slug: blogCategories.slug,
+                visibility: (blogCategories as any).visibility,
             })
             .from(blogPostCategories)
             .innerJoin(
@@ -102,6 +130,7 @@ export default async function BlogIndex({
             )
             .where(inArray(blogPostCategories.postId, visibleIds));
         for (const r of catRows) {
+            if (!canViewCategory((r as any).visibility as any, viewer)) continue;
             const arr = catsMap.get(r.postId) || [];
             arr.push({ name: r.name, slug: r.slug });
             catsMap.set(r.postId, arr);
@@ -132,10 +161,8 @@ export default async function BlogIndex({
         return qs ? `/blog?${qs}` : "/blog";
     };
 
-    const cats = await db
-        .select({ id: blogCategories.id, name: blogCategories.name, slug: blogCategories.slug })
-        .from(blogCategories)
-        .orderBy(blogCategories.name);
+    // Use only visible categories in the sidebar
+    const cats = visibleCats.map((x) => ({ id: x.id, name: x.name, slug: x.slug }));
 
     // Build a simple sticky TOC: categories and recent posts
     const recentPosts = posts.slice(0, 10);
@@ -241,49 +268,64 @@ export default async function BlogIndex({
 
                     {/* Pagination */}
                     {totalPages > 1 ? (
-                        <nav className="mt-8 flex items-center justify-between" aria-label="pagination">
-                            <Link
-                                href={makeHref(Math.max(1, page - 1))}
-                                aria-disabled={page === 1}
-                                className={`text-sm ${page === 1 ? "pointer-events-none opacity-50" : "hover:underline"}`}
-                            >
-                                ← Previous
-                            </Link>
-                            <div className="flex items-center gap-2 text-sm">
-                                {Array.from({ length: totalPages })
-                                    .slice(0, totalPages > 7 ? 7 : totalPages)
-                                    .map((_, i) => {
-                                        const n = i + 1;
-                                        if (totalPages > 7) {
-                                            const show =
-                                                n === 1 ||
-                                                n === totalPages ||
-                                                Math.abs(n - page) <= 1 ||
-                                                (page <= 4 && n <= 5) ||
-                                                (page >= totalPages - 3 && n >= totalPages - 4);
-                                            if (!show) return i === 3 ? <span key={`e-${i}`}>…</span> : null;
+                        <>
+                            <nav className="mt-8 flex items-center justify-between" aria-label="pagination">
+                                <Link
+                                    href={makeHref(Math.max(1, page - 1))}
+                                    aria-disabled={page === 1}
+                                    className={`text-sm ${page === 1 ? "pointer-events-none opacity-50" : "hover:underline"}`}
+                                >
+                                    ← Previous
+                                </Link>
+                                <div className="flex items-center gap-2 text-sm">
+                                    {(() => {
+                                        const items = [];
+                                        let ellipsisShown = false;
+                                        for (let n = 1; n <= totalPages; n++) {
+                                            if (totalPages > 7) {
+                                                const show =
+                                                    n === 1 ||
+                                                    n === totalPages ||
+                                                    Math.abs(n - page) <= 1 ||
+                                                    (page <= 4 && n <= 5) ||
+                                                    (page >= totalPages - 3 && n >= totalPages - 4);
+                                                if (!show) {
+                                                    if (!ellipsisShown && n > 1 && n < totalPages) {
+                                                        items.push(
+                                                            <span key={`ellipsis-${n}`} className="px-2">
+                                                                …
+                                                            </span>
+                                                        );
+                                                        ellipsisShown = true;
+                                                    }
+                                                    continue;
+                                                }
+                                            }
+                                            ellipsisShown = false;
+                                            const active = n === page;
+                                            items.push(
+                                                <Link
+                                                    key={n}
+                                                    href={makeHref(n)}
+                                                    className={`rounded px-2 py-1 ${active ? "bg-muted" : "hover:underline"}`}
+                                                    aria-current={active ? "page" : undefined}
+                                                >
+                                                    {n}
+                                                </Link>
+                                            );
                                         }
-                                        const active = n === page;
-                                        return (
-                                            <Link
-                                                key={n}
-                                                href={makeHref(n)}
-                                                className={`rounded px-2 py-1 ${active ? "bg-muted" : "hover:underline"}`}
-                                                aria-current={active ? "page" : undefined}
-                                            >
-                                                {n}
-                                            </Link>
-                                        );
-                                    })}
-                            </div>
-                            <Link
-                                href={makeHref(Math.min(totalPages, page + 1))}
-                                aria-disabled={page === totalPages}
-                                className={`text-sm ${page === totalPages ? "pointer-events-none opacity-50" : "hover:underline"}`}
-                            >
-                                Next →
-                            </Link>
-                        </nav>
+                                        return items;
+                                    })()}
+                                </div>
+                                <Link
+                                    href={makeHref(Math.min(totalPages, page + 1))}
+                                    aria-disabled={page === totalPages}
+                                    className={`text-sm ${page === totalPages ? "pointer-events-none opacity-50" : "hover:underline"}`}
+                                >
+                                    Next →
+                                </Link>
+                            </nav>
+                        </>
                     ) : null}
                 </main>
             </div>

@@ -1,0 +1,1 @@
+ALTER TABLE "blog_categories" ADD COLUMN "visibility" jsonb;

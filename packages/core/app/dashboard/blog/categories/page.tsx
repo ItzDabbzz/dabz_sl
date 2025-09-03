@@ -5,15 +5,10 @@ import { desc, eq, sql } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { revalidatePath } from "next/cache";
+import { OrgTeamPicker } from "@/components/pickers/org-team-picker";
+import { TeamPicker } from "@/components/pickers/team-picker";
+import { UserPicker } from "@/components/pickers/user-picker";
 
 function slugify(v: string) {
     return v
@@ -31,8 +26,43 @@ export async function createCategory(formData: FormData) {
     const slug = slugify(String(formData.get("slug") || name));
     const description = String(formData.get("description") || "").trim();
     if (!name || !slug) return;
+
+    // visibility inputs
+    const visibilityMode = String(formData.get("visibilityMode") || "public");
+    const roles = String(formData.get("roles") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const orgIds = String(formData.get("orgIds") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const teamIds = String(formData.get("teamIds") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const userIds = String(formData.get("userIds") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const emails = String(formData.get("emails") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+    const visibility = {
+        mode: visibilityMode as "public" | "login" | "restricted",
+        roles,
+        orgIds,
+        teamIds,
+        userIds,
+        emails,
+    } as const;
+
     try {
-        await db.insert(blogCategories).values({ name, slug, description });
+        await db
+            .insert(blogCategories)
+            .values({ name, slug, description, visibility: visibility as any });
     } catch {}
     revalidatePath("/dashboard/blog/categories");
 }
@@ -47,6 +77,38 @@ export async function updateCategory(formData: FormData) {
     const description = String(formData.get("description") || "").trim();
     if (!id) return;
     const nextSlug = rawSlug ? slugify(rawSlug) : undefined;
+
+    const visibilityMode = String(formData.get("visibilityMode") || "public");
+    const roles = String(formData.get("roles") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const orgIds = String(formData.get("orgIds") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const teamIds = String(formData.get("teamIds") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const userIds = String(formData.get("userIds") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const emails = String(formData.get("emails") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+    const visibility = {
+        mode: visibilityMode as "public" | "login" | "restricted",
+        roles,
+        orgIds,
+        teamIds,
+        userIds,
+        emails,
+    } as const;
+
     try {
         await db
             .update(blogCategories)
@@ -54,6 +116,7 @@ export async function updateCategory(formData: FormData) {
                 ...(name && { name }),
                 ...(nextSlug && { slug: nextSlug }),
                 description,
+                visibility: visibility as any,
             })
             .where(eq(blogCategories.id, id));
     } catch {}
@@ -107,17 +170,64 @@ export default async function BlogCategoriesPage() {
                 <CardContent>
                     <form
                         action={createCategory}
-                        className="grid gap-3 sm:grid-cols-3"
+                        className="grid gap-3"
                     >
-                        <Input name="name" placeholder="Name" required />
-                        <Input name="slug" placeholder="Slug (optional)" />
-                        <div className="sm:col-span-2">
-                            <Input
-                                name="description"
-                                placeholder="Description (optional)"
-                            />
+                        <div className="grid gap-2 sm:grid-cols-3">
+                            <Input name="name" placeholder="Name" required />
+                            <Input name="slug" placeholder="Slug (optional)" />
+                            <Input name="description" placeholder="Description (optional)" className="sm:col-span-3" />
                         </div>
-                        <div className="sm:col-span-1 flex sm:justify-end">
+
+                        <div className="grid gap-3 rounded border p-3">
+                            <div className="text-sm font-medium">Visibility</div>
+                            <div className="grid gap-3 lg:grid-cols-3">
+                                <div className="space-y-1">
+                                    <label className="text-xs text-muted-foreground">
+                                        Mode
+                                    </label>
+                                    <select
+                                        name="visibilityMode"
+                                        className="w-full rounded border bg-background px-3 py-2"
+                                    >
+                                        <option value="public">Public</option>
+                                        <option value="login">Logged-in only</option>
+                                        <option value="restricted">
+                                            Restricted (match any)
+                                        </option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-muted-foreground">
+                                        Roles (comma-separated)
+                                    </label>
+                                    <Input
+                                        name="roles"
+                                        placeholder="owner,admin,developer"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <OrgTeamPicker labelOrg="Organizations" labelTeams="Teams" preferTeamPicker />
+                                </div>
+                                <div className="space-y-1">
+                                    <UserPicker label="Whitelist users" name="userIds" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-muted-foreground">
+                                        Emails (whitelist)
+                                    </label>
+                                    <Input
+                                        name="emails"
+                                        placeholder="a@b.com, c@d.com"
+                                    />
+                                </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                When Restricted, access is granted if any of the
+                                lists match the viewer.
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end">
                             <Button type="submit">Create</Button>
                         </div>
                     </form>
@@ -129,92 +239,76 @@ export default async function BlogCategoriesPage() {
                     <CardTitle className="text-base">All Categories</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Slug</TableHead>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead className="w-0"></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {categories.map((c) => (
-                                    <TableRow key={c.id}>
-                                        <TableCell className="font-medium">
-                                            <form
-                                                action={updateCategory}
-                                                className="flex gap-2"
-                                            >
-                                                <input
-                                                    type="hidden"
-                                                    name="id"
-                                                    value={c.id}
-                                                />
-                                                <Input
-                                                    name="name"
-                                                    defaultValue={c.name}
-                                                    className="w-48"
-                                                />
-                                                <Input
-                                                    name="slug"
-                                                    defaultValue={c.slug}
-                                                    className="w-48"
-                                                />
-                                                <Input
-                                                    name="description"
-                                                    defaultValue={
-                                                        c.description || ""
-                                                    }
-                                                    className="flex-1"
-                                                />
-                                                <Button
-                                                    type="submit"
-                                                    variant="secondary"
-                                                >
-                                                    Save
-                                                </Button>
-                                            </form>
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground hidden" />
-                                        <TableCell className="text-muted-foreground hidden" />
-                                        <TableCell className="text-right">
-                                            <details className="inline-block">
-                                                <summary className="cursor-pointer text-destructive hover:underline list-none">
-                                                    Delete
-                                                </summary>
-                                                <div className="mt-2">
-                                                    <form action={deleteCategory}>
-                                                        <input
-                                                            type="hidden"
-                                                            name="id"
-                                                            value={c.id}
-                                                        />
-                                                        <Button
-                                                            type="submit"
-                                                            variant="destructive"
-                                                        >
-                                                            Confirm delete
-                                                        </Button>
-                                                    </form>
+                    <div className="space-y-3">
+                        {categories.map((c) => (
+                            <div key={c.id} className="rounded-md border p-3">
+                                <form action={updateCategory} className="grid gap-3">
+                                    <input type="hidden" name="id" value={c.id} />
+
+                                    <div className="grid gap-2 sm:grid-cols-3">
+                                        <Input name="name" defaultValue={c.name} placeholder="Name" />
+                                        <Input name="slug" defaultValue={c.slug} placeholder="Slug" />
+                                        <Input name="description" defaultValue={c.description || ""} placeholder="Description (optional)" />
+                                    </div>
+
+                                    <details className="rounded border">
+                                        <summary className="cursor-pointer list-none px-3 py-2 text-sm flex items-center justify-between">
+                                            <span>Visibility: {((c as any).visibility?.mode || "public").toUpperCase()}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                roles: {(((c as any).visibility?.roles) || []).length} · org: {(((c as any).visibility?.orgIds) || []).length} · teams: {(((c as any).visibility?.teamIds) || []).length} · users: {(((c as any).visibility?.userIds) || []).length} · emails: {(((c as any).visibility?.emails) || []).length}
+                                            </span>
+                                        </summary>
+                                        <div className="p-3 grid gap-3">
+                                            <div className="grid gap-3 lg:grid-cols-3">
+                                                <div className="space-y-1">
+                                                    <label className="text-xs text-muted-foreground">Mode</label>
+                                                    <select name="visibilityMode" defaultValue={(c as any).visibility?.mode || "public"} className="w-full rounded border bg-background px-3 py-2">
+                                                        <option value="public">Public</option>
+                                                        <option value="login">Logged-in only</option>
+                                                        <option value="restricted">Restricted (match any)</option>
+                                                    </select>
                                                 </div>
-                                            </details>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {categories.length === 0 && (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={4}
-                                            className="text-center text-sm text-muted-foreground"
-                                        >
-                                            No categories
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                                <div className="space-y-1">
+                                                    <label className="text-xs text-muted-foreground">Roles</label>
+                                                    <Input name="roles" defaultValue={((c as any).visibility?.roles || []).join(", ")} placeholder="owner,admin,developer" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <OrgTeamPicker
+                                                        defaultOrgIds={((c as any).visibility?.orgIds || [])}
+                                                        defaultTeamIds={((c as any).visibility?.teamIds || [])}
+                                                        preferTeamPicker
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <UserPicker label="Whitelist users" name="userIds" defaultUserIds={((c as any).visibility?.userIds || [])} />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-xs text-muted-foreground">Emails</label>
+                                                    <Input name="emails" defaultValue={((c as any).visibility?.emails || []).join(", ")} placeholder="a@b.com, c@d.com" />
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">When Restricted, access is granted if any of the lists match the viewer.</p>
+                                        </div>
+                                    </details>
+
+                                    <div className="flex items-center justify-between">
+                                        <Button type="submit" variant="secondary">Save</Button>
+                                        <details>
+                                            <summary className="cursor-pointer text-destructive hover:underline list-none text-sm">Delete</summary>
+                                            <div className="mt-2">
+                                                <form action={deleteCategory}>
+                                                    <input type="hidden" name="id" value={c.id} />
+                                                    <Button type="submit" variant="destructive" size="sm">Confirm delete</Button>
+                                                </form>
+                                            </div>
+                                        </details>
+                                    </div>
+                                </form>
+                            </div>
+                        ))}
+                        {categories.length === 0 && (
+                            <div className="text-center text-sm text-muted-foreground border rounded-md p-6">No categories</div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
