@@ -8,11 +8,11 @@ import { createMetadata } from "@/lib/metadata";
 
 export const metadata = createMetadata({
 	title: {
-		template: "%s | Better Auth",
-		default: "Better Auth",
+		template: "%s | SL Tools",
+		default: "SL Tools",
 	},
-	description: "The most comprehensive authentication library for typescript",
-	metadataBase: new URL("https://demo.better-auth.com"),
+	description: "A list of tools and projects for Second Life creators by Dabz.",
+	metadataBase: new URL("https://sl.itzdabbzz.me"),
 });
 
 export default function RootLayout({
