@@ -106,3 +106,48 @@ export const blogPostRatings = pgTable(
         ),
     }),
 );
+
+// Global settings for the blog (singleton row)
+export const blogSettings = pgTable(
+    "blog_settings",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        // Featured/hero categories
+        heroCategoryId: uuid("hero_category_id"),
+        featuredCategoryId: uuid("featured_category_id"),
+
+        // SEO defaults
+        seoTitleSuffix: text("seo_title_suffix"),
+        seoDefaultDescription: text("seo_default_description"),
+        seoOgImageUrl: text("seo_og_image_url"),
+
+        // Ratings display
+        enableRatingsSummary: boolean("enable_ratings_summary").default(true).notNull(),
+
+        // Email on first publish
+        enableEmailOnPublish: boolean("enable_email_on_publish").default(false).notNull(),
+        emailTemplateSubject: text("email_template_subject"),
+        emailTemplateHtml: text("email_template_html"),
+
+        createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    },
+    (t) => ({
+        createdIdx: index("blog_settings_created_idx").on(t.createdAt),
+    }),
+);
+
+// Track one-time publish announcement per post
+export const blogPostAnnouncements = pgTable(
+    "blog_post_announcements",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        postId: uuid("post_id").notNull(),
+        sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow().notNull(),
+        createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    },
+    (t) => ({
+        uniqPost: uniqueIndex("blog_post_announcements_post_uniq").on(t.postId),
+        byPost: index("blog_post_announcements_post_idx").on(t.postId),
+    }),
+);

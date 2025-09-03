@@ -1,14 +1,16 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { blogPosts, blogCategories, blogPostCategories } from "@/schemas/blog";
+import { blogPosts, blogCategories, blogPostCategories, blogPostAnnouncements, blogSettings } from "@/schemas/blog";
 import { getBlogEditorUser } from "@/lib/blog-auth";
 import { and, eq } from "drizzle-orm";
+import { resend } from "@/lib/email/resend";
+import { absoluteUrl } from "@/lib/absolute-url";
 
 export async function POST(req: NextRequest) {
     const user = await getBlogEditorUser();
     if (!user) return new Response("forbidden", { status: 403 });
     const body = await req.json();
-    const { title, slug, excerpt, contentMd, categories, published } =
+    const { title, slug, excerpt, contentMd, categories, published, sendAnnouncement } =
         body || {};
     if (!title || !contentMd) return new Response("missing", { status: 400 });
 
@@ -54,6 +56,11 @@ export async function POST(req: NextRequest) {
         }
     }
 
+    // Optional: announcement on first publish only
+    if (published && sendAnnouncement) {
+        await trySendPublishAnnouncement(post.id, postSlug, title, excerpt);
+    }
+
     return Response.json({ id: post.id, slug: post.slug });
 }
 
@@ -61,9 +68,12 @@ export async function PUT(req: NextRequest) {
     const user = await getBlogEditorUser();
     if (!user) return new Response("forbidden", { status: 403 });
     const body = await req.json();
-    const { id, title, slug, excerpt, contentMd, categories, published } =
+    const { id, title, slug, excerpt, contentMd, categories, published, sendAnnouncement } =
         body || {};
     if (!id) return new Response("missing_id", { status: 400 });
+
+    // Detect first time publish transition
+    const [prev] = await db.select().from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
 
     await db
         .update(blogPosts)
@@ -104,7 +114,51 @@ export async function PUT(req: NextRequest) {
         }
     }
 
+    if (sendAnnouncement && published && !prev?.published) {
+        const effectiveSlug = slug || prev?.slug;
+        const effectiveTitle = title || prev?.title;
+        await trySendPublishAnnouncement(id, effectiveSlug, effectiveTitle, excerpt || prev?.excerpt);
+    }
+
     return new Response("ok");
+}
+
+async function trySendPublishAnnouncement(postId: string, slug: string, title?: string, excerpt?: string) {
+    // Check settings
+    const [settings] = await db.select().from(blogSettings).limit(1);
+    if (!settings?.enableEmailOnPublish) return;
+
+    // Already sent?
+    const [existing] = await db
+        .select()
+        .from(blogPostAnnouncements)
+        .where(eq(blogPostAnnouncements.postId, postId))
+        .limit(1);
+    if (existing) return;
+
+    // Compose
+    const base = absoluteUrl(new Headers());
+    const url = `${base}/blog/${slug}`;
+    const subject = settings.emailTemplateSubject || `New post: ${title ?? slug}`;
+    const html =
+        settings.emailTemplateHtml ||
+        `<div style="font-family:system-ui,Segoe UI,Arial,sans-serif;padding:16px">
+          <h2 style="margin:0 0 8px 0">${title ?? slug}</h2>
+          <p style="color:#555;margin:0 0 12px 0">${excerpt || ""}</p>
+          <p style="margin:0 0 16px 0"><a href="${url}">Read the post →</a></p>
+        </div>`;
+
+    try {
+        await resend.emails.send({
+            from: process.env.NEXT_PUBLIC_EMAIL_FROM || "noreply@itzdabbzz.me",
+            to: (process.env.NEXT_PUBLIC_EMAIL_TO || "devnull@itzdabbzz.me").split(","),
+            subject,
+            html,
+        });
+        await db.insert(blogPostAnnouncements).values({ postId });
+    } catch (e) {
+        console.error("announce-send-failed", e);
+    }
 }
 
 export async function GET(req: NextRequest) {

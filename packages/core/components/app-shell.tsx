@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useSession } from "@/lib/auth-client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LayoutDashboard, Boxes, Server, FileDiff, BadgeCheck, KeyRound, Webhook, Settings, PanelLeftClose, PanelLeftOpen, ChevronDown, ShoppingBag, ShieldCheck, Tag, FileText } from "lucide-react";
+import { LayoutDashboard, Boxes, Server, FileDiff, BadgeCheck, KeyRound, Webhook, Settings, PanelLeftClose, PanelLeftOpen, ChevronDown, ShoppingBag, ShieldCheck, Tag, FileText, PlusCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/logo";
 
@@ -59,7 +59,11 @@ const navSections: ReadonlyArray<NavSection> = [
     id: "content",
     title: "Content",
     items: [
-      { href: "/dashboard/blog", title: "Blog", icon: FileText },
+      { href: "/dashboard/blog", title: "Blog Overview", icon: FileText },
+      { href: "/dashboard/blog/manage", title: "Blog Posts", icon: FileText },
+      { href: "/dashboard/blog/new", title: "New Post", icon: PlusCircle },
+      { href: "/dashboard/blog/categories", title: "Categories", icon: Tag },
+      { href: "/dashboard/blog/settings", title: "Blog Settings", icon: Settings },
     ],
   },
   {
