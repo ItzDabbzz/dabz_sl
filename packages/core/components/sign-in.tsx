@@ -29,6 +29,17 @@ export default function SignIn() {
 	const router = useRouter();
 	const params = useSearchParams();
 
+	// Resolve a safe absolute callback URL for providers
+	const resolveCallbackURL = () => {
+		const path = getCallbackURL(params);
+		if (typeof window === "undefined") return path;
+		try {
+			return new URL(path, window.location.origin).toString();
+		} catch {
+			return path;
+		}
+	};
+
 	return (
 		<Card className="max-w-md min-w-[350px] rounded-none">
 			<CardHeader>
@@ -114,7 +125,7 @@ export default function SignIn() {
 							onClick={async () => {
 								await signIn.social({
 									provider: "google",
-									callbackURL: "/dashboard",
+									callbackURL: resolveCallbackURL(),
 								});
 							}}
 						>
@@ -149,7 +160,7 @@ export default function SignIn() {
 							onClick={async () => {
 								await signIn.social({
 									provider: "github",
-									callbackURL: "/dashboard",
+									callbackURL: resolveCallbackURL(),
 								});
 							}}
 						>
@@ -172,7 +183,7 @@ export default function SignIn() {
 							onClick={async () => {
 								await signIn.social({
 									provider: "microsoft",
-									callbackURL: "/dashboard",
+									callbackURL: resolveCallbackURL(),
 								});
 							}}
 						>

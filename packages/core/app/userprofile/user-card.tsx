@@ -170,7 +170,7 @@ export default function UserCard(props: {
 											session.userAgent}
 										, {new UAParser(session.userAgent || "").getBrowser().name}
 										<button
-											className="text-red-500 opacity-80  cursor-pointer text-xs border-muted-foreground border-red-600  underline "
+											className="text-red-500 opacity-80  cursor-pointer text-xs border-muted-foreground underline "
 											onClick={async () => {
 												setIsTerminating(session.id);
 												const res = await client.revokeSession({
