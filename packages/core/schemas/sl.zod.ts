@@ -1,5 +1,5 @@
 import { z } from "zod";
-import "zod-openapi"; // augments Zod's .meta() with OpenAPI typings
+import "zod-openapi"; // augments Zod at runtime to support .meta() used for OpenAPI metadata
 
 // Common primitives
 export const SlUuid = z

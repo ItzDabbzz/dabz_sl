@@ -1,8 +1,11 @@
 import { z } from "zod";
 import { createDocument } from "zod-openapi";
+import "zod-openapi";
 import { WebhookPayloadSchema } from "@/schemas/webhook";
 import { auth } from "@/lib/auth";
 import { SlRegisterBody, SlRegisterResponse, SlConfigResponse, SlConfigUpdateBody, SlConfigUpdateResponse, SlEntitlementBody, SlEntitlementResponse, SlInstanceDetailsResponse, SlTokenRotateResponse, InstanceAuthHeaders, SlUuid, ETag } from "@/schemas/sl.zod";
+
+export const dynamic = "force-dynamic";
 
 // Helper to merge paths from multiple OpenAPI schemas
 function mergePaths(...schemas: any[]) {

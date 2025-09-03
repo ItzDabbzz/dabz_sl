@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @dabz/core dev",
+    "dev": "pnpm --filter @dabzsl/core dev",
     "build": "pnpm -r build",
-    "lint": "pnpm --filter @dabz/core lint",
-    "typecheck": "pnpm --filter @dabz/core typecheck"
+    "lint": "pnpm --filter @dabzsl/core lint",
+    "typecheck": "pnpm --filter @dabzsl/core typecheck"
   },
   "packageManager": "pnpm@9.12.0",
   "devDependencies": {

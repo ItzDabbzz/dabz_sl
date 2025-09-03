@@ -1,5 +1,10 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @dabzsl/core build",
+  "outputDirectory": "packages/core/.build",
   "builds": [
     {
       "src": "packages/core/package.json",
