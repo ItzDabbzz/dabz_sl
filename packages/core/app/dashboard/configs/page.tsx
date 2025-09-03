@@ -13,7 +13,10 @@ export default async function ConfigsPage() {
 
   const hdrs = await headers();
   const base = absoluteUrl(hdrs);
-  const res = await fetch(`${base}/api/creator/configs`, { headers: { Authorization: hdrs.get("authorization") || "" } });
+  const outHeaders = new Headers();
+  const cookie = hdrs.get("cookie");
+  if (cookie) outHeaders.set("cookie", cookie);
+  const res = await fetch(`${base}/api/creator/configs`, { headers: outHeaders });
   const data = await res.json().catch(() => ({ items: [] }));
   const items: ConfigItem[] = (data?.items || []).map((x: any) => ({ id: x.id, instanceId: x.instanceId, createdAt: x.createdAt, versionTag: x.versionTag }));
 

@@ -20,9 +20,9 @@ export const masterObjects = pgTable(
     description: text("description"),
 
     // Ownership scope: exactly one should be set (enforced at app level for now)
-    ownerUserId: uuid("owner_user_id"),
-    orgId: uuid("org_id"),
-    teamId: uuid("team_id"),
+    ownerUserId: text("owner_user_id"),
+    orgId: text("org_id"),
+    teamId: text("team_id"),
 
     currentVersion: integer("current_version").default(1).notNull(),
     configSchemaJson: jsonb("config_schema_json"),
@@ -87,9 +87,9 @@ export const objectInstances = pgTable(
     currentConfigHash: text("current_config_hash"),
 
     // Scope inheritance (optional)
-    ownerUserId: uuid("owner_user_id"),
-    orgId: uuid("org_id"),
-    teamId: uuid("team_id"),
+    ownerUserId: text("owner_user_id"),
+    orgId: text("org_id"),
+    teamId: text("team_id"),
 
     firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).defaultNow().notNull(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
@@ -116,7 +116,7 @@ export const userConfigs = pgTable(
     versionTag: text("version_tag"), // optional semantic tag
     configJson: jsonb("config_json").notNull(),
 
-    createdByUserId: uuid("created_by_user_id"),
+    createdByUserId: text("created_by_user_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({

@@ -4,6 +4,8 @@ export type CreatorContext = {
   userId: string;
   scopes: string[];
   targets?: { orgId?: string; teamId?: string; masterObjectId?: string };
+  // True when authenticated via first-party cookie (no Bearer header)
+  firstParty?: boolean;
 };
 
 // Extract scopes/targets from Better Auth API key session
@@ -15,25 +17,34 @@ export async function getCreatorContextFromApiKey(request: Request): Promise<Cre
   let ses: any;
   if (m) {
     ses = await auth.api.getSession({ headers: { Authorization: header } as any });
-    if (!ses?.session) throw new Error("invalid_bearer");
+    if (!ses?.user) throw new Error("missing_bearer");
   } else {
     const h: any = {};
     request.headers.forEach((v, k) => (h[k] = v));
     ses = await auth.api.getSession({ headers: h });
-    if (!ses?.session) throw new Error("missing_bearer");
+    if (!ses?.user) throw new Error("missing_bearer");
   }
 
-  const scopes: string[] = (ses.session.user as any)?.permissions?.split?.(" ") || [];
-  const meta = (ses.session.user as any)?.metadata || {};
+  const user: any = ses.user;
+  const meta = user?.metadata || {};
+
+  // Pull scopes from user.permissions or metadata.permissions (string or array)
+  let scopes: string[] = [];
+  const p = user?.permissions ?? meta?.permissions;
+  if (typeof p === "string") scopes = p.split(" ").filter(Boolean);
+  else if (Array.isArray(p)) scopes = p.filter(Boolean);
+
   const targets = {
     orgId: meta.orgId,
     teamId: meta.teamId,
     masterObjectId: meta.masterObjectId,
   } as CreatorContext["targets"];
 
-  return { userId: ses.session.user.id, scopes, targets };
+  return { userId: user.id, scopes, targets, firstParty: !m };
 }
 
 export function requireScope(ctx: CreatorContext, scope: string) {
+  // Allow first-party authenticated dashboard calls even if explicit scopes are not set
+  if (ctx.firstParty) return;
   if (!ctx.scopes.includes(scope)) throw new Error("forbidden");
 }

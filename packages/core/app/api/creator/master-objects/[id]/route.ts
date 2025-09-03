@@ -4,22 +4,23 @@ import { masterObjects } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
 import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const ctx = await getCreatorContextFromApiKey(_req as any);
-    requireScope(ctx, "sl.objects:read");
+    const { id } = await ctx.params;
+    const ctxAuth = await getCreatorContextFromApiKey(_req as any);
+    requireScope(ctxAuth, "sl.objects:read");
 
     const rows = await db
       .select()
       .from(masterObjects)
       .where(
         and(
-          eq(masterObjects.id, params.id),
-          ctx.targets?.orgId
-            ? eq(masterObjects.orgId, ctx.targets.orgId as any)
-            : ctx.targets?.teamId
-            ? eq(masterObjects.teamId, ctx.targets.teamId as any)
-            : eq(masterObjects.ownerUserId, ctx.userId as any)
+          eq(masterObjects.id, id),
+          ctxAuth.targets?.orgId
+            ? eq(masterObjects.orgId, ctxAuth.targets.orgId as any)
+            : ctxAuth.targets?.teamId
+            ? eq(masterObjects.teamId, ctxAuth.targets.teamId as any)
+            : eq(masterObjects.ownerUserId, ctxAuth.userId as any)
         )
       );
     const row = rows[0];
@@ -33,13 +34,14 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const ctx = await getCreatorContextFromApiKey(req as any);
-    requireScope(ctx, "sl.objects:write");
+    const { id } = await ctx.params;
+    const ctxAuth = await getCreatorContextFromApiKey(req as any);
+    requireScope(ctxAuth, "sl.objects:write");
 
     const body = await req.json();
-    const { name, description, defaultConfigJson, configSchemaJson, visibility } = body || {};
+    const { name, description, defaultConfigJson, configSchemaJson, visibility, currentVersion } = body || {};
 
     const res = await db
       .update(masterObjects)
@@ -49,15 +51,16 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         ...(defaultConfigJson !== undefined ? { defaultConfigJson } : {}),
         ...(configSchemaJson !== undefined ? { configSchemaJson } : {}),
         ...(visibility !== undefined ? { visibility } : {}),
+        ...(currentVersion !== undefined ? { currentVersion } : {}),
       })
       .where(
         and(
-          eq(masterObjects.id, params.id),
-          ctx.targets?.orgId
-            ? eq(masterObjects.orgId, ctx.targets.orgId as any)
-            : ctx.targets?.teamId
-            ? eq(masterObjects.teamId, ctx.targets.teamId as any)
-            : eq(masterObjects.ownerUserId, ctx.userId as any)
+          eq(masterObjects.id, id),
+          ctxAuth.targets?.orgId
+            ? eq(masterObjects.orgId, ctxAuth.targets.orgId as any)
+            : ctxAuth.targets?.teamId
+            ? eq(masterObjects.teamId, ctxAuth.targets.teamId as any)
+            : eq(masterObjects.ownerUserId, ctxAuth.userId as any)
         )
       )
       .returning({ id: masterObjects.id });
@@ -72,21 +75,22 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const ctx = await getCreatorContextFromApiKey(req as any);
-    requireScope(ctx, "sl.objects:write");
+    const { id } = await ctx.params;
+    const ctxAuth = await getCreatorContextFromApiKey(req as any);
+    requireScope(ctxAuth, "sl.objects:write");
 
     const res = await db
       .delete(masterObjects)
       .where(
         and(
-          eq(masterObjects.id, params.id),
-          ctx.targets?.orgId
-            ? eq(masterObjects.orgId, ctx.targets.orgId as any)
-            : ctx.targets?.teamId
-            ? eq(masterObjects.teamId, ctx.targets.teamId as any)
-            : eq(masterObjects.ownerUserId, ctx.userId as any)
+          eq(masterObjects.id, id),
+          ctxAuth.targets?.orgId
+            ? eq(masterObjects.orgId, ctxAuth.targets.orgId as any)
+            : ctxAuth.targets?.teamId
+            ? eq(masterObjects.teamId, ctxAuth.targets.teamId as any)
+            : eq(masterObjects.ownerUserId, ctxAuth.userId as any)
         )
       )
       .returning({ id: masterObjects.id });

@@ -13,7 +13,11 @@ export default async function ObjectsPage() {
 
   const hdrs = await headers();
   const base = absoluteUrl(hdrs);
-  const res = await fetch(`${base}/api/creator/master-objects`, { headers: { Authorization: hdrs.get("authorization") || "" } });
+  // Forward only cookie so the API authenticates via first-party session
+  const outHeaders = new Headers();
+  const cookie = hdrs.get("cookie");
+  if (cookie) outHeaders.set("cookie", cookie);
+  const res = await fetch(`${base}/api/creator/master-objects`, { headers: outHeaders });
   const data = await res.json().catch(() => ({ items: [] }));
   const items: MasterObject[] = (data?.items || []).map((x: any) => ({ id: x.id, name: x.name, description: x.description, currentVersion: x.currentVersion || 1 }));
 

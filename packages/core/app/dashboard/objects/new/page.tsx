@@ -12,7 +12,11 @@ async function createObject(formData: FormData) {
   const base = process.env.NEXT_PUBLIC_APP_URL || hdrs.get('x-url') || '';
   const name = String(formData.get('name') || '');
   const description = String(formData.get('description') || '');
-  await fetch(`${base}/api/creator/master-objects`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: hdrs.get('authorization') || '' }, body: JSON.stringify({ name, description }) });
+  // Forward only cookie so the API authenticates via first-party session
+  const outHeaders = new Headers({ 'Content-Type': 'application/json' });
+  const cookie = hdrs.get('cookie');
+  if (cookie) outHeaders.set('cookie', cookie);
+  await fetch(`${base}/api/creator/master-objects`, { method: 'POST', headers: outHeaders, body: JSON.stringify({ name, description }) });
   return redirect('/dashboard/objects');
 }
 

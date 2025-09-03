@@ -92,6 +92,20 @@
       "when": 1756924817100,
       "tag": "0012_unusual_forge",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1756931256870,
+      "tag": "0013_magical_shocker",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1756932742408,
+      "tag": "0014_volatile_toxin",
+      "breakpoints": true
     }
   ]
 }

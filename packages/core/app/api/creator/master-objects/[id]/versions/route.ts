@@ -4,12 +4,13 @@ import { objectVersions } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
 import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const ctx = await getCreatorContextFromApiKey(req as any);
-    requireScope(ctx, "sl.objects:read");
+    const { id } = await ctx.params;
+    const authCtx = await getCreatorContextFromApiKey(req as any);
+    requireScope(authCtx, "sl.objects:read");
 
-    const rows = await db.select().from(objectVersions).where(eq(objectVersions.masterObjectId, params.id));
+    const rows = await db.select().from(objectVersions).where(eq(objectVersions.masterObjectId, id));
     return NextResponse.json({ items: rows }, { status: 200 });
   } catch (e: any) {
     if (e.message?.includes("missing_bearer")) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -19,17 +20,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const ctx = await getCreatorContextFromApiKey(req as any);
-    requireScope(ctx, "sl.objects:write");
+    const { id } = await ctx.params;
+    const authCtx = await getCreatorContextFromApiKey(req as any);
+    requireScope(authCtx, "sl.objects:write");
 
     const body = await req.json();
     const { version, changelog, migrationRef } = body || {};
 
     const inserted = await db
       .insert(objectVersions)
-      .values({ masterObjectId: params.id, version, changelog, migrationRef })
+      .values({ masterObjectId: id, version, changelog, migrationRef })
       .returning({ id: objectVersions.id });
 
     return NextResponse.json({ id: inserted[0].id }, { status: 201 });

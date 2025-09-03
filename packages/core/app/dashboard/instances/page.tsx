@@ -12,7 +12,10 @@ export default async function InstancesPage() {
 
   const hdrs = await headers();
   const base = absoluteUrl(hdrs);
-  const res = await fetch(`${base}/api/creator/instances`, { headers: { Authorization: hdrs.get("authorization") || "" } });
+  const outHeaders = new Headers();
+  const cookie = hdrs.get("cookie");
+  if (cookie) outHeaders.set("cookie", cookie);
+  const res = await fetch(`${base}/api/creator/instances`, { headers: outHeaders });
   const data = await res.json().catch(() => ({ items: [] }));
   const items: InstanceItem[] = (data?.items || []).map((x: any) => ({ id: x.id, ownerSlUuid: x.ownerSlUuid, status: x.status, region: x.region, version: x.version }));
 

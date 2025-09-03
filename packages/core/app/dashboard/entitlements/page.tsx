@@ -13,7 +13,10 @@ export default async function EntitlementsPage() {
 
   const hdrs = await headers();
   const base = absoluteUrl(hdrs);
-  const res = await fetch(`${base}/api/creator/entitlements`, { headers: { Authorization: hdrs.get("authorization") || "" } });
+  const outHeaders = new Headers();
+  const cookie = hdrs.get("cookie");
+  if (cookie) outHeaders.set("cookie", cookie);
+  const res = await fetch(`${base}/api/creator/entitlements`, { headers: outHeaders });
   const data = await res.json().catch(() => ({ items: [] }));
   const items: EntitlementItem[] = (data?.items || []).map((x: any) => ({ id: x.id, ownerSlUuid: x.ownerSlUuid, masterObjectId: x.masterObjectId, source: x.source, createdAt: x.createdAt }));
 
