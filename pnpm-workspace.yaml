@@ -1,5 +1,7 @@
 packages:
-  - "packages/*"
+  - packages/*
+  - scraper-cli
+  - shared-data
 
 evergreen-bundled-dependencies:
   - next

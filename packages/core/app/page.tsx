@@ -284,6 +284,9 @@ export default async function Home() {
               <Button asChild>
                 <Link href="/marketplace">Marketplace</Link>
               </Button>
+              <Button asChild>
+                <Link href="/blog">Blog</Link>
+              </Button>
               <Button asChild variant="outline">
                 <Link href="/api-docs">API Docs</Link>
               </Button>

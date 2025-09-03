@@ -64,6 +64,20 @@
       "when": 1756849488465,
       "tag": "0008_slow_mister_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1756914968038,
+      "tag": "0009_even_tattoo",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1756917837974,
+      "tag": "0010_light_azazel",
+      "breakpoints": true
     }
   ]
 }
