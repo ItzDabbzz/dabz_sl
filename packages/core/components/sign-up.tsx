@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCallbackURL } from "@/lib/shared";
-
+ 
 export function SignUp() {
 	const [firstName, setFirstName] = useState("");
 	const [lastName, setLastName] = useState("");

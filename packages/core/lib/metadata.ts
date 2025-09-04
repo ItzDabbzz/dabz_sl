@@ -6,9 +6,9 @@ export function createMetadata(override: Metadata): Metadata {
 		openGraph: {
 			title: override.title ?? undefined,
 			description: override.description ?? undefined,
-			url: "https://sl.itzdabbzz.me",
-			images: "https://sl.itzdabbzz.me/og.png",
-			siteName: "Better Auth",
+			url: "https://www.sanctumrp.net",
+			images: "https://www.sanctumrp.net/og.png",
+			siteName: "Sanctum Realms Project",
 			...override.openGraph,
 		},
 		twitter: {
@@ -16,7 +16,7 @@ export function createMetadata(override: Metadata): Metadata {
 			creator: "@ItzDabbzz",
 			title: override.title ?? undefined,
 			description: override.description ?? undefined,
-			images: "https://sl.itzdabbzz.me/og.png",
+			images: "https://www.sanctumrp.net/og.png",
 			...override.twitter,
 		},
 	};
@@ -25,4 +25,4 @@ export function createMetadata(override: Metadata): Metadata {
 export const baseUrl =
 	process.env.NODE_ENV === "development"
 		? new URL("http://localhost:3000")
-		: new URL(`https://sl.itzdabbzz.me`);
+		: new URL(`https://www.sanctumrp.net`);

@@ -16,6 +16,7 @@ import { db } from "@/lib/db";
 import { mpCategories, mpItemCategories, mpItems } from "@/schemas/sl-schema";
 import { count, sql } from "drizzle-orm";
 import WebBg from "@/components/web-bg";
+import { LogoutButton } from "@/components/logout-button";
 
 // Real session fetcher (returns null if not logged in)
 async function getSession() {
@@ -295,6 +296,7 @@ export default async function Home() {
                             <Button asChild size="sm" variant="outline">
                                 <Link href="/dashboard">Dashboard</Link>
                             </Button>
+                            <LogoutButton size="sm" variant="outline" label="Sign out" />
                         </>
                     ) : (
                         <>

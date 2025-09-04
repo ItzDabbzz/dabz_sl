@@ -4,7 +4,7 @@ import { blogPosts } from "@/schemas/blog";
 import { eq } from "drizzle-orm";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "https://sl.itzdabbzz.me";
+  const base = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "https://www.sanctumrp.net";
 
   const posts = await db
     .select({ slug: blogPosts.slug, updatedAt: blogPosts.updatedAt, publishedAt: blogPosts.publishedAt })

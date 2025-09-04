@@ -41,8 +41,8 @@ export default function SignIn() {
 	};
 
 	return (
-		<Card className="max-w-md min-w-[350px] rounded-none">
-			<CardHeader>
+		<Card className="w-full sm:max-w-md rounded-md">
+			<CardHeader className="space-y-2">
 				<CardTitle className="text-lg md:text-xl">Sign In</CardTitle>
 				<CardDescription className="text-xs md:text-sm">
 					Enter your email below to login to your account
@@ -57,6 +57,7 @@ export default function SignIn() {
 							type="email"
 							placeholder="m@example.com"
 							required
+							autoComplete="email"
 							onChange={(e) => {
 								setEmail(e.target.value);
 							}}
@@ -67,7 +68,10 @@ export default function SignIn() {
 					<div className="grid gap-2">
 						<div className="flex items-center">
 							<Label htmlFor="password">Password</Label>
-							<Link href="#" className="ml-auto inline-block text-sm underline">
+							<Link
+								href="/forget-password"
+								className="ml-auto inline-block text-sm underline"
+							>
 								Forgot your password?
 							</Link>
 						</div>
@@ -76,7 +80,7 @@ export default function SignIn() {
 							id="password"
 							type="password"
 							placeholder="password"
-							autoComplete="password"
+							autoComplete="current-password"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 						/>
@@ -101,7 +105,7 @@ export default function SignIn() {
 								await signIn.email(
 									{ email, password, rememberMe },
 									{
-										onSuccess(context) {
+										onSuccess() {
 											toast.success("Successfully signed in");
 											router.push(getCallbackURL(params));
 										},
@@ -182,7 +186,7 @@ export default function SignIn() {
 							className={cn("w-full gap-2")}
 							onClick={async () => {
 								await signIn.social({
-									provider: "microsoft",
+									provider: "discord",
 									callbackURL: resolveCallbackURL(),
 								});
 							}}
@@ -195,10 +199,10 @@ export default function SignIn() {
 							>
 								<path
 									fill="currentColor"
-									d="M2 3h9v9H2zm9 19H2v-9h9zM21 3v9h-9V3zm0 19h-9v-9h9z"
-								></path>
+									d="M20.317 4.369A19.791 19.791 0 0 0 16.558 3c-.014.024-1.03 1.904-1.474 3.012a13.1 13.1 0 0 0-3.168 0C11.474 4.904 10.47 3.024 10.457 3A19.736 19.736 0 0 0 6.696 4.369C3.73 9.102 2.89 13.71 3.2 18.271a19.9 19.9 0 0 0 6.013 3.084c.258-.351.488-.724.686-1.116c-.378-.144-.739-.314-1.08-.51a.17.17 0 0 1-.008-.292c.073-.054.146-.111.215-.168c.05-.036.115-.041.169-.015c2.273 1.034 4.736 1.034 7.003 0c.054-.026.119-.021.169.015c.069.057.142.114.215.168a.17.17 0 0 1-.008.292c-.341.197-.702.367-1.08.511c.198.391.428.764.686 1.115a19.9 19.9 0 0 0 6.013-3.084c.49-6.763-1.046-11.323-2.946-13.902M9.681 15.345c-1.015 0-1.846-.93-1.846-2.074s.82-2.074 1.846-2.074c1.034 0 1.856.934 1.846 2.074c0 1.145-.812 2.074-1.846 2.074m4.638 0c-1.015 0-1.846-.93-1.846-2.074s.82-2.074 1.846-2.074c1.034 0 1.856.934 1.846 2.074c0 1.145-.812 2.074-1.846 2.074"
+								/>
 							</svg>
-							Sign in with Microsoft
+							Sign in with Discord
 						</Button>
 					</div>
 				</div>
