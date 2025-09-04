@@ -35,6 +35,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import Image from "next/image";
 
 type Item = {
     id: string;
@@ -234,8 +235,7 @@ export default function Explorer() {
         ids.forEach((id) => {
             if (itemCats[id] === undefined) fetchItemCats(id);
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [items]);
+    }, [items, itemCats]);
 
     // Keyboard shortcut: Cmd/Ctrl+K to open category combobox and focus input
     useEffect(() => {
@@ -318,7 +318,7 @@ export default function Explorer() {
                 setItemCats((old) => ({ ...old, ...grouped }));
             } catch {}
         })();
-    }, [items]);
+    }, [items, itemCats]);
 
     // Live search: debounce on filter changes too
     const searchDebounceRef = useRef<number | null>(null);
@@ -1036,44 +1036,36 @@ export default function Explorer() {
                                                             .map((src, idx) => (
                                                                 <button
                                                                     key={idx}
-                                                                    className="h-8 w-8 overflow-hidden rounded border"
+                                                                    className="h-8 w-8 overflow-hidden rounded border relative"
                                                                     onClick={() =>
                                                                         openPreview(
-                                                                            it.images ||
-                                                                                [],
+                                                                            it.images || [],
                                                                             it.title,
                                                                         )
                                                                     }
                                                                 >
-                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                    <img
-                                                                        src={
-                                                                            src
-                                                                        }
-                                                                        alt={
-                                                                            it.title
-                                                                        }
-                                                                        className="h-full w-full object-cover"
+                                                                    <Image
+                                                                        src={src}
+                                                                        alt={it.title}
+                                                                        fill
+                                                                        sizes="(max-width: 768px) 32px, 32px"
+                                                                        className="object-cover"
                                                                     />
                                                                 </button>
                                                             ))}
-                                                        {it.images.length >
-                                                            3 && (
+                                                        {it.images.length > 3 && (
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="h-7 px-2"
                                                                 onClick={() =>
                                                                     openPreview(
-                                                                        it.images ||
-                                                                            [],
+                                                                        it.images || [],
                                                                         it.title,
                                                                     )
                                                                 }
                                                             >
-                                                                +
-                                                                {it.images
-                                                                    .length - 3}
+                                                                +{it.images.length - 3}
                                                             </Button>
                                                         )}
                                                     </div>
@@ -1145,65 +1137,42 @@ export default function Explorer() {
                                                             <div className="text-xs uppercase text-muted-foreground">
                                                                 Images
                                                             </div>
-                                                            {it.images
-                                                                ?.length ? (
+                                                            {it.images?.length ? (
                                                                 <div className="flex flex-wrap gap-2">
                                                                     {it.images
-                                                                        .slice(
-                                                                            0,
-                                                                            4,
-                                                                        )
-                                                                        .map(
-                                                                            (
-                                                                                src,
-                                                                                idx,
-                                                                            ) => (
-                                                                                <button
-                                                                                    key={
-                                                                                        idx
-                                                                                    }
-                                                                                    className="h-16 w-16 overflow-hidden rounded border"
-                                                                                    onClick={() =>
-                                                                                        openPreview(
-                                                                                            it.images ||
-                                                                                                [],
-                                                                                            it.title,
-                                                                                        )
-                                                                                    }
-                                                                                >
-                                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                                    <img
-                                                                                        src={
-                                                                                            src
-                                                                                        }
-                                                                                        alt={
-                                                                                            it.title
-                                                                                        }
-                                                                                        className="h-full w-full object-cover"
-                                                                                    />
-                                                                                </button>
-                                                                            ),
-                                                                        )}
-                                                                    {it.images
-                                                                        .length >
-                                                                        4 && (
+                                                                        .slice(0, 4)
+                                                                        .map((src, idx) => (
+                                                                            <button
+                                                                                key={idx}
+                                                                                className="h-16 w-16 overflow-hidden rounded border relative"
+                                                                                onClick={() =>
+                                                                                    openPreview(
+                                                                                        it.images || [],
+                                                                                        it.title,
+                                                                                    )
+                                                                                }
+                                                                            >
+                                                                                <Image
+                                                                                    src={src}
+                                                                                    alt={it.title}
+                                                                                    fill
+                                                                                    sizes="64px"
+                                                                                    className="object-cover"
+                                                                                />
+                                                                            </button>
+                                                                        ))}
+                                                                    {it.images.length > 4 && (
                                                                         <Button
                                                                             variant="outline"
                                                                             size="sm"
                                                                             onClick={() =>
                                                                                 openPreview(
-                                                                                    it.images ||
-                                                                                        [],
+                                                                                    it.images || [],
                                                                                     it.title,
                                                                                 )
                                                                             }
                                                                         >
-                                                                            +
-                                                                            {it
-                                                                                .images
-                                                                                .length -
-                                                                                4}{" "}
-                                                                            more
+                                                                            +{it.images.length - 4} more
                                                                         </Button>
                                                                     )}
                                                                 </div>
@@ -1275,11 +1244,12 @@ export default function Explorer() {
                     </DialogHeader>
                     <div className="flex flex-col items-center gap-3">
                         <div className="relative w-full aspect-video overflow-hidden rounded border bg-background">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <Image
                                 src={preview.images[preview.index]}
                                 alt={preview.title}
-                                className="h-full w-full object-contain"
+                                fill
+                                sizes="(max-width: 768px) 100vw, 800px"
+                                className="object-cover"
                             />
                         </div>
                         <div className="flex items-center justify-between w-full">
