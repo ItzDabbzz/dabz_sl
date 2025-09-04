@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 import { loadEnvConfig } from "@next/env";
+// @ts-expect-error: CJS default export
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 // Load env from the monorepo root
 loadEnvConfig(path.resolve(__dirname, "..", ".."));
+
+const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
 const nextConfig: NextConfig = {
 	typescript: {
@@ -23,4 +27,4 @@ const nextConfig: NextConfig = {
 	},
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

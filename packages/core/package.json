@@ -13,7 +13,8 @@
     "db:migrate": "dotenv -e ../../.env -- drizzle-kit migrate",
     "db:push": "dotenv -e ../../.env -- drizzle-kit push",
     "db:studio": "dotenv -e ../../.env -- drizzle-kit studio",
-    "db:introspect": "dotenv -e ../../.env -- drizzle-kit introspect"
+    "db:introspect": "dotenv -e ../../.env -- drizzle-kit introspect",
+    "analyze": "ANALYZE=true dotenv -e ../../.env -- next build"
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.18",
@@ -103,6 +104,7 @@
     "@catppuccin/highlightjs": "^1.0.1",
     "@catppuccin/tailwindcss": "^1.0.0",
     "@eslint/eslintrc": "^3.3.1",
+    "@next/bundle-analyzer": "^15.0.0",
     "@tailwindcss/postcss": "^4.1.12",
     "@tailwindcss/typography": "^0.5.16",
     "@types/canvas-confetti": "^1.9.0",
