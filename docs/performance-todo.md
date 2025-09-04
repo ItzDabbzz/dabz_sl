@@ -13,28 +13,29 @@ Goals
 
 Quick wins (this week)
 
-- [ ] Images: switch to `next/image` where possible; until domains are known, add `loading="lazy"` and `decoding="async"` to all `<img>` usages.
-  - Files: `packages/core/app/marketplace/ClientExplorer.tsx`, `packages/core/app/dashboard/tools/marketplace/explorer/Explorer.tsx`, debug pages.
-- [ ] Add bundle analyzer to find heavy routes.
-  - Add `@next/bundle-analyzer` in `packages/core`, script `analyze`.
+- [x] Images: switch to `next/image` where possible; until domains are known, add `loading="lazy"` and `decoding="async"` to all `<img>` usages.
+  - Done for Marketplace client, Dashboard Explorer, and logo component.
+- [x] Add bundle analyzer to find heavy routes.
+  - Added `@next/bundle-analyzer` and `analyze` script.
 - [ ] Dynamic import heavy, rarely-used UI.
   - Syntax highlighting (`react-syntax-highlighter`) only when content has code. Files: `components/markdown.tsx`, `app/debug/*`.
 - [ ] Use React Query for marketplace search results to get request dedupe/stale caching.
   - Replace manual fetch/setState with `useQuery` keyed by `q, sort, limit, category`.
-- [ ] Consolidate toast system (use only Sonner).
-  - Remove/stop exporting `components/ui/toast` + `components/ui/toaster` if unused.
+- [x] Consolidate toast system (use only Sonner).
+  - Marketplace client now uses Sonner; ActionToast migrated; legacy `ui/toast` and `ui/toaster` remain to be removed if unused.
 
 Images and media
 
-- [ ] Configure `next.config.js` images.remotePatterns for Second Life Marketplace/CDN hosts.
-  - Collect sample hosts from `it.images[]` at runtime logs and add allowlist.
-- [ ] Replace `<img>` with `<Image>` (Next) with proper sizes and blur placeholders.
-- [ ] Add `<link rel="preconnect" />` to image/CDN hosts in `app/layout.tsx` once domains are known.
+- [x] Configure `next.config.js` images.remotePatterns for Second Life Marketplace/CDN hosts.
+  - Added patterns for `marketplace.secondlife.com`, `*.secondlife.com`, `*.slm-assets.com`, `*.cloudfront.net`, `*.imgur.com`.
+- [x] Replace `<img>` with `<Image>` (Next) with proper sizes and blur placeholders where practical.
+  - Migrated Marketplace client media and modals to `next/image` with `sizes` and `fill`. Dashboard Explorer thumbnails and preview migrated.
+- [x] Add `<link rel="preconnect" />` to image/CDN hosts in `app/layout.tsx` once domains are known.
 
 Rendering and UX
 
 - [ ] Virtualize long result lists (grid/list) with `@tanstack/react-virtual` or `react-virtuoso`.
-  - Files: `ClientExplorer.tsx`, `dashboard/tools/marketplace/explorer/Explorer.tsx`.
+  - Skeletons only improve perceived load; they do not reduce DOM size while scrolling. Virtualization mounts only visible rows/cards + small overscan, dramatically reducing DOM nodes and paint/JS work on large lists.
 - [ ] Use `useDeferredValue` for search input text to reduce re-render pressure of derived UI.
 - [ ] Memoize derived arrays (already partly done); audit with React Profiler.
 
@@ -65,12 +66,12 @@ Quality gates
 Rollout plan
 
 1) Land quick wins PR (images lazy+async, analyzer, todo cleanup)
-2) Configure image domains and migrate to `next/image`
+2) Configure image domains and migrate to `next/image` (done for Marketplace + Dashboard)
 3) Introduce list virtualization in Marketplace
 4) Adopt React Query for Marketplace search
 5) DB/index review and API caching tags
 
 Notes
 
-- Marketplace pages currently use many raw `<img>` tags with `eslint-disable-next-line @next/next/no-img-element`. Replace after remotePatterns are known.
-- Both Radix Toast and Sonner exist; standardize on Sonner (already mounted in `app/layout.tsx`).
+- Any `<img>` usage left is either email templates or will be migrated later when safe.
+- Both Radix Toast and Sonner exist; standardized on Sonner (mounted in `app/layout.tsx`).
