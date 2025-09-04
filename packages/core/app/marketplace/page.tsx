@@ -3,8 +3,10 @@ import ClientExplorer from "./ClientExplorer";
 
 export default function Page() {
     return (
-        <Suspense>
-            <ClientExplorer />
-        </Suspense>
+        <div className="h-[100svh] w-full overflow-hidden pb-2.5">
+            <Suspense>
+                <ClientExplorer />
+            </Suspense>
+        </div>
     );
 }

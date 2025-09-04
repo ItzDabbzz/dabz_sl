@@ -212,6 +212,27 @@
     display: none;
 }
 
+.themed-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent; /* Firefox */
+}
+.themed-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+.themed-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.themed-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+    border: 2px solid transparent; /* creates inset look */
+    background-clip: padding-box;
+}
+.themed-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklch, var(--border), black 10%);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

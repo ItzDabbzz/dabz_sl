@@ -266,7 +266,7 @@ export default async function PublicBlogIndex({
                 const date = p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : "Draft";
                 const authorInit = (p.authorName || "?")
                   .split(" ")
-                  .map((x) => x[0])
+                  .map((x: any[]) => x[0])
                   .join("")
                   .slice(0, 2)
                   .toUpperCase();

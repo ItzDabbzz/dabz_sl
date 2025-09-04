@@ -8,8 +8,8 @@ import { createMetadata } from "@/lib/metadata";
 
 export const metadata = createMetadata({
 	title: {
-		template: "%s | SL Tools",
-		default: "SL Tools",
+		template: "%s | Sanctum Realms Project",
+		default: "Sanctum Realms Project",
 	},
 	description: "A list of tools and projects for Second Life creators by Dabz.",
 	metadataBase: new URL("https://sl.itzdabbzz.me"),

@@ -24,9 +24,12 @@ import {
     Tag,
     FileText,
     PlusCircle,
+    Home,
+    ExternalLink,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/logo";
+import WebBG from "@/components/web-bg";
 
 function useLocalStorageBoolean(key: string, initial: boolean) {
     const [value, setValue] = useState(initial);
@@ -252,12 +255,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
 
     return (
-        <div className="h-dvh flex bg-background text-foreground">
+        <div className="relative h-dvh flex bg-background text-foreground">
+            <WebBG className="absolute inset-0 z-1" opacity={0.42} />
             {/* Sidebar */}
             <aside
                 className={
                     (collapsed ? "w-16" : "w-80") +
-                    " h-dvh sticky top-0 shrink-0 border-r border-border flex flex-col transition-[width] duration-200 overflow-hidden"
+                    " z-20 h-dvh sticky top-0 shrink-0 border-r border-border flex flex-col transition-[width] duration-200 overflow-hidden"
                 }
             >
                 <div className="h-24 flex items-center gap-2 px-3 border-b border-border">
@@ -285,18 +289,32 @@ export function AppShell({ children }: { children: ReactNode }) {
                             </span>
                         </Link>
                     )}
+                    <div className="ml-auto flex items-center gap-2">
+                        <Link
+                            href="/"
+                            className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                            title="Back to site"
+                        >
+                            <Home className="h-4 w-4" />
+                            {!collapsed && <span>Back to site</span>}
+                        </Link>
+                    </div>
                 </div>
                 <nav className="flex-1 overflow-y-auto py-2">
                     {/* Expanded: grouped & collapsible */}
                     {!collapsed && (
                         <div className="space-y-2">
-                            {sections.map((section) => (
-                                <CollapsibleSection
-                                    key={section.id}
-                                    section={section}
-                                    collapsed={collapsed}
-                                    pathname={pathname}
-                                />
+                            {sections.map((section, idx) => (
+                                <div key={section.id}>
+                                    <CollapsibleSection
+                                        section={section}
+                                        collapsed={collapsed}
+                                        pathname={pathname}
+                                    />
+                                    {idx < sections.length - 1 ? (
+                                        <div className="mx-2 my-2 h-px bg-border/60" />
+                                    ) : null}
+                                </div>
                             ))}
                         </div>
                     )}
@@ -360,11 +378,34 @@ export function AppShell({ children }: { children: ReactNode }) {
                             </div>
                         </div>
                     </div>
+                    <div className="my-2 h-px bg-border/60" />
+                    <div className="flex items-center justify-between px-1 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-3">
+                            <a
+                                href="https://itzdabbzz.me"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 underline underline-offset-4 hover:no-underline"
+                            >
+                                <span>itzdabbzz.me</span>
+                                <ExternalLink className="h-3 w-3" />
+                            </a>
+                            <a
+                                href="https://github.com/itzdabbzz/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 underline underline-offset-4 hover:no-underline"
+                            >
+                                <span>github.com/itzdabbzz</span>
+                                <ExternalLink className="h-3 w-3" />
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </aside>
 
             {/* Main content */}
-            <main className="flex-1 min-w-0">
+            <main className="relative z-10 flex-1 min-w-0">
                 <ScrollArea ref={contentRef as any} className="h-dvh">
                     <div className="p-6">{children}</div>
                 </ScrollArea>
