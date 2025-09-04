@@ -26,6 +26,7 @@ import {
     Home,
     ChevronLeft,
     ChevronRight,
+    PlusCircle,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -504,6 +505,20 @@ export default function ClientExplorer() {
                                     }}
                                 >
                                     <Trash2 className="h-4 w-4 mr-1" /> Reset
+                                </Button>
+                            </div>
+
+                            {/* Request item CTA */}
+                            <div className="flex items-center gap-2 justify-center">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => router.push("/marketplace/request")}
+                                    aria-label="Request an item"
+                                    title="Request an item"
+                                >
+                                    <PlusCircle className="h-4 w-4 mr-1" />
+                                    Request item
                                 </Button>
                             </div>
                         </div>

@@ -19,7 +19,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Minimal local types (align with Explorer)
@@ -79,12 +79,15 @@ export default function NewMarketplaceItem() {
     };
 
     const onCreate = async () => {
-        if (!title.trim() || !url.trim()) return;
-        setLoading(true);
+        // Enforce required: title, url, store, price, description, at least 1 image
         const images = imagesText
             .split(/\r?\n|, /)
             .map((s) => s.trim())
             .filter(Boolean);
+        if (!title.trim() || !url.trim() || !store.trim() || !price.trim() || !description.trim() || images.length === 0) {
+            return;
+        }
+        setLoading(true);
         const features = featuresText
             .split(/\r?\n|, /)
             .map((s) => s.trim())
@@ -154,7 +157,37 @@ export default function NewMarketplaceItem() {
         }
     };
 
-    const canCreate = !loading && !!title.trim() && !!url.trim();
+    const imagesCount = imagesText
+        .split(/\r?\n|, /)
+        .map((s) => s.trim())
+        .filter(Boolean).length;
+    const requiredOk = {
+        title: !!title.trim(),
+        url: !!url.trim(),
+        store: !!store.trim(),
+        price: !!price.trim(),
+        description: !!description.trim(),
+        images: imagesCount > 0,
+    };
+
+    // const canCreate = !loading && !!title.trim() && !!url.trim();
+    const canCreate = !loading && !!title.trim() && !!url.trim() && !!store.trim() && !!price.trim() && !!description.trim() && imagesCount > 0;
+
+    const Help = ({ children }: { children: any }) => (
+        <p className="text-[11px] text-muted-foreground mt-1 flex items-start gap-1">
+            <Info className="h-3 w-3 mt-[2px]" /> {children}
+        </p>
+    );
+    const Req = ({ ok }: { ok: boolean }) => (
+        <span
+            className={cn(
+                "ml-1 text-[10px]",
+                ok ? "text-green-600" : "text-red-600",
+            )}
+        >
+            {ok ? "✓" : "*"}
+        </span>
+    );
 
     return (
         <div className="space-y-4">
@@ -164,22 +197,31 @@ export default function NewMarketplaceItem() {
                 </CardHeader>
                 <CardContent className="grid gap-3">
                     <div>
-                        <div className="text-xs mb-1">Title</div>
+                        <div className="text-xs mb-1">
+                            Title{" "}
+                            <Req ok={requiredOk.title} />
+                        </div>
                         <Input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                         />
+                        <Help>Use the exact listing title when possible.</Help>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <div className="text-xs mb-1">Price</div>
+                            <div className="text-xs mb-1">
+                                Price{" "}
+                                <Req ok={requiredOk.price} />
+                            </div>
                             <Input
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value)}
                             />
                         </div>
                         <div>
-                            <div className="text-xs mb-1">Version</div>
+                            <div className="text-xs mb-1">
+                                Version (optional)
+                            </div>
                             <Input
                                 value={version}
                                 onChange={(e) => setVersion(e.target.value)}
@@ -188,14 +230,21 @@ export default function NewMarketplaceItem() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <div className="text-xs mb-1">URL</div>
+                            <div className="text-xs mb-1">
+                                URL{" "}
+                                <Req ok={requiredOk.url} />
+                            </div>
                             <Input
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                             />
+                            <Help>Paste the full marketplace/product URL.</Help>
                         </div>
                         <div>
-                            <div className="text-xs mb-1">Store</div>
+                            <div className="text-xs mb-1">
+                                Store{" "}
+                                <Req ok={requiredOk.store} />
+                            </div>
                             <Input
                                 value={store}
                                 onChange={(e) => setStore(e.target.value)}
@@ -219,7 +268,10 @@ export default function NewMarketplaceItem() {
                         </div>
                     </div>
                     <div>
-                        <div className="text-xs mb-1">Description</div>
+                        <div className="text-xs mb-1">
+                            Description{" "}
+                            <Req ok={requiredOk.description} />
+                        </div>
                         <Textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -244,42 +296,34 @@ export default function NewMarketplaceItem() {
                             <div className="text-xs mb-1">Perm: Transfer</div>
                             <Input
                                 value={permTransfer}
-                                onChange={(e) =>
-                                    setPermTransfer(e.target.value)
-                                }
+                                onChange={(e) => setPermTransfer(e.target.value)}
                             />
                         </div>
                     </div>
                     <div>
                         <div className="text-xs mb-1">
-                            Images (one per line)
+                            Images (one per line){" "}
+                            <Req ok={requiredOk.images} />
                         </div>
                         <Textarea
                             value={imagesText}
                             onChange={(e) => setImagesText(e.target.value)}
                         />
+                        <Help>At least one image URL is required.</Help>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <div className="text-xs mb-1">
-                                Features (one per line)
-                            </div>
+                            <div className="text-xs mb-1">Features (optional)</div>
                             <Textarea
                                 value={featuresText}
-                                onChange={(e) =>
-                                    setFeaturesText(e.target.value)
-                                }
+                                onChange={(e) => setFeaturesText(e.target.value)}
                             />
                         </div>
                         <div>
-                            <div className="text-xs mb-1">
-                                Contents (one per line)
-                            </div>
+                            <div className="text-xs mb-1">Contents (optional)</div>
                             <Textarea
                                 value={contentsText}
-                                onChange={(e) =>
-                                    setContentsText(e.target.value)
-                                }
+                                onChange={(e) => setContentsText(e.target.value)}
                             />
                         </div>
                     </div>

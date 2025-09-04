@@ -296,3 +296,47 @@ export const mpItemCategories = pgTable(
     byCategory: index("sl_mp_item_categories_category_idx").on(t.categoryId),
   })
 );
+
+// Marketplace Item Requests (public submissions)
+export const mpItemRequests = pgTable(
+  "sl_mp_item_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+
+    // Optional who submitted
+    requestedByUserId: text("requested_by_user_id"),
+    requesterEmail: text("requester_email"),
+
+    // Item payload
+    url: text("url").notNull(),
+    title: text("title").notNull(),
+    version: text("version"),
+    images: jsonb("images").$type<string[]>(),
+    price: text("price").notNull(),
+    creator: jsonb("creator").$type<{ name: string; link: string }>().notNull(),
+    store: text("store").notNull(),
+    permissions: jsonb("permissions").$type<{ copy: string; modify: string; transfer: string }>().notNull(),
+    description: text("description").notNull(),
+    features: jsonb("features").$type<string[]>(),
+    contents: jsonb("contents").$type<string[]>(),
+    updatedOn: text("updated_on"),
+
+    // Selected category ids (required)
+    categoryIds: jsonb("category_ids").$type<string[]>().notNull(),
+
+    // Moderation
+    status: text("status").default("pending").notNull(), // pending | approved | rejected
+    approvedByUserId: text("approved_by_user_id"),
+    rejectedByUserId: text("rejected_by_user_id"),
+    rejectReason: text("reject_reason"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    byStatus: index("sl_mp_item_requests_status_idx").on(t.status),
+    byRequestedBy: index("sl_mp_item_requests_requested_by_idx").on(t.requestedByUserId),
+    byUrl: uniqueIndex("sl_mp_item_requests_url_uniq").on(t.url),
+  })
+);
