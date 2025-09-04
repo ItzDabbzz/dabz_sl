@@ -1,7 +1,7 @@
-import { SVGProps } from "react";
+import Image from "next/image";
 
-export const Logo = (props: SVGProps<any>) => {
+export const Logo = () => {
 	return (
-		<img src="/logo.png" alt="alt" width={60} height={45} />
+		<Image src="/logo.png" alt="SL Tools" width={60} height={45} priority />
 	);
 };

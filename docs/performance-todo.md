@@ -22,7 +22,7 @@ Quick wins (this week)
 - [ ] Use React Query for marketplace search results to get request dedupe/stale caching.
   - Replace manual fetch/setState with `useQuery` keyed by `q, sort, limit, category`.
 - [x] Consolidate toast system (use only Sonner).
-  - Marketplace client now uses Sonner; ActionToast migrated; legacy `ui/toast` and `ui/toaster` remain to be removed if unused.
+  - Marketplace client now uses Sonner; ActionToast migrated; legacy `ui/toast` and `ui/toaster` removed.
 
 Images and media
 
@@ -34,8 +34,8 @@ Images and media
 
 Rendering and UX
 
-- [ ] Virtualize long result lists (grid/list) with `@tanstack/react-virtual` or `react-virtuoso`.
-  - Skeletons only improve perceived load; they do not reduce DOM size while scrolling. Virtualization mounts only visible rows/cards + small overscan, dramatically reducing DOM nodes and paint/JS work on large lists.
+- [x] Virtualize long result lists (grid/list) with `react-virtuoso`.
+  - Implemented in Marketplace client for both grid and list with endReached pagination.
 - [ ] Use `useDeferredValue` for search input text to reduce re-render pressure of derived UI.
 - [ ] Memoize derived arrays (already partly done); audit with React Profiler.
 
@@ -67,11 +67,12 @@ Rollout plan
 
 1) Land quick wins PR (images lazy+async, analyzer, todo cleanup)
 2) Configure image domains and migrate to `next/image` (done for Marketplace + Dashboard)
-3) Introduce list virtualization in Marketplace
+3) Introduce list virtualization in Marketplace (done)
 4) Adopt React Query for Marketplace search
 5) DB/index review and API caching tags
 
 Notes
 
 - Any `<img>` usage left is either email templates or will be migrated later when safe.
-- Both Radix Toast and Sonner exist; standardized on Sonner (mounted in `app/layout.tsx`).
+- Standardized on Sonner (mounted in `app/layout.tsx`); legacy Radix toasts removed.
+- React Query complements Next features on the client: it dedupes, caches, and retries client-side requests. Keep server routes using Next fetch caching/ISR where applicable; use React Query only where UX benefits from client caching (e.g., search pagination, filters).

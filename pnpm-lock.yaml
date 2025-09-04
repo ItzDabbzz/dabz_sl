@@ -224,6 +224,9 @@ importers:
       react-syntax-highlighter:
         specifier: ^15.6.6
         version: 15.6.6(react@19.1.1)
+      react-virtuoso:
+        specifier: ^4.14.0
+        version: 4.14.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       recharts:
         specifier: ^2.14.1
         version: 2.15.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -4747,6 +4750,12 @@ packages:
     peerDependenciesMeta:
       react-dom:
         optional: true
+
+  react-virtuoso@4.14.0:
+    resolution: {integrity: sha512-fR+eiCvirSNIRvvCD7ueJPRsacGQvUbjkwgWzBZXVq+yWypoH7mRUvWJzGHIdoRaCZCT+6mMMMwIG2S1BW3uwA==}
+    peerDependencies:
+      react: '>=16 || >=17 || >= 18 || >= 19'
+      react-dom: '>=16 || >=17 || >= 18 || >=19'
 
   react@19.1.1:
     resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
@@ -10319,6 +10328,11 @@ snapshots:
     dependencies:
       react: 19.1.1
     optionalDependencies:
+      react-dom: 19.1.1(react@19.1.1)
+
+  react-virtuoso@4.14.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+    dependencies:
+      react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
   react@19.1.1: {}
