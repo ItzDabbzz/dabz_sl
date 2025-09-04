@@ -24,6 +24,14 @@ export default function RootLayout({
 		<html lang="en" suppressHydrationWarning>
 			<head>
 				<link rel="icon" href="/favicon/favicon.ico" sizes="any" />
+                {/* Preconnect to known image/CDN hosts */}
+                <link rel="preconnect" href="https://marketplace.secondlife.com" />
+                <link rel="preconnect" href="https://images.secondlife.com" />
+                <link rel="preconnect" href="https://static.secondlife.com" />
+                <link rel="preconnect" href="https://cdn.secondlife.com" />
+                <link rel="preconnect" href="https://slm-assets.com" />
+                <link rel="preconnect" href="https://cloudfront.net" />
+                <link rel="preconnect" href="https://i.imgur.com" />
 			</head>
 			<body className={`${GeistSans.variable} ${GeistMono.variable} font-sans`}>
 				<ThemeProvider attribute="class" defaultTheme="dark">
