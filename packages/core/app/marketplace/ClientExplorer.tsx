@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import {
     Select,
@@ -26,24 +26,9 @@ import {
     Home,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import Image from "next/image";
+import { Virtuoso, VirtuosoGrid } from "react-virtuoso";
 
 type Item = {
     id: string;
@@ -92,12 +77,17 @@ export default function ClientExplorer() {
     const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
     const [compare, setCompare] = useState<Set<string>>(() => new Set());
     const [recent, setRecent] = useState<string[]>([]);
-    const { toast } = useToast();
     const [compareOpen, setCompareOpen] = useState(false);
     const [descItem, setDescItem] = useState<Item | null>(null);
 
     const inputRef = useRef<HTMLInputElement | null>(null);
-    const sentinelRef = useRef<HTMLDivElement | null>(null);
+    // const sentinelRef = useRef<HTMLDivElement | null>(null); // Virtualization replaces IntersectionObserver sentinel
+
+    // Refs required by Pagination types
+    const pagListRef = useRef<HTMLUListElement>(null);
+    const pagPrevRef = useRef<HTMLLIElement>(null);
+    const pagCurrRef = useRef<HTMLLIElement>(null);
+    const pagNextRef = useRef<HTMLLIElement>(null);
 
     const router = useRouter();
     const pathname = usePathname();
@@ -235,41 +225,35 @@ export default function ClientExplorer() {
         if (sub) qp.set("sub", sub);
         router.replace(`${pathname}?${qp.toString()}`, { scroll: false });
     }, [q, sort, limit, primary, sub, router, pathname]);
-
     // Fetch items
-    async function fetchItems(options?: {
-        reset?: boolean;
-        pageIndex?: number;
-    }) {
-        const { reset = false, pageIndex } = options ?? {};
-        if (loading) return;
-        setLoading(true);
-        try {
-            const effectivePage =
-                typeof pageIndex === "number" ? pageIndex : page;
-            const params = new URLSearchParams();
-            if (q.trim()) params.set("q", q.trim());
-            if (selectedCategoryId)
-                params.set("categoryId", selectedCategoryId);
-            if (sort) params.set("sort", sort);
-            params.set("limit", String(limit));
-            params.set("offset", String(effectivePage * limit));
-            const res = await fetch(
-                `/api/public/marketplace/items?${params.toString()}`,
-                {
-                    cache: "no-store",
-                },
-            );
-            const data: ItemsResp = await res.json();
-            setTotal(data.total || 0);
-            setItems((prev) =>
-                reset ? data.items || [] : [...prev, ...(data.items || [])],
-            );
-            if (typeof pageIndex === "number") setPage(effectivePage);
-        } finally {
-            setLoading(false);
-        }
-    }
+    const fetchItems = useCallback(
+        async (options?: { reset?: boolean; pageIndex?: number }) => {
+            const { reset = false, pageIndex } = options || {};
+            const effectivePage = typeof pageIndex === "number" ? pageIndex : page;
+            setLoading(true);
+            try {
+                const params = new URLSearchParams();
+                if (q.trim()) params.set("q", q.trim());
+                if (selectedCategoryId) params.set("categoryId", selectedCategoryId);
+                if (sort) params.set("sort", sort);
+                params.set("limit", String(limit));
+                params.set("offset", String(effectivePage * limit));
+                const res = await fetch(
+                    `/api/public/marketplace/items?${params.toString()}`,
+                    {
+                        cache: "no-store",
+                    },
+                );
+                const data: ItemsResp = await res.json();
+                setTotal(data.total || 0);
+                setItems((prev) => (reset ? data.items || [] : [...prev, ...(data.items || [])]));
+                if (typeof pageIndex === "number") setPage(effectivePage);
+            } finally {
+                setLoading(false);
+            }
+        },
+        [q, sort, selectedCategoryId, limit, page],
+    );
 
     // Trigger fetch when filters change (debounced for q)
     useEffect(() => {
@@ -277,20 +261,7 @@ export default function ClientExplorer() {
             fetchItems({ reset: true, pageIndex: 0 });
         }, 250);
         return () => clearTimeout(t);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [q, sort, selectedCategoryId, limit]);
-
-    const totalPages = Math.max(1, Math.ceil(total / limit));
-
-    function goToPage(p: number) {
-        const clamped = Math.max(0, Math.min(totalPages - 1, p));
-        setPage(clamped);
-        if (scrollMode === "pages") {
-            fetchItems({ reset: true, pageIndex: clamped });
-        } else {
-            fetchItems({ reset: false, pageIndex: clamped });
-        }
-    }
+    }, [q, sort, selectedCategoryId, limit, fetchItems]);
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -308,33 +279,12 @@ export default function ClientExplorer() {
             }
             if (e.key === "ArrowRight" && scrollMode === "pages") {
                 const next = page + 1;
-                if (next * limit < total)
-                    fetchItems({ reset: true, pageIndex: next });
+                if (next * limit < total) fetchItems({ reset: true, pageIndex: next });
             }
         }
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-    }, [page, limit, total, scrollMode]);
-
-    // Infinite scroll observer
-    useEffect(() => {
-        if (scrollMode !== "infinite") return;
-        const el = sentinelRef.current;
-        if (!el) return;
-        const io = new IntersectionObserver(
-            (entries) => {
-                const entry = entries[0];
-                if (entry.isIntersecting && !loading) {
-                    const next = page + 1;
-                    if (next * limit < total)
-                        fetchItems({ reset: false, pageIndex: next });
-                }
-            },
-            { root: null, rootMargin: "200px", threshold: 0 },
-        );
-        io.observe(el);
-        return () => io.disconnect();
-    }, [scrollMode, page, limit, total, loading]);
+    }, [page, limit, total, scrollMode, fetchItems]);
 
     // Derived visible items based on client-side filters
     const visibleItems = useMemo(() => {
@@ -351,7 +301,7 @@ export default function ClientExplorer() {
     function copy(text: string, msg = "Link copied") {
         try {
             navigator.clipboard.writeText(text);
-            toast({ description: msg });
+            toast(msg);
         } catch {
             try {
                 const ta = document.createElement("textarea");
@@ -360,7 +310,7 @@ export default function ClientExplorer() {
                 ta.select();
                 document.execCommand("copy");
                 document.body.removeChild(ta);
-                toast({ description: msg });
+                toast(msg);
             } catch {}
         }
     }
@@ -728,369 +678,217 @@ export default function ClientExplorer() {
                                     filters.
                                 </div>
                             ) : (
-                                <div
-                                    className={
-                                        view === "grid"
-                                            ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 pr-2"
-                                            : "flex flex-col gap-3 pr-2"
-                                    }
-                                >
-                                    {visibleItems.map((it) => {
-                                        const creatorName =
-                                            it.creator?.name?.trim();
-                                        const creatorLink =
-                                            it.creator?.link?.trim();
-                                        const storeLink = it.store?.trim();
-                                        const showStore =
-                                            storeLink &&
-                                            storeLink !== creatorLink;
-                                        const fav = favorites.has(it.id);
-                                        const cmp = compare.has(it.id);
-                                        const mediaClass =
-                                            view === "list"
-                                                ? "h-24 w-40 sm:h-28 sm:w-44"
-                                                : "aspect-video";
-
-                                        const Media = (
-                                            <div
-                                                className={`overflow-hidden rounded bg-muted ${mediaClass}`}
-                                            >
-                                                {it.images?.[0] && (
-                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                    <img
-                                                        src={it.images[0]}
-                                                        alt={it.title}
-                                                        className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-                                                    />
-                                                )}
-                                            </div>
-                                        );
-
-                                        const Meta = (
-                                            <div
-                                                className={
-                                                    view === "list"
-                                                        ? "space-y-1"
-                                                        : "space-y-1 mt-2"
+                                <>
+                                    {view === "list" ? (
+                                        <Virtuoso
+                                            className="h-full pr-2"
+                                            overscan={200}
+                                            data={visibleItems}
+                                            endReached={() => {
+                                                if (scrollMode !== "infinite" || loading) return;
+                                                const next = page + 1;
+                                                if (next * limit < total) {
+                                                    fetchItems({ reset: false, pageIndex: next });
                                                 }
-                                            >
-                                                <div className="flex items-start justify-between gap-3 min-w-0">
-                                                    <div
-                                                        className="text-sm font-medium truncate"
-                                                        title={
-                                                            it.title ||
-                                                            "Untitled"
-                                                        }
-                                                    >
-                                                        {it.title || "Untitled"}
-                                                    </div>
-                                                    <div
-                                                        className={`shrink-0 ${view === "list" ? "text-sm font-medium" : "text-xs"} text-muted-foreground`}
-                                                    >
-                                                        L$ {it.price ?? "-"}
-                                                    </div>
-                                                </div>
-                                                {(creatorName ||
-                                                    creatorLink ||
-                                                    storeLink) && (
-                                                    <div className="text-[11px] text-muted-foreground">
-                                                        {creatorName ? (
-                                                            <>
-                                                                by{" "}
-                                                                {creatorLink ? (
-                                                                    <a
-                                                                        className="underline underline-offset-4 hover:no-underline"
-                                                                        href={
-                                                                            creatorLink
-                                                                        }
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                    >
-                                                                        {
-                                                                            creatorName
-                                                                        }
-                                                                    </a>
-                                                                ) : (
-                                                                    <span>
-                                                                        {
-                                                                            creatorName
-                                                                        }
-                                                                    </span>
-                                                                )}
-                                                            </>
-                                                        ) : null}
-                                                        {showStore ? (
-                                                            <>
-                                                                {creatorName ? (
-                                                                    <span>
-                                                                        {" · "}
-                                                                    </span>
-                                                                ) : null}
-                                                                <a
-                                                                    className="underline underline-offset-4 hover:no-underline"
-                                                                    href={
-                                                                        storeLink!
-                                                                    }
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                >
-                                                                    Store
-                                                                </a>
-                                                            </>
-                                                        ) : null}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-
-                                        const Actions =
-                                            view === "list" ? (
-                                                <div className="flex flex-col items-end gap-2 min-w-[110px]">
-                                                    <div className="flex flex-col gap-2">
-                                                        <Button
-                                                            variant={
-                                                                fav
-                                                                    ? "secondary"
-                                                                    : "ghost"
-                                                            }
-                                                            size="icon"
-                                                            aria-label="Favorite"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                const next =
-                                                                    new Set(
-                                                                        favorites,
-                                                                    );
-                                                                next.has(it.id)
-                                                                    ? next.delete(
-                                                                          it.id,
-                                                                      )
-                                                                    : next.add(
-                                                                          it.id,
-                                                                      );
-                                                                setFavorites(
-                                                                    next,
-                                                                );
-                                                            }}
-                                                        >
-                                                            <Heart
-                                                                className={`h-4 w-4 ${fav ? "text-pink-500" : ""}`}
-                                                            />
-                                                        </Button>
-                                                        <Button
-                                                            variant={
-                                                                cmp
-                                                                    ? "secondary"
-                                                                    : "ghost"
-                                                            }
-                                                            size="icon"
-                                                            aria-label="Compare"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                const next =
-                                                                    new Set(
-                                                                        compare,
-                                                                    );
-                                                                next.has(it.id)
-                                                                    ? next.delete(
-                                                                          it.id,
-                                                                      )
-                                                                    : next.add(
-                                                                          it.id,
-                                                                      );
-                                                                setCompare(
-                                                                    next,
-                                                                );
-                                                            }}
-                                                        >
-                                                            <Scale
-                                                                className={`h-4 w-4 ${cmp ? "text-emerald-500" : ""}`}
-                                                            />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            aria-label="Copy shareable link"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                copy(
-                                                                    it.url,
-                                                                    "Listing link copied",
-                                                                );
-                                                            }}
-                                                        >
-                                                            <Link2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="w-24"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            setDescItem(it);
-                                                        }}
-                                                    >
-                                                        Details
-                                                    </Button>
-                                                    <Button
-                                                        asChild
-                                                        size="sm"
-                                                        className="w-24 mt-auto"
-                                                    >
-                                                        <a
-                                                            href={it.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        >
-                                                            Open
-                                                        </a>
-                                                    </Button>
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-wrap items-center gap-2 pt-2">
-                                                    <Button
-                                                        variant={
-                                                            fav
-                                                                ? "secondary"
-                                                                : "ghost"
-                                                        }
-                                                        size="icon"
-                                                        aria-label="Favorite"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            const next =
-                                                                new Set(
-                                                                    favorites,
-                                                                );
-                                                            next.has(it.id)
-                                                                ? next.delete(
-                                                                      it.id,
-                                                                  )
-                                                                : next.add(
-                                                                      it.id,
-                                                                  );
-                                                            setFavorites(next);
-                                                        }}
-                                                    >
-                                                        <Heart
-                                                            className={`h-4 w-4 ${fav ? "text-pink-500" : ""}`}
-                                                        />
-                                                    </Button>
-                                                    <Button
-                                                        variant={
-                                                            cmp
-                                                                ? "secondary"
-                                                                : "ghost"
-                                                        }
-                                                        size="icon"
-                                                        aria-label="Compare"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            const next =
-                                                                new Set(
-                                                                    compare,
-                                                                );
-                                                            next.has(it.id)
-                                                                ? next.delete(
-                                                                      it.id,
-                                                                  )
-                                                                : next.add(
-                                                                      it.id,
-                                                                  );
-                                                            setCompare(next);
-                                                        }}
-                                                    >
-                                                        <Scale
-                                                            className={`h-4 w-4 ${cmp ? "text-emerald-500" : ""}`}
-                                                        />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        aria-label="Copy shareable link"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            copy(
-                                                                it.url,
-                                                                "Listing link copied",
-                                                            );
-                                                        }}
-                                                    >
-                                                        <Link2 className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            setDescItem(it);
-                                                        }}
-                                                    >
-                                                        Details
-                                                    </Button>
-                                                    <Button asChild size="sm">
-                                                        <a
-                                                            href={it.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        >
-                                                            Open
-                                                        </a>
-                                                    </Button>
-                                                </div>
-                                            );
-
-                                        if (view === "list") {
-                                            return (
-                                                <Card
-                                                    key={it.id}
-                                                    className="group"
-                                                >
-                                                    <CardContent className="p-3">
-                                                        <div className="grid grid-cols-[10rem_1fr_auto] gap-4 items-center">
-                                                            {Media}
-                                                            <div className="min-w-0 flex items-center">
-                                                                {Meta}
+                                            }}
+                                            itemContent={(index, it) => {
+                                                const creatorName = it.creator?.name?.trim();
+                                                const creatorLink = it.creator?.link?.trim();
+                                                const storeLink = it.store?.trim();
+                                                const showStore = storeLink && storeLink !== creatorLink;
+                                                const fav = favorites.has(it.id);
+                                                const cmp = compare.has(it.id);
+                                                return (
+                                                    <Card key={it.id} className="group mb-3">
+                                                        <CardContent className="p-3">
+                                                            <div className="grid grid-cols-[10rem_1fr_auto] gap-4 items-center">
+                                                                <div className="overflow-hidden rounded bg-muted h-24 w-40 sm:h-28 sm:w-44">
+                                                                    {it.images?.[0] && (
+                                                                        <Image src={it.images[0]} alt={it.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" width={176} height={112} sizes="176px" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="min-w-0 flex items-center">
+                                                                    <div className="space-y-1">
+                                                                        <div className="flex items-start justify-between gap-3 min-w-0">
+                                                                            <div className="text-sm font-medium truncate" title={it.title || "Untitled"}>
+                                                                                {it.title || "Untitled"}
+                                                                            </div>
+                                                                            <div className="shrink-0 text-sm font-medium text-muted-foreground">L$ {it.price ?? "-"}</div>
+                                                                        </div>
+                                                                        {(creatorName || creatorLink || storeLink) && (
+                                                                            <div className="text-[11px] text-muted-foreground">
+                                                                                {creatorName ? (
+                                                                                    <>
+                                                                                        by {creatorLink ? (
+                                                                                            <a className="underline underline-offset-4 hover:no-underline" href={creatorLink} target="_blank" rel="noopener noreferrer">{creatorName}</a>
+                                                                                        ) : (
+                                                                                            <span>{creatorName}</span>
+                                                                                        )}
+                                                                                    </>
+                                                                                ) : null}
+                                                                                {showStore ? (
+                                                                                    <>
+                                                                                        {creatorName ? <span>{" · "}</span> : null}
+                                                                                        <a className="underline underline-offset-4 hover:no-underline" href={storeLink!} target="_blank" rel="noopener noreferrer">Store</a>
+                                                                                    </>
+                                                                                ) : null}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex flex-col items-end gap-2 min-w-[110px]">
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <Button variant={fav ? "secondary" : "ghost"} size="icon" aria-label="Favorite" onClick={(e) => { e.preventDefault(); const next = new Set(favorites); next.has(it.id) ? next.delete(it.id) : next.add(it.id); setFavorites(next); }}>
+                                                                            <Heart className={`h-4 w-4 ${fav ? "text-pink-500" : ""}`} />
+                                                                        </Button>
+                                                                        <Button variant={cmp ? "secondary" : "ghost"} size="icon" aria-label="Compare" onClick={(e) => { e.preventDefault(); const next = new Set(compare); next.has(it.id) ? next.delete(it.id) : next.add(it.id); setCompare(next); }}>
+                                                                            <Scale className={`h-4 w-4 ${cmp ? "text-emerald-500" : ""}`} />
+                                                                        </Button>
+                                                                        <Button variant="ghost" size="icon" aria-label="Copy shareable link" onClick={(e) => { e.preventDefault(); copy(it.url, "Listing link copied"); }}>
+                                                                            <Link2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                    <Button size="sm" variant="outline" className="w-24" onClick={(e) => { e.preventDefault(); setDescItem(it); }}>Details</Button>
+                                                                    <Button asChild size="sm" className="w-24 mt-auto"><a href={it.url} target="_blank" rel="noopener noreferrer">Open</a></Button>
+                                                                </div>
                                                             </div>
-                                                            {Actions}
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
-                                            );
-                                        }
-
-                                        // Grid view: keep link on media+meta only, actions outside anchor
-                                        return (
-                                            <Card key={it.id} className="group">
-                                                <CardContent className="p-3">
-                                                    <a
-                                                        href={it.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="block"
-                                                    >
-                                                        {Media}
-                                                        {Meta}
-                                                    </a>
-                                                    {Actions}
-                                                </CardContent>
-                                            </Card>
-                                        );
-                                    })}
-                                </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                );
+                                            }}
+                                            components={{
+                                                Footer: () => (
+                                                    scrollMode === "infinite" && loading ? (
+                                                        <div className="flex items-center justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                                                    ) : null
+                                                ),
+                                            }}
+                                        />
+                                    ) : (
+                                        <VirtuosoGrid
+                                            className="h-full"
+                                            listClassName="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 pr-2"
+                                            overscan={200}
+                                            data={visibleItems}
+                                            endReached={() => {
+                                                if (scrollMode !== "infinite" || loading) return;
+                                                const next = page + 1;
+                                                if (next * limit < total) {
+                                                    fetchItems({ reset: false, pageIndex: next });
+                                                }
+                                            }}
+                                            itemContent={(index, it) => {
+                                                const fav = favorites.has(it.id);
+                                                const cmp = compare.has(it.id);
+                                                return (
+                                                    <Card key={it.id} className="group">
+                                                        <CardContent className="p-3">
+                                                            <a href={it.url} target="_blank" rel="noopener noreferrer" className="block">
+                                                                <div className="overflow-hidden rounded bg-muted aspect-video">
+                                                                    {it.images?.[0] && (
+                                                                        <Image src={it.images[0]} alt={it.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" fill sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="space-y-1 mt-2">
+                                                                    <div className="flex items-start justify-between gap-3 min-w-0">
+                                                                        <div className="text-sm font-medium truncate" title={it.title || "Untitled"}>{it.title || "Untitled"}</div>
+                                                                        <div className="shrink-0 text-xs text-muted-foreground">L$ {it.price ?? "-"}</div>
+                                                                    </div>
+                                                                    {(it.creator?.name?.trim() || it.creator?.link?.trim() || it.store?.trim()) && (
+                                                                        <div className="text-[11px] text-muted-foreground">
+                                                                            {it.creator?.name?.trim() ? (
+                                                                                <>
+                                                                                    by {it.creator?.link?.trim() ? (
+                                                                                        <a className="underline underline-offset-4 hover:no-underline" href={it.creator!.link!} target="_blank" rel="noopener noreferrer">{it.creator!.name!}</a>
+                                                                                    ) : (
+                                                                                        <span>{it.creator!.name!}</span>
+                                                                                    )}
+                                                                                </>
+                                                                            ) : null}
+                                                                            {it.store?.trim() && it.store?.trim() !== it.creator?.link?.trim() ? (
+                                                                                <>
+                                                                                    {it.creator?.name ? <span>{" · "}</span> : null}
+                                                                                    <a className="underline underline-offset-4 hover:no-underline" href={it.store!} target="_blank" rel="noopener noreferrer">Store</a>
+                                                                                </>
+                                                                            ) : null}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </a>
+                                                            <div className="flex flex-wrap items-center gap-2 pt-2">
+                                                                <Button variant={fav ? "secondary" : "ghost"} size="icon" aria-label="Favorite" onClick={(e) => { e.preventDefault(); const next = new Set(favorites); next.has(it.id) ? next.delete(it.id) : next.add(it.id); setFavorites(next); }}>
+                                                                    <Heart className={`h-4 w-4 ${fav ? "text-pink-500" : ""}`} />
+                                                                </Button>
+                                                                <Button variant={cmp ? "secondary" : "ghost"} size="icon" aria-label="Compare" onClick={(e) => { e.preventDefault(); const next = new Set(compare); next.has(it.id) ? next.delete(it.id) : next.add(it.id); setCompare(next); }}>
+                                                                    <Scale className={`h-4 w-4 ${cmp ? "text-emerald-500" : ""}`} />
+                                                                </Button>
+                                                                <Button variant="ghost" size="icon" aria-label="Copy shareable link" onClick={(e) => { e.preventDefault(); copy(it.url, "Listing link copied"); }}>
+                                                                    <Link2 className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button size="sm" variant="outline" onClick={(e) => { e.preventDefault(); setDescItem(it); }}>Details</Button>
+                                                                <Button asChild size="sm"><a href={it.url} target="_blank" rel="noopener noreferrer">Open</a></Button>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                );
+                                            }}
+                                            components={{
+                                                Footer: () => (
+                                                    scrollMode === "infinite" && loading ? (
+                                                        <div className="col-span-full flex items-center justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                                                    ) : null
+                                                ),
+                                            }}
+                                        />
+                                    )}
+                                </>
                             )}
 
-                            {/* Infinite scroll spinner */}
-                            {scrollMode === "infinite" &&
-                                loading &&
-                                items.length > 0 && (
-                                    <div className="flex items-center justify-center py-4">
-                                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                                    </div>
-                                )}
-
-                            <div ref={sentinelRef} />
+                            {/* Pagination (pages mode) */}
+                            {scrollMode === "pages" && (
+                                <div className="py-2">
+                                    <Pagination>
+                                        <PaginationContent ref={pagListRef}>
+                                            <PaginationItem ref={pagPrevRef}>
+                                                <PaginationPrevious
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        const next = page - 1;
+                                                        if (next >= 0) {
+                                                            fetchItems({
+                                                                reset: true,
+                                                                pageIndex: next,
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                            </PaginationItem>
+                                            <PaginationItem ref={pagCurrRef}>
+                                                <PaginationLink href="#" isActive>
+                                                    {page + 1} /{" "}
+                                                    {Math.max(1, Math.ceil(total / limit))}
+                                                </PaginationLink>
+                                            </PaginationItem>
+                                            <PaginationItem ref={pagNextRef}>
+                                                <PaginationNext
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        const next = page + 1;
+                                                        if (next * limit < total) {
+                                                            fetchItems({
+                                                                reset: true,
+                                                                pageIndex: next,
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                            </PaginationItem>
+                                        </PaginationContent>
+                                    </Pagination>
+                                </div>
+                            )}
                         </ScrollArea>
                     </CardContent>
                 </Card>
@@ -1114,12 +912,14 @@ export default function ClientExplorer() {
                     </DialogHeader>
                     <div className="space-y-3">
                         {descItem?.images?.[0] ? (
-                            <div className="h-64 sm:h-72 md:h-80 overflow-hidden rounded bg-muted max-w-[900px] mx-auto">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
+                            <div className="h-64 sm:h-72 md:h-80 overflow-hidden rounded bg-muted max-w-[900px] mx-auto relative">
+                                <Image
                                     src={descItem.images[0]}
                                     alt={descItem.title || "Image"}
-                                    className="h-full w-full object-cover"
+                                    className="object-cover"
+                                    fill
+                                    sizes="(max-width: 900px) 100vw, 900px"
+                                    priority={false}
                                 />
                             </div>
                         ) : null}
@@ -1213,13 +1013,14 @@ export default function ClientExplorer() {
                                         <X className="h-4 w-4" />
                                     </Button>
                                     <CardContent className="p-4 space-y-3">
-                                        <div className="aspect-video overflow-hidden rounded bg-muted">
+                                        <div className="aspect-video overflow-hidden rounded bg-muted relative">
                                             {it.images?.[0] && (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img
+                                                <Image
                                                     src={it.images[0]}
                                                     alt={it.title}
-                                                    className="h-full w-full object-cover"
+                                                    className="object-cover"
+                                                    fill
+                                                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                                                 />
                                             )}
                                         </div>
@@ -1269,52 +1070,6 @@ export default function ClientExplorer() {
                     </div>
                 </DialogContent>
             </Dialog>
-
-            {/* Pagination (pages mode) */}
-            {scrollMode === "pages" && (
-                <div className="py-2">
-                    <Pagination>
-                        <PaginationContent>
-                            <PaginationItem>
-                                <PaginationPrevious
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        const next = page - 1;
-                                        if (next >= 0) {
-                                            fetchItems({
-                                                reset: true,
-                                                pageIndex: next,
-                                            });
-                                        }
-                                    }}
-                                />
-                            </PaginationItem>
-                            <PaginationItem>
-                                <PaginationLink href="#" isActive>
-                                    {page + 1} /{" "}
-                                    {Math.max(1, Math.ceil(total / limit))}
-                                </PaginationLink>
-                            </PaginationItem>
-                            <PaginationItem>
-                                <PaginationNext
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        const next = page + 1;
-                                        if (next * limit < total) {
-                                            fetchItems({
-                                                reset: true,
-                                                pageIndex: next,
-                                            });
-                                        }
-                                    }}
-                                />
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
-                </div>
-            )}
         </div>
     );
 }
