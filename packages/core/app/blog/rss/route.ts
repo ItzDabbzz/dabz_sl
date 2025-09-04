@@ -39,7 +39,7 @@ export async function GET() {
     .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.createdAt))
     .limit(50);
 
-  const channelTitle = "sl.itzdabbzz.me Blog";
+  const channelTitle = "sanctumrp.net Blog";
   const channelLink = `${base}/blog`;
   const channelDesc = "Latest posts, guides, and updates.";
   const lastBuildDate = new Date(posts[0]?.publishedAt || Date.now()).toUTCString();

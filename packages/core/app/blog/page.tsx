@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic"; // personalized by session
 const PAGE_SIZE = 10;
 
 export const metadata = {
-    title: "Blog | sl.itzdabbzz.me",
+    title: "Blog | sanctumrp.net",
     description: "Latest posts, guides, and updates.",
 };
 
@@ -107,7 +107,7 @@ export default async function BlogIndex({
                     </aside>
                     <main className="lg:col-span-9 xl:col-span-9 min-w-0">
                         <header className="mb-8">
-                            <h1 className="text-3xl font-bold tracking-tight">
+                            <h1 className="font-enchanted text-5xl font-bold tracking-tight">
                                 Blog
                             </h1>
                             <p className="text-sm text-muted-foreground">

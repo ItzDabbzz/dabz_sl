@@ -16,7 +16,7 @@ export const dynamic = "force-static";
 const PAGE_SIZE = 10;
 
 export const metadata = {
-  title: "Public Blog | sl.itzdabbzz.me",
+  title: "Public Blog | sanctumrp.net",
   description: "Public posts, guides, and updates.",
 };
 

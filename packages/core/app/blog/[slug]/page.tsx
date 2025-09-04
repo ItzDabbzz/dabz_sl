@@ -13,8 +13,8 @@ import { Rating } from "@/components/blog/rating";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { TableOfContents, TocItem } from "@/components/blog/toc";
-import WebBg from "@/components/web-bg";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import SanctumBg from "@/components/sanctum-bg";
 
 export const revalidate = 60; // ISR
 
@@ -100,18 +100,22 @@ export default async function BlogPostPage({
         <div className="relative min-h-screen">
             {/* Full-viewport background behind content */}
             <div className="fixed inset-0 -z-10">
-                <WebBg />
+                <SanctumBg />
             </div>
-            <div className="relative mx-auto max-w-6xl px-6 py-10">
+            <div className="relative mx-auto max-w-8xl px-6 py-10">
                 {/* Floating back button */}
                 <Button
                     asChild
                     variant="secondary"
-                    className="fixed left-4 top-1/2 hidden -translate-y-1/2 md:inline-flex"
+                    className="group fixed left-4 top-1/2 hidden -translate-y-1/2 transition-all md:inline-flex"
                 >
-                    <Link href="/blog" aria-label="Back to all posts">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        <span className="sr-only md:not-sr-only">
+                    <Link
+                        href="/blog"
+                        aria-label="Back to all posts"
+                        className="flex items-center"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="max-w-0 overflow-hidden opacity-0 transition-all duration-300 group-hover:max-w-[120px] group-hover:opacity-100 group-focus-visible:max-w-[120px] group-focus-visible:opacity-100">
                             All Posts
                         </span>
                     </Link>
@@ -123,7 +127,7 @@ export default async function BlogPostPage({
                         {/* Header / hero */}
                         <Card className="mb-6 bg-gradient-to-b from-card to-muted/40">
                             <CardContent className="p-6 md:p-8">
-                                <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+                                <h1 className="font-secondary text-balance text-6xl font-bold leading-tight tracking-tight md:text-5xl sm:text-lg">
                                     {post.title}
                                 </h1>
                                 {post.excerpt ? (

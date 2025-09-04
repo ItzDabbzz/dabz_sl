@@ -78,7 +78,7 @@ import {
 } from "./admin-access";
 
 export const auth = betterAuth({
-    appName: "DABZ SL Tools",
+    appName: "Sanctum Realms Project",
     baseURL,
     database: drizzleAdapter(db, {
         provider: "pg",
@@ -110,7 +110,7 @@ export const auth = betterAuth({
     },
     account: {
         accountLinking: {
-            trustedProviders: ["google", "github"],
+            trustedProviders: ["google", "github", "discord"],
         },
     },
     emailAndPassword: {
@@ -170,7 +170,7 @@ export const auth = betterAuth({
                                 ? `http://localhost:3000/accept-invitation/${data.id}`
                                 : `${
                                       process.env.BETTER_AUTH_URL ||
-                                      "https://demo.better-auth.com"
+                                      "https://sanctumrp.net"
                                   }/accept-invitation/${data.id}`,
                     }),
                 });

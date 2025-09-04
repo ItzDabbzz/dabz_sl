@@ -1,6 +1,94 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @plugin "@tailwindcss/typography";
 @import "@catppuccin/highlightjs/css/catppuccin-mocha.css";
+
+/* Enchanted Land display font */
+@font-face {
+    font-family: "Enchanted Land";
+    src: url("./fonts/Enchanted Land.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* latin-ext */
+@font-face {
+    font-family: "Cinzel Decorative";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(https://fonts.gstatic.com/s/cinzeldecorative/v18/daaCSScvJGqLYhG8nNt8KPPswUAPni7dTMx7aA.woff2)
+        format("woff2");
+    unicode-range:
+        U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+        U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+        U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+    font-family: "Cinzel Decorative";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(https://fonts.gstatic.com/s/cinzeldecorative/v18/daaCSScvJGqLYhG8nNt8KPPswUAPni7TTMw.woff2)
+        format("woff2");
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+        U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+        U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+    font-family: "Cinzel Decorative";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(https://fonts.gstatic.com/s/cinzeldecorative/v18/daaHSScvJGqLYhG8nNt8KPPswUAPniZoadlKSTG7lQ.woff2)
+        format("woff2");
+    unicode-range:
+        U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+        U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+        U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+    font-family: "Cinzel Decorative";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(https://fonts.gstatic.com/s/cinzeldecorative/v18/daaHSScvJGqLYhG8nNt8KPPswUAPniZoadlESTE.woff2)
+        format("woff2");
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+        U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+        U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+    font-family: "Cinzel Decorative";
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url(https://fonts.gstatic.com/s/cinzeldecorative/v18/daaHSScvJGqLYhG8nNt8KPPswUAPniZQa9lKSTG7lQ.woff2)
+        format("woff2");
+    unicode-range:
+        U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+        U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+        U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+    font-family: "Cinzel Decorative";
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url(https://fonts.gstatic.com/s/cinzeldecorative/v18/daaHSScvJGqLYhG8nNt8KPPswUAPniZQa9lESTE.woff2)
+        format("woff2");
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+        U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+        U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 @custom-variant dark (&:is(.dark *));
 :root {
@@ -39,6 +127,10 @@
     --font-sans: AR One Sans, ui-sans-serif, sans-serif, system-ui;
     --font-serif: Alkalami, ui-serif, serif;
     --font-mono: JetBrains Mono, ui-monospace, monospace;
+    /* Preferred display font (Enchanted Land with serif fallback) */
+    --font-display: "Enchanted Land", Alkalami, ui-serif, serif;
+    /* Secondary font (Cinzel Decorative) */
+    --font-secondary: "Cinzel Decorative", Alkalami, ui-serif, serif;
     --radius: 0.9rem;
     --shadow-2xs: 0px 4px 8px 0px hsl(240 30% 25% / 0.09);
     --shadow-xs: 0px 4px 8px 0px hsl(240 30% 25% / 0.09);
@@ -67,45 +159,79 @@
     --shadow-offset-x: 0px;
     --shadow-offset-y: 4px;
     --letter-spacing: 0em;
+
+    /* Semantic aliases for Tailwind-style usage */
+    --blood: var(--primary);
+    --bone: var(--foreground);
+    --stone: var(--card);
+    --ash: var(--secondary);
+    --ember: var(--accent);
 }
 
 .dark {
-    --background: oklch(0.2155 0.0254 284.0647);
-    --foreground: oklch(0.8787 0.0426 272.2767);
-    --card: oklch(0.2429 0.0304 283.911);
-    --card-foreground: oklch(0.8787 0.0426 272.2767);
-    --popover: oklch(0.4037 0.032 280.152);
-    --popover-foreground: oklch(0.8787 0.0426 272.2767);
-    --primary: oklch(0.7871 0.1187 304.7693);
-    --primary-foreground: oklch(0.2429 0.0304 283.911);
-    --secondary: oklch(0.4765 0.034 278.643);
-    --secondary-foreground: oklch(0.8787 0.0426 272.2767);
-    --muted: oklch(0.2973 0.0294 276.2144);
-    --muted-foreground: oklch(0.751 0.0396 273.932);
-    --accent: oklch(0.7871 0.1187 304.7693);
-    --accent-foreground: oklch(0.2429 0.0304 283.911);
-    --destructive: oklch(0.7556 0.1297 2.7642);
-    --destructive-foreground: oklch(0.2429 0.0304 283.911);
-    --border: oklch(0.324 0.0319 281.9784);
-    --input: oklch(0.324 0.0319 281.9784);
-    --ring: oklch(0.7871 0.1187 304.7693);
-    --chart-1: oklch(0.7871 0.1187 304.7693);
-    --chart-2: oklch(0.8467 0.0833 210.2545);
-    --chart-3: oklch(0.8577 0.1092 142.7153);
-    --chart-4: oklch(0.8237 0.1015 52.6294);
-    --chart-5: oklch(0.9226 0.0238 30.4919);
-    --sidebar: oklch(0.1828 0.0204 284.2039);
-    --sidebar-foreground: oklch(0.8787 0.0426 272.2767);
-    --sidebar-primary: oklch(0.7871 0.1187 304.7693);
-    --sidebar-primary-foreground: oklch(0.2429 0.0304 283.911);
-    --sidebar-accent: oklch(0.8467 0.0833 210.2545);
-    --sidebar-accent-foreground: oklch(0.2429 0.0304 283.911);
-    --sidebar-border: oklch(0.4037 0.032 280.152);
-    --sidebar-ring: oklch(0.7871 0.1187 304.7693);
+    /* Obsidian base with bone text */
+    --background: oklch(0.14 0.015 280);
+    --foreground: oklch(0.92 0.02 85);
+
+    /* Stone cards/popovers */
+    --card: oklch(0.18 0.012 280);
+    --card-foreground: var(--foreground);
+    --popover: oklch(0.2 0.012 280);
+    --popover-foreground: var(--foreground);
+
+    /* Blood primary, bone foreground */
+    --primary: oklch(0.48 0.23 25);
+    --primary-foreground: oklch(0.98 0 0);
+
+    /* Ash secondary */
+    --secondary: oklch(0.28 0.01 280);
+    --secondary-foreground: var(--foreground);
+
+    /* Muted and its foreground */
+    --muted: oklch(0.24 0.008 280);
+    --muted-foreground: oklch(0.78 0.02 85);
+
+    /* Ember-gold accent */
+    --accent: oklch(0.62 0.14 75);
+    --accent-foreground: oklch(0.1 0.01 280);
+
+    /* Destructive keeps a brighter scarlet for contrast */
+    --destructive: oklch(0.6 0.22 25);
+    --destructive-foreground: oklch(0.98 0 0);
+
+    /* Borders, inputs, and focus ring */
+    --border: oklch(0.22 0.008 280);
+    --input: var(--border);
+    --ring: var(--primary);
+
+    /* Charts (approximate harmonics) */
+    --chart-1: var(--primary);
+    --chart-2: oklch(0.62 0.14 75);
+    --chart-3: oklch(0.56 0.15 140);
+    --chart-4: oklch(0.58 0.16 45);
+    --chart-5: oklch(0.7 0.04 30);
+
+    /* Sidebar tokens aligned to base */
+    --sidebar: oklch(0.16 0.012 280);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
+
+    /* Typography and radii tweaks */
     --font-sans: AR One Sans, ui-sans-serif, sans-serif, system-ui;
-    --font-serif: Alkalami, ui-serif, serif;
+    --font-serif: "Cinzel Decorative", ui-serif, serif;
     --font-mono: JetBrains Mono, ui-monospace, monospace;
-    --radius: 0.9rem;
+    /* Preferred display font (Enchanted Land with serif fallback) */
+    --font-display: "Enchanted Land", Alkalami, ui-serif, serif;
+    /* Secondary font (Cinzel Decorative) */
+    --font-secondary: "Cinzel Decorative", Alkalami, ui-serif, serif;
+    --radius: 0.7rem; /* slightly sharper corners */
+
+    /* Shadows unchanged */
     --shadow-2xs: 0px 4px 8px 0px hsl(240 30% 25% / 0.09);
     --shadow-xs: 0px 4px 8px 0px hsl(240 30% 25% / 0.09);
     --shadow-sm:
@@ -168,9 +294,20 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
 
+    /* Expose semantic aliases as colors (Tailwind utilities: text-blood, bg-stone, etc.) */
+    --color-blood: var(--blood);
+    --color-bone: var(--bone);
+    --color-stone: var(--stone);
+    --color-ash: var(--ash);
+    --color-ember: var(--ember);
+
     --font-sans: AR One Sans, ui-sans-serif, sans-serif, system-ui;
     --font-mono: JetBrains Mono, ui-monospace, monospace;
     --font-serif: Alkalami, ui-serif, serif;
+    /* Expose display font token */
+    --font-display: var(--font-display);
+    /* Expose secondary font token */
+    --font-secondary: var(--font-secondary);
 
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
@@ -234,32 +371,85 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-    letter-spacing: var(--tracking-normal);
-  }
-  /* Markdown prose polishing */
-  :is(.prose, .prose :where(*)) a {
-    @apply text-primary underline-offset-4 hover:underline;
-  }
-  :is(.prose) img {
-    @apply rounded-lg shadow-sm my-4;
-  }
-  :is(.prose) blockquote {
-    @apply border-l-4 pl-4 italic text-muted-foreground;
-  }
-  :is(.prose) hr {
-    @apply my-8 border-muted;
-  }
-  :is(.prose) code:not(pre code) {
-    @apply rounded bg-muted px-1 py-0.5 text-xs;
-  }
-  /* Remove typography plugin's default backticks around inline code */
-  .prose :where(code):not(:where(pre code, [class~="not-prose"] *))::before,
-  .prose :where(code):not(:where(pre code, [class~="not-prose"] *))::after {
-    content: none !important;
-  }
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+        letter-spacing: var(--tracking-normal);
+    }
+    /* Markdown prose polishing */
+    :is(.prose, .prose :where(*)) a {
+        @apply text-primary underline-offset-4 hover:underline;
+    }
+    :is(.prose) img {
+        @apply rounded-lg shadow-sm my-4;
+    }
+    :is(.prose) blockquote {
+        @apply border-l-4 pl-4 italic text-muted-foreground;
+    }
+    :is(.prose) hr {
+        @apply my-8 border-muted;
+    }
+    :is(.prose) code:not(pre code) {
+        @apply rounded bg-muted px-1 py-0.5 text-xs;
+    }
+    /* Remove typography plugin's default backticks around inline code */
+    .prose :where(code):not(:where(pre code, [class~="not-prose"] *))::before,
+    .prose :where(code):not(:where(pre code, [class~="not-prose"] *))::after {
+        content: none !important;
+    }
+}
+
+@layer utilities {
+    /* Subtle glows using palette tokens */
+    .glow-blood {
+        box-shadow:
+            0 0 0 1px color-mix(in oklch, var(--color-blood), black 65%),
+            0 0 24px color-mix(in oklch, var(--color-blood), black 70%);
+    }
+    .glow-ember {
+        box-shadow:
+            0 0 0 1px color-mix(in oklch, var(--color-ember), black 65%),
+            0 0 24px color-mix(in oklch, var(--color-ember), black 70%);
+    }
+
+    /* Convenience ring color helpers */
+    .ring-blood {
+        --tw-ring-color: var(--color-blood);
+    }
+    .ring-ember {
+        --tw-ring-color: var(--color-ember);
+    }
+
+    /* Stone card surface */
+    .stone-card {
+        background-color: var(--color-card);
+        color: var(--color-card-foreground);
+        border-color: var(--color-border);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Radial vignette mask for backgrounds */
+    .mask-vignette {
+        -webkit-mask-image: radial-gradient(
+            120% 120% at 50% 45%,
+            black 55%,
+            transparent 85%
+        );
+        mask-image: radial-gradient(
+            120% 120% at 50% 45%,
+            black 55%,
+            transparent 85%
+        );
+    }
+
+    /* Utility to apply Enchanted Land display font */
+    .font-enchanted {
+        font-family: var(--font-display);
+    }
+    /* Utility to apply Cinzel Decorative secondary font */
+    .font-secondary, .font-cinzel {
+        font-family: var(--font-secondary);
+    }
 }

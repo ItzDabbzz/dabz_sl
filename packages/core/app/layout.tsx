@@ -26,7 +26,7 @@ export const metadata = createMetadata({
 		title: "Sanctum Realms Project",
 		description: "A list of tools and projects for Second Life creators by Dabz.",
 		url: "https://www.sanctumrp.net",
-		images: [{ url: "/og.png", width: 1200, height: 630 }],
+		images: [{ url: "/og.png", width: 1200, height: 930 }],
 	},
 	twitter: {
 		card: "summary_large_image",

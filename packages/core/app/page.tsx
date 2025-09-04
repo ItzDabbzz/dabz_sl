@@ -15,7 +15,7 @@ import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { mpCategories, mpItemCategories, mpItems } from "@/schemas/sl-schema";
 import { count, sql } from "drizzle-orm";
-import WebBg from "@/components/web-bg";
+import SanctumBg from "@/components/sanctum-bg";
 import { LogoutButton } from "@/components/logout-button";
 
 // Real session fetcher (returns null if not logged in)
@@ -277,8 +277,8 @@ export default async function Home() {
 
     return (
         <div className="relative min-h-[100svh] w-full overflow-hidden bg-gradient-to-b from-background via-background to-background">
-            {/* Framer Motion Aurora */}
-            <WebBg />
+            {/* Sanctum cathedral background */}
+            <SanctumBg mode="cathedral" moon="blood" />
 
             {/* Floating minimal user header */}
             <div className="fixed top-4 right-4 z-50">
@@ -311,19 +311,18 @@ export default async function Home() {
                 </div>
             </div>
 
-            <main className="relative mx-auto flex min-h-[100svh] max-w-[90rem] flex-col items-center justify-center gap-5 px-6 text-center">
+            <main className="relative mx-auto flex min-h-[100svh] max-w-[90rem] flex-col items-center justify-center gap-5 px-6 text-center z-10">
                 <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-                    Live Alpha
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-rose-500 font-secondary" />
+                    Gate Open
                 </span>
 
-                <h1 className="text-balance font-extrabold tracking-tight text-3xl sm:text-4xl md:text-5xl">
-                    The Sanctum Realms Project
+                <h1 className="text-balance font-enchanted tracking-tight text-7xl sm:text-5xl md:text-7xl">
+                    Sanctum Realms
                 </h1>
-                <p className="text-balance max-w-3xl text-sm sm:text-base text-muted-foreground">
-                    A sleek suite of utilities crafted by Dabz. Authenticate to
-                    explore dashboards, manage objects, webhooks, API keys, and
-                    more.
+                <p className="font-secondary text-balance max-w-3xl text-md sm:text-base text-muted-foreground">
+                    A hidden refuge of power, craft, and knowledge. Enter to
+                    chart realms, bind artifacts, and keep the rites.
                 </p>
 
                 <div className="relative mt-2">
@@ -331,6 +330,8 @@ export default async function Home() {
                         className={cn(
                             "bg-card/70 backdrop-blur-xl border border-border/60 shadow-2xl",
                             "rounded-2xl px-4 py-3 sm:px-5 sm:py-4 flex flex-col items-center gap-2 w-[90vw] max-w-md",
+                            // subtle sanctum glow ring
+                            "ring-1 ring-rose-900/20 hover:ring-rose-700/25 transition-shadow duration-300 shadow-[0_0_60px_-20px_rgba(193,30,55,0.35)]",
                         )}
                     >
                         {/* Clean public navigation buttons */}
@@ -358,8 +359,8 @@ export default async function Home() {
                     {/* Live Stats */}
                     <div className="text-left">
                         <div className="mb-2.5 flex items-center justify-between">
-                            <h2 className="text-base sm:text-lg font-bold tracking-tight">
-                                Live Second Life
+                            <h2 className="text-base sm:text-lg font-bold tracking-tight md:font-enchanted">
+                                The World Beyond
                             </h2>
                             <Badge variant="outline" className="text-[10px]">
                                 Linden Lab
@@ -603,8 +604,8 @@ export default async function Home() {
                     {/* Marketplace Stats */}
                     <div className="text-left">
                         <div className="mb-2.5 flex items-center justify-between">
-                            <h2 className="text-base sm:text-lg font-bold tracking-tight">
-                                Marketplace
+                            <h2 className="text-base sm:text-lg font-bold tracking-tight md:font-enchanted">
+                                Relics and Ledgers
                             </h2>
                             <Badge variant="outline" className="text-[10px]">
                                 Cached ~10m
@@ -615,7 +616,7 @@ export default async function Home() {
                             <Card className="h-[180px]">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-sm">
-                                        Total items
+                                        Cataloged Relics
                                     </CardTitle>
                                     <CardDescription className="text-xs">
                                         All imported listings
@@ -681,7 +682,7 @@ export default async function Home() {
                             <Card className="h-[180px]">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-sm">
-                                        Categorized items
+                                        Bound to Orders
                                     </CardTitle>
                                     <CardDescription className="text-xs">
                                         Items linked to any category
@@ -699,7 +700,7 @@ export default async function Home() {
                             <Card className="h-[180px]">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-sm">
-                                        Uncategorized
+                                        Untethered
                                     </CardTitle>
                                     <CardDescription className="text-xs">
                                         Items needing review
@@ -716,7 +717,7 @@ export default async function Home() {
                                             variant="secondary"
                                             className="text-[10px]"
                                         >
-                                            Last change{" "}
+                                            Last Stirring{" "}
                                             {timeAgoFromIso(
                                                 mpStats.lastItemUpdateIso,
                                             )}
