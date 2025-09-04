@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export function ActionToast({ ok }: { ok?: string }) {
-  const { toast } = useToast();
   React.useEffect(() => {
     if (!ok) return;
     const map: Record<string, string> = {
@@ -16,12 +15,12 @@ export function ActionToast({ ok }: { ok?: string }) {
       current: "Current version updated",
     };
     const msg = map[ok] || "Saved";
-    toast({ title: msg });
+    toast(msg);
     try {
       const url = new URL(window.location.href);
       url.searchParams.delete("ok");
       window.history.replaceState({}, "", url.toString());
     } catch {}
-  }, [ok, toast]);
+  }, [ok]);
   return null;
 }
