@@ -52,6 +52,18 @@ const db = drizzle(sql);
 const baseURL: string | undefined =
     process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
 
+// Build trusted origins from baseURL to avoid hard-coding domains
+const defaultTrusted = ["exp://", "https://www.sanctumrp.net"] as string[];
+const computedTrusted = [...defaultTrusted];
+try {
+    if (baseURL) {
+        const origin = new URL(baseURL).origin;
+        if (origin && !computedTrusted.includes(origin)) {
+            computedTrusted.push(origin);
+        }
+    }
+} catch {}
+
 const cookieDomain: string | undefined = process.env.COOKIE_DOMAIN || undefined;
 
 import {
@@ -219,7 +231,7 @@ export const auth = betterAuth({
             };
         }),
     ],
-    trustedOrigins: ["exp://", 'https://www.sanctumrp.net'],
+    trustedOrigins: computedTrusted,
     advanced: {
         crossSubDomainCookies: {
             enabled: process.env.NODE_ENV === "production",
