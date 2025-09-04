@@ -219,7 +219,7 @@ export const auth = betterAuth({
             };
         }),
     ],
-    trustedOrigins: ["exp://"],
+    trustedOrigins: ["exp://", 'https://www.sanctumrp.net'],
     advanced: {
         crossSubDomainCookies: {
             enabled: process.env.NODE_ENV === "production",
