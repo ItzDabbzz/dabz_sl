@@ -14,7 +14,12 @@ export default async function ApiKeysPage() {
 
   const hdrs = await headers();
   const base = absoluteUrl(hdrs);
-  const res = await fetch(`${base}/api/creator/apikeys`, { headers: { Authorization: hdrs.get("authorization") || "" } });
+  const res = await fetch(`${base}/api/creator/apikeys`, {
+    headers: {
+      Authorization: hdrs.get("authorization") || "",
+      Cookie: hdrs.get("cookie") || "",
+    },
+  });
   const data = await res.json().catch(() => ({ items: [] }));
   const items: ApiKeyItem[] = (data?.items || []).map((x: any) => ({ id: x.id, name: x.name, createdAt: x.createdAt, lastUsedAt: x.lastUsedAt }));
 
@@ -23,7 +28,13 @@ export default async function ApiKeysPage() {
     const id = String(formData.get('id') || '');
     const hdrs2 = await headers();
     const base2 = absoluteUrl(hdrs2);
-    await fetch(`${base2}/api/creator/apikeys?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: hdrs2.get('authorization') || '' } });
+    await fetch(`${base2}/api/creator/apikeys?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: hdrs2.get('authorization') || '',
+        Cookie: hdrs2.get('cookie') || '',
+      },
+    });
   }
 
   async function createKey(formData: FormData) {
@@ -32,7 +43,15 @@ export default async function ApiKeysPage() {
     const scopes = String(formData.get('scopes') || '').split(/\s+/).filter(Boolean);
     const hdrs2 = await headers();
     const base2 = absoluteUrl(hdrs2);
-    await fetch(`${base2}/api/creator/apikeys`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: hdrs2.get('authorization') || '' }, body: JSON.stringify({ name, scopes }) });
+    await fetch(`${base2}/api/creator/apikeys`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: hdrs2.get('authorization') || '',
+        Cookie: hdrs2.get('cookie') || '',
+      },
+      body: JSON.stringify({ name, scopes }),
+    });
   }
 
   return (
