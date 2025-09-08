@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const authz = req.headers.get("authorization") || "";
@@ -14,13 +17,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Session flow (dashboard): use cookies
-    const session = await auth.api.getSession({ headers: req.headers as any });
-    if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const session = await auth.api.getSession({ headers: req.headers as any });
+  if (!session) return NextResponse.json({ error: "unauthorized", reason: "missing_session" }, { status: 401 });
     const result = await auth.api.listApiKeys({ headers: req.headers as any });
     return NextResponse.json({ items: result?.apiKeys ?? [] }, { status: 200 });
   } catch (e: any) {
-    if (e.message?.includes("missing_bearer")) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    if (e.message?.includes("forbidden")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (e.message?.includes("missing_bearer")) return NextResponse.json({ error: "unauthorized", reason: "missing_bearer" }, { status: 401 });
+  if (e.message?.includes("forbidden")) return NextResponse.json({ error: "forbidden", reason: "insufficient_scope" }, { status: 403 });
     console.error(e);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
@@ -43,16 +46,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Session flow
-    const session = await auth.api.getSession({ headers: req.headers as any });
-    if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const session = await auth.api.getSession({ headers: req.headers as any });
+  if (!session) return NextResponse.json({ error: "unauthorized", reason: "missing_session" }, { status: 401 });
     const created = await auth.api.createApiKey({
       body: { name, metadata: { ...(metadata || {}), permissions: (scopes || []).join(" ") } },
       headers: req.headers as any,
     });
     return NextResponse.json(created, { status: 201 });
   } catch (e: any) {
-    if (e.message?.includes("missing_bearer")) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    if (e.message?.includes("forbidden")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (e.message?.includes("missing_bearer")) return NextResponse.json({ error: "unauthorized", reason: "missing_bearer" }, { status: 401 });
+  if (e.message?.includes("forbidden")) return NextResponse.json({ error: "forbidden", reason: "insufficient_scope" }, { status: 403 });
     console.error(e);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
@@ -72,13 +75,13 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Session flow
-    const session = await auth.api.getSession({ headers: req.headers as any });
-    if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const session = await auth.api.getSession({ headers: req.headers as any });
+  if (!session) return NextResponse.json({ error: "unauthorized", reason: "missing_session" }, { status: 401 });
     await auth.api.deleteApiKey({ body: { id: keyId }, headers: req.headers as any });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e: any) {
-    if (e.message?.includes("missing_bearer")) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    if (e.message?.includes("forbidden")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (e.message?.includes("missing_bearer")) return NextResponse.json({ error: "unauthorized", reason: "missing_bearer" }, { status: 401 });
+  if (e.message?.includes("forbidden")) return NextResponse.json({ error: "forbidden", reason: "insufficient_scope" }, { status: 403 });
     console.error(e);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }

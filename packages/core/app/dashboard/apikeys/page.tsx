@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiKeysTable, type ApiKeyItem } from "./components/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { absoluteUrl } from "@/lib/absolute-url";
 import WorkInProgressNotice from "@/components/wip-notice";
+import dynamic from "next/dynamic";
+const ActionsClient = dynamic(() => import("./actions-client").then(m => m.ActionsClient), { ssr: false });
 
 export default async function ApiKeysPage() {
   const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
@@ -23,36 +23,7 @@ export default async function ApiKeysPage() {
   const data = await res.json().catch(() => ({ items: [] }));
   const items: ApiKeyItem[] = (data?.items || []).map((x: any) => ({ id: x.id, name: x.name, createdAt: x.createdAt, lastUsedAt: x.lastUsedAt }));
 
-  async function revokeKey(formData: FormData) {
-    'use server';
-    const id = String(formData.get('id') || '');
-    const hdrs2 = await headers();
-    const base2 = absoluteUrl(hdrs2);
-    await fetch(`${base2}/api/creator/apikeys?id=${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: hdrs2.get('authorization') || '',
-        Cookie: hdrs2.get('cookie') || '',
-      },
-    });
-  }
-
-  async function createKey(formData: FormData) {
-    'use server';
-    const name = String(formData.get('name') || 'New Key');
-    const scopes = String(formData.get('scopes') || '').split(/\s+/).filter(Boolean);
-    const hdrs2 = await headers();
-    const base2 = absoluteUrl(hdrs2);
-    await fetch(`${base2}/api/creator/apikeys`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: hdrs2.get('authorization') || '',
-        Cookie: hdrs2.get('cookie') || '',
-      },
-      body: JSON.stringify({ name, scopes }),
-    });
-  }
+  // Actions handled client-side in ActionsClient for better error UX
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -66,24 +37,10 @@ export default async function ApiKeysPage() {
           {/* Presentational table */}
           <ApiKeysTable items={items} />
           {/* Actions per key */}
-          <div className="mt-4 space-y-2">
-            {items.map((k) => (
-              <form key={k.id} action={revokeKey} className="flex items-center justify-between border rounded-md p-2">
-                <div className="text-xs text-muted-foreground truncate">
-                  Revoke key <span className="font-mono">{k.id}</span>
-                </div>
-                <input type="hidden" name="id" value={k.id} />
-                <Button variant="destructive" size="sm" type="submit">Revoke</Button>
-              </form>
-            ))}
-          </div>
+          <ActionsClient items={items} />
         </CardContent>
         <CardFooter>
-          <form action={createKey} className="w-full grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-            <Input name="name" placeholder="Key name" />
-            <Input name="scopes" placeholder="Scopes (space separated) e.g. sl.objects:read sl.instances:write" />
-            <Button type="submit">Create</Button>
-          </form>
+          {/* Duplicated in ActionsClient */}
         </CardFooter>
       </Card>
     </div>
