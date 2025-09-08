@@ -7,9 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { revalidatePath } from "next/cache";
 import { EmailTemplateEditor } from "@/components/blog/email-template-editor";
+import { requirePermission } from "@/lib/guards";
+import { headers } from "next/headers";
 
 export async function saveSettings(formData: FormData) {
     "use server";
+    // Require explicit blog settings permission
+    await requirePermission("blog.settings.update", await headers());
+
     const user = await getBlogEditorUser();
     if (!user) return;
     const heroCategoryId =
@@ -69,13 +74,16 @@ export async function saveSettings(formData: FormData) {
 }
 
 export default async function BlogSettingsPage() {
-    const user = await getBlogEditorUser();
-    if (!user)
+    // Only users with blog.settings.update may access this page
+    try {
+        await requirePermission("blog.settings.update", await headers());
+    } catch {
         return (
             <div className="p-6 text-sm text-red-500">
                 You do not have access.
             </div>
         );
+    }
 
     const categories = await db
         .select()

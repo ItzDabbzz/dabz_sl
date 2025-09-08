@@ -30,6 +30,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/logo";
 import WebBG from "@/components/web-bg";
+import { useCan } from "@/lib/client-permissions";
 
 function useLocalStorageBoolean(key: string, initial: boolean) {
     const [value, setValue] = useState(initial);
@@ -224,29 +225,44 @@ export function AppShell({ children }: { children: ReactNode }) {
     const contentRef = useRef<HTMLDivElement>(null);
 
     const role = (session as any)?.user?.role ?? "user";
+    const blogSettingsAllowed = useCan("blog.settings.update");
     const isStaff = useMemo(
         () => new Set(["owner", "developer", "admin"]).has(role),
         [role],
     );
+    const isSuperAdmin = useMemo(() => {
+        const id = (session as any)?.user?.id as string | undefined;
+        const admins = (process.env.NEXT_PUBLIC_BETTER_AUTH_ADMIN_IDS || "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+        return !!id && admins.includes(id);
+    }, [session]);
 
     // Sections, conditionally including Admin for staff
     const sections: ReadonlyArray<NavSection> = useMemo(() => {
         const base: NavSection[] = [...navSections];
-        if (isStaff) {
+        if (isStaff || isSuperAdmin) {
             base.push({
                 id: "staff",
                 title: "Staff",
                 items: [
-                    {
-                        href: "/dashboard/admin",
-                        title: "Admin",
-                        icon: ShieldCheck,
-                    },
+                    { href: "/dashboard/admin", title: "Admin", icon: ShieldCheck },
+                    { href: "/dashboard/admin/permissions", title: "Permissions", icon: ShieldCheck },
                 ],
             });
         }
+        // Hide Blog Settings unless allowed
+        const contentIdx = base.findIndex((s) => s.id === "content");
+        if (contentIdx >= 0) {
+            const s = base[contentIdx];
+            base[contentIdx] = {
+                ...s,
+                items: s.items.filter((i) => i.href !== "/dashboard/blog/settings" || blogSettingsAllowed),
+            };
+        }
         return base;
-    }, [isStaff]);
+    }, [isStaff, isSuperAdmin, blogSettingsAllowed]);
 
     // Flattened items for collapsed sidebar
     const flatItems: NavItem[] = useMemo(
