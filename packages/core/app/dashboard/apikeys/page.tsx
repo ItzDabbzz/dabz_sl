@@ -5,8 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { ApiKeysTable, type ApiKeyItem } from "./components/table";
 import { absoluteUrl } from "@/lib/absolute-url";
 import WorkInProgressNotice from "@/components/wip-notice";
-import dynamic from "next/dynamic";
-const ActionsClient = dynamic(() => import("./actions-client").then(m => m.ActionsClient), { ssr: false });
+import { ActionsClient } from "./actions-client";
 
 export default async function ApiKeysPage() {
   const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
