@@ -5,9 +5,9 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { generateToken, hashToken } from "@/lib/utils";
 
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id;
+  const { id } = await params;
 
     const [inst] = await db.select().from(objectInstances).where(eq(objectInstances.id, id));
     if (!inst) return NextResponse.json({ error: "instance_not_found" }, { status: 404 });

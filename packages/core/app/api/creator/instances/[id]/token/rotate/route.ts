@@ -5,12 +5,12 @@ import { eq } from "drizzle-orm";
 import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
 import { generateToken, hashToken } from "@/lib/utils";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const ctx = await getCreatorContextFromApiKey(req as any);
     requireScope(ctx, "sl.instances:write");
 
-    const id = params.id;
+  const { id } = await params;
     const [inst] = await db.select().from(objectInstances).where(eq(objectInstances.id, id));
     if (!inst) return NextResponse.json({ error: "not_found" }, { status: 404 });
 

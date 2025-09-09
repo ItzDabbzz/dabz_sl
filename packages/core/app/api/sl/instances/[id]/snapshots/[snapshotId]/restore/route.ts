@@ -17,14 +17,14 @@ function rlHeaders(rl: any) {
   return h;
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string; snapshotId: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string; snapshotId: string }> }) {
   const rawBody = await req.text();
   try {
     const headers = Object.fromEntries(req.headers);
 
     // Rate limit by instance and IP
     const ip = headers["x-forwarded-for"] || "unknown";
-    const { id, snapshotId } = params;
+  const { id, snapshotId } = await params;
     const rl = await rateLimit(`restore:${id}:${ip}`, 10, 60_000);
     if (!rl.ok) return new NextResponse(null, { status: 429, headers: rlHeaders(rl) });
 

@@ -5,10 +5,10 @@ import { requirePermission, getActiveOrgId } from "@/lib/guards";
 import { rbacRoles } from "@/schemas/rbac";
 import { and, eq } from "drizzle-orm";
 
-export async function PATCH(req: NextRequest, { params }: { params: { roleId: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ roleId: string }> }) {
   await requirePermission("rbac.manage", await headers());
   const orgId = (await getActiveOrgId(await headers()))!;
-  const { roleId } = params;
+  const { roleId } = await params;
   const body = await req.json();
   const name = body?.name as string | undefined;
   const description = (body?.description ?? undefined) as string | undefined;
@@ -20,10 +20,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { roleId: st
   return NextResponse.json({ ok: true });
 }
 
-export async function POST(req: NextRequest, { params }: { params: { roleId: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ roleId: string }> }) {
   await requirePermission("rbac.manage", await headers());
   const orgId = (await getActiveOrgId(await headers()))!;
-  const { roleId } = params;
+  const { roleId } = await params;
 
   const ct = req.headers.get("content-type") || "";
   let _method = "";
@@ -54,10 +54,10 @@ export async function POST(req: NextRequest, { params }: { params: { roleId: str
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { roleId: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ roleId: string }> }) {
   await requirePermission("rbac.manage", await headers());
   const orgId = (await getActiveOrgId(await headers()))!;
-  const { roleId } = params;
+  const { roleId } = await params;
 
   await db.delete(rbacRoles).where(and(eq(rbacRoles.id as any, roleId as any) as any, eq(rbacRoles.organizationId as any, orgId as any) as any) as any);
   return NextResponse.json({ ok: true });

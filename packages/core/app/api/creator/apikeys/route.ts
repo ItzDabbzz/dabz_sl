@@ -12,15 +12,17 @@ export async function GET(req: NextRequest) {
       // API key flow: require specific scope
       const ctx = await getCreatorContextFromApiKey(req as any);
       requireScope(ctx, "sl.apikeys:read");
-      const result = await auth.api.listApiKeys({ headers: { Authorization: authz } as any });
-      return NextResponse.json({ items: result?.apiKeys ?? [] }, { status: 200 });
+  const result = await auth.api.listApiKeys({ headers: { Authorization: authz } as any });
+  const items = (result as any)?.apiKeys ?? (Array.isArray(result) ? result : []);
+  return NextResponse.json({ items }, { status: 200 });
     }
 
     // Session flow (dashboard): use cookies
   const session = await auth.api.getSession({ headers: req.headers as any });
   if (!session) return NextResponse.json({ error: "unauthorized", reason: "missing_session" }, { status: 401 });
-    const result = await auth.api.listApiKeys({ headers: req.headers as any });
-    return NextResponse.json({ items: result?.apiKeys ?? [] }, { status: 200 });
+  const result = await auth.api.listApiKeys({ headers: req.headers as any });
+  const items = (result as any)?.apiKeys ?? (Array.isArray(result) ? result : []);
+  return NextResponse.json({ items }, { status: 200 });
   } catch (e: any) {
   if (e.message?.includes("missing_bearer")) return NextResponse.json({ error: "unauthorized", reason: "missing_bearer" }, { status: 401 });
   if (e.message?.includes("forbidden")) return NextResponse.json({ error: "forbidden", reason: "insufficient_scope" }, { status: 403 });
@@ -70,14 +72,14 @@ export async function DELETE(req: NextRequest) {
     if (authz) {
       const ctx = await getCreatorContextFromApiKey(req as any);
       requireScope(ctx, "sl.apikeys:write");
-      await auth.api.deleteApiKey({ body: { id: keyId }, headers: { Authorization: authz } as any });
+  await auth.api.deleteApiKey({ body: { keyId }, headers: { Authorization: authz } as any });
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 
     // Session flow
   const session = await auth.api.getSession({ headers: req.headers as any });
   if (!session) return NextResponse.json({ error: "unauthorized", reason: "missing_session" }, { status: 401 });
-    await auth.api.deleteApiKey({ body: { id: keyId }, headers: req.headers as any });
+  await auth.api.deleteApiKey({ body: { keyId }, headers: req.headers as any });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e: any) {
   if (e.message?.includes("missing_bearer")) return NextResponse.json({ error: "unauthorized", reason: "missing_bearer" }, { status: 401 });

@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Markdown } from "@/components/markdown";
+import { Markdown } from "@/components/features/common/markdown";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";

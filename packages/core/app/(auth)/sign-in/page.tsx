@@ -1,7 +1,7 @@
 "use client";
 
 import SignIn from "@/components/sign-in";
-import { SignUp } from "@/components/sign-up";
+import { SignUp } from "@/components/features/auth/sign-up";
 // Replace custom Tabs2 with shadcn Tabs (Radix)
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { client } from "@/lib/auth-client";

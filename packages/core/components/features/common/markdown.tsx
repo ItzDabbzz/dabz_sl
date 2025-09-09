@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import javascript from "react-syntax-highlighter/dist/esm/languages/hljs/javascript";
@@ -158,3 +158,5 @@ export function Markdown({ value }: { value: string }) {
         </div>
     );
 }
+
+export default Markdown;

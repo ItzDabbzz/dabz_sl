@@ -9,9 +9,10 @@ async function fetchRoles(q?: string) {
   return (await res.json()).roles as Array<{ id: string; name: string; slug: string; isSystem: boolean; description: string | null; }>;
 }
 
-export default async function RolesPage({ searchParams }: { searchParams: { q?: string } }) {
+export default async function RolesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   try { await requirePermission("rbac.manage", await headers()); } catch { return <div className="p-6 text-sm text-red-500">You do not have access.</div>; }
-  const q = searchParams?.q || "";
+  const sp = await searchParams;
+  const q = sp?.q || "";
   const roles = await fetchRoles(q);
 
   return (

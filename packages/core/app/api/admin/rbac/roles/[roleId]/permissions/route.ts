@@ -7,11 +7,11 @@ import { and, asc, eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { PermissionService } from "@/lib/permission-service";
 
-export async function GET(_req: NextRequest, { params }: { params: { roleId: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ roleId: string }> }) {
   await requirePermission("rbac.manage", await headers());
   // Ensure role belongs to active org
   const orgId = (await getActiveOrgId(await headers()))!;
-  const { roleId } = params;
+  const { roleId } = await params;
   const roleRows = await db.select().from(rbacRoles).where(and(eq(rbacRoles.id as any, roleId as any) as any, eq(rbacRoles.organizationId as any, orgId as any) as any) as any).limit(1);
   if (!roleRows.length) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -19,10 +19,10 @@ export async function GET(_req: NextRequest, { params }: { params: { roleId: str
   return NextResponse.json({ permissions: rows });
 }
 
-export async function POST(req: NextRequest, { params }: { params: { roleId: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ roleId: string }> }) {
   await requirePermission("rbac.manage", await headers());
   const orgId = (await getActiveOrgId(await headers()))!;
-  const { roleId } = params;
+  const { roleId } = await params;
   const roleRows = await db.select().from(rbacRoles).where(and(eq(rbacRoles.id as any, roleId as any) as any, eq(rbacRoles.organizationId as any, orgId as any) as any) as any).limit(1);
   if (!roleRows.length) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -61,10 +61,10 @@ export async function POST(req: NextRequest, { params }: { params: { roleId: str
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { roleId: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ roleId: string }> }) {
   await requirePermission("rbac.manage", await headers());
   const orgId = (await getActiveOrgId(await headers()))!;
-  const { roleId } = params;
+  const { roleId } = await params;
   const roleRows = await db.select().from(rbacRoles).where(and(eq(rbacRoles.id as any, roleId as any) as any, eq(rbacRoles.organizationId as any, orgId as any) as any) as any).limit(1);
   if (!roleRows.length) return NextResponse.json({ error: "not_found" }, { status: 404 });
 

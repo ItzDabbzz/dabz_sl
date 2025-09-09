@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { id: string } },
+    { params }: { params: Promise<{ id: string }> },
 ) {
     try {
         const session = await auth.api.getSession({
@@ -40,7 +40,7 @@ export async function PATCH(
             );
         }
 
-        const userId = params.id;
+    const { id: userId } = await params;
         await db
             .update(userTable)
             .set({ name: newName as any, updatedAt: new Date() as any })

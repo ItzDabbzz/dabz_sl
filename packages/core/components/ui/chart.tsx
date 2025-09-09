@@ -34,7 +34,13 @@ function useChart() {
 	return context;
 }
 
-const ChartContainer = ({ ref, id, className, children, config, ...props }) => {
+interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
+	id?: string;
+	config: ChartConfig;
+	children: React.ReactElement;
+}
+
+const ChartContainer = React.forwardRef<HTMLDivElement, ChartContainerProps>(({ id, className, children, config, ...props }, ref) => {
 	const uniqueId = React.useId();
 	const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
 
@@ -56,7 +62,7 @@ const ChartContainer = ({ ref, id, className, children, config, ...props }) => {
 			</div>
 		</ChartContext.Provider>
 	);
-};
+});
 ChartContainer.displayName = "Chart";
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
@@ -94,8 +100,36 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
-const ChartTooltipContent = ({
-	ref,
+type TooltipPayloadItem = {
+	value?: number | string;
+	name?: string;
+	color?: string;
+	dataKey?: string;
+	payload: Record<string, any> & { fill?: string };
+};
+
+interface ChartTooltipContentProps extends React.HTMLAttributes<HTMLDivElement> {
+	active?: boolean;
+	payload?: TooltipPayloadItem[];
+	indicator?: "dot" | "line" | "dashed";
+	hideLabel?: boolean;
+	hideIndicator?: boolean;
+	label?: string;
+	labelFormatter?: (value: React.ReactNode, payload?: TooltipPayloadItem[]) => React.ReactNode;
+	labelClassName?: string;
+	formatter?: (
+		value: NonNullable<TooltipPayloadItem["value"]>,
+		name: NonNullable<TooltipPayloadItem["name"]>,
+		item: TooltipPayloadItem,
+		index: number,
+		raw: TooltipPayloadItem["payload"],
+	) => React.ReactNode;
+	color?: string;
+	nameKey?: string;
+	labelKey?: string;
+}
+
+const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltipContentProps>(({
 	active,
 	payload,
 	className,
@@ -109,7 +143,7 @@ const ChartTooltipContent = ({
 	color,
 	nameKey,
 	labelKey,
-}) => {
+}, ref) => {
 	const { config } = useChart();
 
 	const tooltipLabel = React.useMemo(() => {
@@ -231,19 +265,21 @@ const ChartTooltipContent = ({
 			</div>
 		</div>
 	);
-};
+});
 ChartTooltipContent.displayName = "ChartTooltip";
 
 const ChartLegend = RechartsPrimitive.Legend;
 
-const ChartLegendContent = ({
-	ref,
-	className,
-	hideIcon = false,
-	payload,
-	verticalAlign = "bottom",
-	nameKey,
-}) => {
+type LegendPayloadItem = { value?: string; color?: string; dataKey?: string; };
+
+interface ChartLegendContentProps extends React.HTMLAttributes<HTMLDivElement> {
+	hideIcon?: boolean;
+	payload?: LegendPayloadItem[];
+	verticalAlign?: "top" | "bottom";
+	nameKey?: string;
+}
+
+const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendContentProps>(({ className, hideIcon = false, payload, verticalAlign = "bottom", nameKey }, ref) => {
 	const { config } = useChart();
 
 	if (!payload?.length) {
@@ -286,7 +322,7 @@ const ChartLegendContent = ({
 			})}
 		</div>
 	);
-};
+});
 ChartLegendContent.displayName = "ChartLegend";
 
 // Helper to extract item config from a payload.

@@ -4,7 +4,7 @@ import { webhooks } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
 import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const ctx = await getCreatorContextFromApiKey(req as any);
     requireScope(ctx, "sl.webhooks:write");
@@ -20,7 +20,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         ...(secret !== undefined ? { secret } : {}),
         ...(active !== undefined ? { active } : {}),
       })
-      .where(eq(webhooks.id, params.id))
+  .where(eq(webhooks.id, (await params).id))
       .returning({ id: webhooks.id });
 
     if (!res.length) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -33,12 +33,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const ctx = await getCreatorContextFromApiKey(req as any);
     requireScope(ctx, "sl.webhooks:write");
 
-    const res = await db.delete(webhooks).where(eq(webhooks.id, params.id)).returning({ id: webhooks.id });
+  const res = await db.delete(webhooks).where(eq(webhooks.id, (await params).id)).returning({ id: webhooks.id });
     if (!res.length) return NextResponse.json({ error: "not_found" }, { status: 404 });
     return NextResponse.json({ id: res[0].id }, { status: 200 });
   } catch (e: any) {

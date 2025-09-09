@@ -19,9 +19,9 @@ function rlHeaders(rl: any) {
   return h;
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id;
+  const { id } = await params;
 
     // Rate limit by instance and IP
     const ip = req.headers.get("x-forwarded-for") || "unknown";
@@ -62,14 +62,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rawBody = await req.text();
   try {
     const headers = Object.fromEntries(req.headers);
 
     // Rate limit by instance and IP (before verification to shield)
     const ip = headers["x-forwarded-for"] || "unknown";
-    const id = params.id;
+  const { id } = await params;
     const rl = await rateLimit(`setcfg:${id}:${ip}`, 20, 60_000);
     if (!rl.ok)
       return new NextResponse(null, {
