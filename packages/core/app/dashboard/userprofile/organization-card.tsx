@@ -48,8 +48,17 @@ export function OrganizationCard(props: {
 	activeOrganization: ActiveOrganization | null;
 }) {
 	const organizations = useListOrganizations();
+	const normalizeOrg = (org: ActiveOrganization | null): ActiveOrganization | null =>
+		org
+			? {
+				  ...org,
+				  members: org.members ?? [],
+				  invitations: org.invitations ?? [],
+				  teams: org.teams ?? [],
+			  }
+			: null;
 	const [optimisticOrg, setOptimisticOrg] = useState<ActiveOrganization | null>(
-		props.activeOrganization,
+		normalizeOrg(props.activeOrganization),
 	);
 	const [isRevoking, setIsRevoking] = useState<string[]>([]);
 	const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
@@ -103,16 +112,29 @@ export function OrganizationCard(props: {
 										if (org.id === optimisticOrg?.id) {
 											return;
 										}
+										// Optimistically show switching state with safe defaults
 										setOptimisticOrg({
+											// spread basic org fields from list item
+											...org,
+											// ensure arrays exist while we fetch full org
 											members: [],
 											invitations: [],
 											teams: [],
-											...org,
-										});
+										} as unknown as ActiveOrganization);
 										const { data } = await organization.setActive({
 											organizationId: org.id,
 										});
-										setOptimisticOrg(data);
+										// Normalize server response to ensure arrays are always defined
+										setOptimisticOrg(
+											data
+												? {
+													  ...data,
+													  members: data.members ?? [],
+													  invitations: data.invitations ?? [],
+													  teams: data.teams ?? [],
+												  }
+												: null,
+										);
 										setActiveTeamId(null);
 									}}
 								>
@@ -127,7 +149,7 @@ export function OrganizationCard(props: {
 								canManage={currentMember?.role === "owner" || currentMember?.role === "admin"}
 								onCreated={async () => {
 									const { data } = await organization.getFullOrganization({});
-									if (data) setOptimisticOrg(data);
+									if (data) setOptimisticOrg(normalizeOrg(data));
 								}}
 							/>
 						)}
@@ -147,7 +169,7 @@ export function OrganizationCard(props: {
 					<div className="min-w-0">
 						<p className="text-base sm:text-lg font-semibold truncate">{optimisticOrg?.name || "Personal"}</p>
 						<p className="text-xs sm:text-sm text-muted-foreground">
-							{(optimisticOrg?.members.length || 1)} member{(optimisticOrg?.members.length || 1) === 1 ? "" : "s"}
+							{(optimisticOrg?.members?.length ?? 1)} member{(optimisticOrg?.members?.length ?? 1) === 1 ? "" : "s"}
 						</p>
 						{optimisticOrg?.id && (
 							<p className="text-xs text-muted-foreground truncate">
@@ -162,10 +184,10 @@ export function OrganizationCard(props: {
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 					<div className="flex flex-col gap-3">
 						<p className="text-sm font-semibold text-foreground/90 border-b border-border pb-2">
-							Members{optimisticOrg?.members?.length !== undefined ? ` (${optimisticOrg.members.length})` : ""}
+							Members{optimisticOrg?.members ? ` (${optimisticOrg.members.length})` : ""}
 						</p>
 						<div className="flex flex-col gap-2">
-							{optimisticOrg?.members.map((member) => (
+							{(optimisticOrg?.members ?? []).map((member) => (
 								<div
 									key={member.id}
 									className="flex justify-between items-center rounded-md border p-2 sm:p-3"
@@ -317,11 +339,11 @@ export function OrganizationCard(props: {
 						{/* Invites */}
 						<div className="flex flex-col gap-3">
 							<p className="text-sm font-semibold text-foreground/90 border-b border-border pb-2">
-								Invites{optimisticOrg?.invitations ? ` (${optimisticOrg.invitations.filter((i)=>i.status==="pending").length})` : ""}
+								Invites{optimisticOrg?.invitations ? ` (${(optimisticOrg.invitations.filter((i)=>i.status==="pending").length)})` : ""}
 							</p>
 							<div className="flex flex-col gap-2">
 								<AnimatePresence>
-									{optimisticOrg?.invitations
+									{(optimisticOrg?.invitations ?? [])
 											.filter((invitation) => invitation.status === "pending")
 											.map((invitation) => (
 												<motion.div
@@ -383,14 +405,14 @@ export function OrganizationCard(props: {
 													</Button>
 													<div>
 														<CopyButton
-															textToCopy={`${window.location.origin}/accept-invitation/${invitation.id}`}
+															textToCopy={`${typeof window !== 'undefined' ? window.location.origin : ''}/accept-invitation/${invitation.id}`}
 														/>
 													</div>
 												</div>
 											</motion.div>
 										))}
 								</AnimatePresence>
-								{optimisticOrg?.invitations.length === 0 && (
+								{optimisticOrg?.invitations?.length === 0 && (
 									<motion.p
 										className="text-sm text-muted-foreground"
 										initial={{ opacity: 0 }}
