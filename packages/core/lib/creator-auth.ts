@@ -46,5 +46,6 @@ export async function getCreatorContextFromApiKey(request: Request): Promise<Cre
 export function requireScope(ctx: CreatorContext, scope: string) {
   // Allow first-party authenticated dashboard calls even if explicit scopes are not set
   if (ctx.firstParty) return;
+  if (ctx.scopes.includes("*")) return;
   if (!ctx.scopes.includes(scope)) throw new Error("forbidden");
 }

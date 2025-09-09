@@ -207,6 +207,7 @@ export const webhookDeliveries = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     webhookId: uuid("webhook_id"), // nullable for ad-hoc test deliveries
+  destinationId: uuid("destination_id"), // optional: when delivery is for a specific destination
     targetUrl: text("target_url").notNull(),
     event: text("event").notNull(),
     requestJson: jsonb("request_json").notNull(),
@@ -214,12 +215,65 @@ export const webhookDeliveries = pgTable(
     responseBody: text("response_body"),
     error: text("error"),
     signature: text("signature"),
+  transport: text("transport"), // http | discord | other
     durationMs: integer("duration_ms"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
     byWebhook: index("sl_webhook_deliveries_webhook_idx").on(t.webhookId),
+  byDestination: index("sl_webhook_deliveries_destination_idx").on(t.destinationId),
     byCreatedAt: index("sl_webhook_deliveries_created_idx").on(t.createdAt),
+  })
+);
+
+// Discord integrations: embed presets and saved channels
+export const discordEmbedPresets = pgTable(
+  "sl_discord_embed_presets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    scopeType: text("scope_type").notNull(), // org | team | user
+  scopeId: text("scope_id").notNull(),
+    name: text("name").notNull(),
+    payloadJson: jsonb("payload_json").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    byScope: index("sl_discord_embed_presets_scope_idx").on(t.scopeType, t.scopeId),
+  })
+);
+
+export const discordChannels = pgTable(
+  "sl_discord_channels",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    scopeType: text("scope_type").notNull(), // org | team | user
+  scopeId: text("scope_id").notNull(),
+    name: text("name").notNull(),
+    webhookUrl: text("webhook_url").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    byScope: index("sl_discord_channels_scope_idx").on(t.scopeType, t.scopeId),
+  })
+);
+
+// Webhook Destinations (fan-out targets like Discord or extra HTTP endpoints)
+export const webhookDestinations = pgTable(
+  "sl_webhook_destinations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    webhookId: uuid("webhook_id").notNull(),
+    type: text("type").notNull(), // http | discord
+    enabled: boolean("enabled").default(true).notNull(),
+    events: jsonb("events").$type<string[]>().notNull(), // list of event keys or patterns
+    configJson: jsonb("config_json").notNull(), // per-type config
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    byWebhook: index("sl_webhook_destinations_webhook_idx").on(t.webhookId),
+    byEnabled: index("sl_webhook_destinations_enabled_idx").on(t.enabled),
   })
 );
 

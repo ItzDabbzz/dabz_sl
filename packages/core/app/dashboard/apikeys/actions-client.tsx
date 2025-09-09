@@ -1,77 +1,116 @@
 "use client";
 
+import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { ApiKeyItem } from "./components/table";
-
-export function ActionsClient({ items }: { items: ApiKeyItem[] }) {
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import ScopeSelector from "@/components/pickers/scope-selector";
+import { defaultScopeOptions } from "@/components/pickers/scope-options";
+export function ActionsClient() {
   const router = useRouter();
+  const [scopes, setScopes] = React.useState<string[]>([]);
+  const [open, setOpen] = React.useState(false);
 
-  async function revoke(id: string) {
-    const res = await fetch(`/api/creator/apikeys?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      toast.error(data?.error || res.statusText || "Failed to revoke", { description: data?.reason });
-    } else {
-      toast.success("Key revoked");
-    }
-  }
+  const [revealed, setRevealed] = React.useState<{ id?: string; key?: string; prefix?: string } | null>(null);
 
   async function create(name: string, scopesRaw: string) {
     const scopes = scopesRaw.split(/\s+/).filter(Boolean);
+    const confirmStar = scopes.includes("*") && scopes.filter((s) => s !== "*").length > 0;
     const res = await fetch(`/api/creator/apikeys`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, scopes }),
+      body: JSON.stringify({ name, scopes, confirmStar }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       toast.error(data?.error || res.statusText || "Failed to create key", { description: data?.reason });
     } else {
-      toast.success("Key created");
+      const data = await res.json().catch(() => ({}));
+      // If the API returns key material, show it once
+      if (data?.key || data?.apiKey?.key) {
+        setRevealed({ id: data?.id || data?.apiKey?.id, key: data?.key || data?.apiKey?.key, prefix: data?.prefix || data?.apiKey?.prefix });
+        toast.success("Key created. Copy it now — you won't be able to see it again.");
+      } else {
+        toast.success("Key created");
+      }
     }
   }
 
   return (
-    <>
-      <div className="mt-4 space-y-2">
-        {items.map((k) => (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) {
+          setScopes([]);
+          setRevealed(null);
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button>New API Key</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Create API Key</DialogTitle>
+        </DialogHeader>
+        {revealed ? (
+          <div className="rounded border p-3 text-sm">
+            <div className="font-medium mb-1">New API Key</div>
+            <div className="font-mono break-all">{revealed.key}</div>
+            <div className="text-muted-foreground mt-1">Copy this now — it won't be shown again.</div>
+          </div>
+        ) : (
           <form
-            key={k.id}
+            id="create-key-form"
             onSubmit={async (e) => {
               e.preventDefault();
-              const id = (e.currentTarget.elements.namedItem("id") as HTMLInputElement)?.value || "";
-              await revoke(id);
+              const name = (e.currentTarget.elements.namedItem("name") as HTMLInputElement)?.value || "New Key";
+              const scopesRaw = (e.currentTarget.elements.namedItem("scopes") as HTMLInputElement)?.value || "";
+              await create(name, scopesRaw);
+              // Guard against null reset in some synthetic events
+              const form = e.currentTarget as HTMLFormElement | null;
+              form?.reset?.();
+              setScopes([]);
               router.refresh();
             }}
-            className="flex items-center justify-between border rounded-md p-2"
+            className="grid gap-4"
           >
-            <div className="text-xs text-muted-foreground truncate">
-              Revoke key <span className="font-mono">{k.id}</span>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Name</label>
+              <Input name="name" placeholder="Key name" />
             </div>
-            <input type="hidden" name="id" value={k.id} />
-            <Button variant="destructive" size="sm" type="submit">Revoke</Button>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Permissions</label>
+              <ScopeSelector options={defaultScopeOptions} value={scopes} onChange={(arr) => setScopes(arr)} />
+              {/* Preserve server contract: submit as space-separated string */}
+              <input type="hidden" name="scopes" value={scopes.join(" ")} />
+            </div>
           </form>
-        ))}
-      </div>
-
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const name = (e.currentTarget.elements.namedItem("name") as HTMLInputElement)?.value || "New Key";
-          const scopes = (e.currentTarget.elements.namedItem("scopes") as HTMLInputElement)?.value || "";
-          await create(name, scopes);
-          (e.currentTarget as HTMLFormElement).reset();
-          router.refresh();
-        }}
-        className="w-full grid gap-3 md:grid-cols-[1fr_1fr_auto]"
-      >
-        <Input name="name" placeholder="Key name" />
-        <Input name="scopes" placeholder="Scopes (space separated) e.g. sl.objects:read sl.instances:write" />
-        <Button type="submit">Create</Button>
-      </form>
-    </>
+        )}
+        <DialogFooter>
+          {revealed ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRevealed(null);
+                  setOpen(false);
+                }}
+              >
+                Close
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="submit" form="create-key-form">Create</Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
