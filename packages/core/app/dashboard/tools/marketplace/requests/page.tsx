@@ -14,7 +14,7 @@ async function getSession() {
 
 export default async function Page() {
   const session = await getSession();
-  const role = (session?.user as any)?.adminRole as string | undefined;
+  const role = (session?.user as any)?.role as string | undefined;
   const can = !!role && ["owner", "developer", "admin", "mod"].includes(role);
 
   return (
