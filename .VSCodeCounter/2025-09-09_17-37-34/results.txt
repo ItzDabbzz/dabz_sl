@@ -1,0 +1,618 @@
+Date : 2025-09-09 17:37:34
+Directory : c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me
+Total : 360 files,  94533 codes, 804 comments, 5093 blanks, all 100430 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| JSON               |         33 |     48,330 |          0 |         11 |     48,341 |
+| TypeScript JSX     |        170 |     27,832 |        477 |      1,802 |     30,111 |
+| YAML               |          2 |      9,206 |          0 |      2,194 |     11,400 |
+| TypeScript         |        109 |      6,942 |        217 |        793 |      7,952 |
+| Markdown           |         10 |        734 |          0 |        213 |        947 |
+| MS SQL             |         28 |        732 |         66 |         27 |        825 |
+| PostCSS            |          2 |        643 |         37 |         42 |        722 |
+| JSON with Comments |          3 |         62 |          0 |          3 |         65 |
+| JavaScript         |          2 |         44 |          7 |          7 |         58 |
+| XML                |          1 |          8 |          0 |          1 |          9 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                            | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                               |        360 |     94,533 |        804 |      5,093 |    100,430 |
+| . (Files)                                                                                                                       |         10 |      9,673 |          0 |      2,265 |     11,938 |
+| .backups                                                                                                                        |          3 |      1,675 |         26 |         87 |      1,788 |
+| .backups (Files)                                                                                                                |          1 |        711 |         12 |         38 |        761 |
+| .backups\packages                                                                                                               |          2 |        964 |         14 |         49 |      1,027 |
+| .backups\packages\core                                                                                                          |          2 |        964 |         14 |         49 |      1,027 |
+| .backups\packages\core\app                                                                                                      |          2 |        964 |         14 |         49 |      1,027 |
+| .github                                                                                                                         |          1 |         88 |          0 |         16 |        104 |
+| docs                                                                                                                            |          6 |        461 |          0 |        129 |        590 |
+| packages                                                                                                                        |        340 |     82,636 |        778 |      2,596 |     86,010 |
+| packages\core                                                                                                                   |        331 |     82,075 |        777 |      2,531 |     85,383 |
+| packages\core (Files)                                                                                                           |         10 |        291 |          8 |         23 |        322 |
+| packages\core\app                                                                                                               |        149 |     22,281 |        465 |      1,428 |     24,174 |
+| packages\core\app (Files)                                                                                                       |          7 |      1,330 |         55 |         88 |      1,473 |
+| packages\core\app\(auth)                                                                                                        |          6 |        476 |          4 |         26 |        506 |
+| packages\core\app\(auth)\forget-password                                                                                        |          1 |        120 |          1 |          7 |        128 |
+| packages\core\app\(auth)\reset-password                                                                                         |          1 |         93 |          0 |          3 |         96 |
+| packages\core\app\(auth)\sign-in                                                                                                |          2 |         69 |          1 |          5 |         75 |
+| packages\core\app\(auth)\two-factor                                                                                             |          2 |        194 |          2 |         11 |        207 |
+| packages\core\app\(auth)\two-factor (Files)                                                                                     |          1 |         93 |          0 |          5 |         98 |
+| packages\core\app\(auth)\two-factor\otp                                                                                         |          1 |        101 |          2 |          6 |        109 |
+| packages\core\app\accept-invitation                                                                                             |          2 |        215 |          0 |         12 |        227 |
+| packages\core\app\accept-invitation\[id]                                                                                        |          2 |        215 |          0 |         12 |        227 |
+| packages\core\app\api                                                                                                           |         65 |      4,067 |         89 |        462 |      4,618 |
+| packages\core\app\api (Files)                                                                                                   |          2 |         13 |          1 |          5 |         19 |
+| packages\core\app\api-docs                                                                                                      |          1 |        312 |          6 |         15 |        333 |
+| packages\core\app\api\admin                                                                                                     |          9 |        573 |         12 |         77 |        662 |
+| packages\core\app\api\admin\rbac                                                                                                |          8 |        526 |         11 |         70 |        607 |
+| packages\core\app\api\admin\rbac\members                                                                                        |          1 |         19 |          1 |          4 |         24 |
+| packages\core\app\api\admin\rbac\overrides                                                                                      |          1 |         67 |          0 |         12 |         79 |
+| packages\core\app\api\admin\rbac\permissions                                                                                    |          1 |         11 |          1 |          2 |         14 |
+| packages\core\app\api\admin\rbac\roles                                                                                          |          4 |        213 |          4 |         41 |        258 |
+| packages\core\app\api\admin\rbac\roles (Files)                                                                                  |          1 |         34 |          0 |          7 |         41 |
+| packages\core\app\api\admin\rbac\roles\[roleId]                                                                                 |          3 |        179 |          4 |         34 |        217 |
+| packages\core\app\api\admin\rbac\roles\[roleId] (Files)                                                                         |          1 |         54 |          1 |         10 |         65 |
+| packages\core\app\api\admin\rbac\roles\[roleId]\members                                                                         |          1 |         61 |          1 |         12 |         74 |
+| packages\core\app\api\admin\rbac\roles\[roleId]\permissions                                                                     |          1 |         64 |          2 |         12 |         78 |
+| packages\core\app\api\admin\rbac\seed-org                                                                                       |          1 |        216 |          5 |         11 |        232 |
+| packages\core\app\api\admin\users                                                                                               |          1 |         47 |          1 |          7 |         55 |
+| packages\core\app\api\admin\users\[id]                                                                                          |          1 |         47 |          1 |          7 |         55 |
+| packages\core\app\api\auth                                                                                                      |          2 |         16 |          0 |          4 |         20 |
+| packages\core\app\api\auth\[...all]                                                                                             |          1 |          3 |          0 |          2 |          5 |
+| packages\core\app\api\auth\can                                                                                                  |          1 |         13 |          0 |          2 |         15 |
+| packages\core\app\api\creator                                                                                                   |         25 |      1,612 |         21 |        162 |      1,795 |
+| packages\core\app\api\creator\apikeys                                                                                           |          1 |        306 |          9 |         13 |        328 |
+| packages\core\app\api\creator\blog                                                                                              |          1 |        246 |          0 |          6 |        252 |
+| packages\core\app\api\creator\configs                                                                                           |          1 |         40 |          1 |          7 |         48 |
+| packages\core\app\api\creator\entitlements                                                                                      |          1 |         25 |          1 |          7 |         33 |
+| packages\core\app\api\creator\instances                                                                                         |          3 |        177 |          1 |         24 |        202 |
+| packages\core\app\api\creator\instances (Files)                                                                                 |          1 |        108 |          1 |         11 |        120 |
+| packages\core\app\api\creator\instances\[id]                                                                                    |          2 |         69 |          0 |         13 |         82 |
+| packages\core\app\api\creator\instances\[id]\token                                                                              |          2 |         69 |          0 |         13 |         82 |
+| packages\core\app\api\creator\instances\[id]\token\revoke                                                                       |          1 |         32 |          0 |          6 |         38 |
+| packages\core\app\api\creator\instances\[id]\token\rotate                                                                       |          1 |         37 |          0 |          7 |         44 |
+| packages\core\app\api\creator\integrations                                                                                      |          6 |        239 |          0 |         23 |        262 |
+| packages\core\app\api\creator\integrations\discord                                                                              |          6 |        239 |          0 |         23 |        262 |
+| packages\core\app\api\creator\integrations\discord\channels                                                                     |          2 |         82 |          0 |          6 |         88 |
+| packages\core\app\api\creator\integrations\discord\channels (Files)                                                             |          1 |         44 |          0 |          3 |         47 |
+| packages\core\app\api\creator\integrations\discord\channels\[id]                                                                |          1 |         38 |          0 |          3 |         41 |
+| packages\core\app\api\creator\integrations\discord\presets                                                                      |          2 |         82 |          0 |          6 |         88 |
+| packages\core\app\api\creator\integrations\discord\presets (Files)                                                              |          1 |         44 |          0 |          3 |         47 |
+| packages\core\app\api\creator\integrations\discord\presets\[id]                                                                 |          1 |         38 |          0 |          3 |         41 |
+| packages\core\app\api\creator\integrations\discord\send                                                                         |          1 |         35 |          0 |          6 |         41 |
+| packages\core\app\api\creator\integrations\discord\send-multi                                                                   |          1 |         40 |          0 |          5 |         45 |
+| packages\core\app\api\creator\master-objects                                                                                    |          3 |        184 |          0 |         24 |        208 |
+| packages\core\app\api\creator\master-objects (Files)                                                                            |          1 |         49 |          0 |          8 |         57 |
+| packages\core\app\api\creator\master-objects\[id]                                                                               |          2 |        135 |          0 |         16 |        151 |
+| packages\core\app\api\creator\master-objects\[id] (Files)                                                                       |          1 |         97 |          0 |          9 |        106 |
+| packages\core\app\api\creator\master-objects\[id]\versions                                                                      |          1 |         38 |          0 |          7 |         45 |
+| packages\core\app\api\creator\webhooks                                                                                          |          9 |        395 |          9 |         58 |        462 |
+| packages\core\app\api\creator\webhooks (Files)                                                                                  |          1 |         38 |          0 |          8 |         46 |
+| packages\core\app\api\creator\webhooks\[id]                                                                                     |          5 |        279 |          7 |         35 |        321 |
+| packages\core\app\api\creator\webhooks\[id] (Files)                                                                             |          1 |         44 |          0 |          7 |         51 |
+| packages\core\app\api\creator\webhooks\[id]\deliveries                                                                          |          1 |         86 |          3 |         12 |        101 |
+| packages\core\app\api\creator\webhooks\[id]\destinations                                                                        |          2 |        117 |          3 |          9 |        129 |
+| packages\core\app\api\creator\webhooks\[id]\destinations (Files)                                                                |          1 |         52 |          2 |          6 |         60 |
+| packages\core\app\api\creator\webhooks\[id]\destinations\[destId]                                                               |          1 |         65 |          1 |          3 |         69 |
+| packages\core\app\api\creator\webhooks\[id]\test                                                                                |          1 |         32 |          1 |          7 |         40 |
+| packages\core\app\api\creator\webhooks\deliveries                                                                               |          1 |         50 |          2 |          8 |         60 |
+| packages\core\app\api\creator\webhooks\deliveries\[deliveryId]                                                                  |          1 |         50 |          2 |          8 |         60 |
+| packages\core\app\api\creator\webhooks\deliveries\[deliveryId]\retry                                                            |          1 |         50 |          2 |          8 |         60 |
+| packages\core\app\api\creator\webhooks\events                                                                                   |          1 |         10 |          0 |          3 |         13 |
+| packages\core\app\api\creator\webhooks\test                                                                                     |          1 |         18 |          0 |          4 |         22 |
+| packages\core\app\api\docs                                                                                                      |          1 |        272 |          2 |         13 |        287 |
+| packages\core\app\api\protected                                                                                                 |          1 |         43 |          3 |          7 |         53 |
+| packages\core\app\api\public                                                                                                    |          5 |        340 |         15 |         41 |        396 |
+| packages\core\app\api\public\blog                                                                                               |          1 |        132 |         10 |         18 |        160 |
+| packages\core\app\api\public\blog\[postId]                                                                                      |          1 |        132 |         10 |         18 |        160 |
+| packages\core\app\api\public\blog\[postId]\rating                                                                               |          1 |        132 |         10 |         18 |        160 |
+| packages\core\app\api\public\marketplace                                                                                        |          3 |        168 |          5 |         20 |        193 |
+| packages\core\app\api\public\marketplace\categories                                                                             |          1 |         17 |          0 |          3 |         20 |
+| packages\core\app\api\public\marketplace\items                                                                                  |          1 |         82 |          4 |          9 |         95 |
+| packages\core\app\api\public\marketplace\requests                                                                               |          1 |         69 |          1 |          8 |         78 |
+| packages\core\app\api\public\webhooks                                                                                           |          1 |         40 |          0 |          3 |         43 |
+| packages\core\app\api\public\webhooks\events                                                                                    |          1 |         40 |          0 |          3 |         43 |
+| packages\core\app\api\sl                                                                                                        |          6 |        361 |         12 |         64 |        437 |
+| packages\core\app\api\sl\entitlements                                                                                           |          1 |         65 |          2 |          8 |         75 |
+| packages\core\app\api\sl\instances                                                                                              |          4 |        220 |          6 |         44 |        270 |
+| packages\core\app\api\sl\instances\[id]                                                                                         |          4 |        220 |          6 |         44 |        270 |
+| packages\core\app\api\sl\instances\[id] (Files)                                                                                 |          1 |         29 |          0 |          5 |         34 |
+| packages\core\app\api\sl\instances\[id]\config                                                                                  |          1 |        102 |          4 |         21 |        127 |
+| packages\core\app\api\sl\instances\[id]\snapshots                                                                               |          1 |         64 |          2 |         12 |         78 |
+| packages\core\app\api\sl\instances\[id]\snapshots\[snapshotId]                                                                  |          1 |         64 |          2 |         12 |         78 |
+| packages\core\app\api\sl\instances\[id]\snapshots\[snapshotId]\restore                                                          |          1 |         64 |          2 |         12 |         78 |
+| packages\core\app\api\sl\instances\[id]\token                                                                                   |          1 |         25 |          0 |          6 |         31 |
+| packages\core\app\api\sl\instances\[id]\token\rotate                                                                            |          1 |         25 |          0 |          6 |         31 |
+| packages\core\app\api\sl\register                                                                                               |          1 |         76 |          4 |         12 |         92 |
+| packages\core\app\api\tools                                                                                                     |          8 |        664 |         23 |         73 |        760 |
+| packages\core\app\api\tools\marketplace                                                                                         |          8 |        664 |         23 |         73 |        760 |
+| packages\core\app\api\tools\marketplace\admin                                                                                   |          1 |         16 |          0 |          3 |         19 |
+| packages\core\app\api\tools\marketplace\categories                                                                              |          2 |        103 |          3 |          8 |        114 |
+| packages\core\app\api\tools\marketplace\categories (Files)                                                                      |          1 |         61 |          1 |          4 |         66 |
+| packages\core\app\api\tools\marketplace\categories\[id]                                                                         |          1 |         42 |          2 |          4 |         48 |
+| packages\core\app\api\tools\marketplace\items                                                                                   |          4 |        444 |         19 |         45 |        508 |
+| packages\core\app\api\tools\marketplace\items (Files)                                                                           |          1 |        323 |         12 |         26 |        361 |
+| packages\core\app\api\tools\marketplace\items\[id]                                                                              |          1 |         67 |          3 |         10 |         80 |
+| packages\core\app\api\tools\marketplace\items\[id]\categories                                                                   |          1 |         67 |          3 |         10 |         80 |
+| packages\core\app\api\tools\marketplace\items\categories                                                                        |          2 |         54 |          4 |          9 |         67 |
+| packages\core\app\api\tools\marketplace\items\categories (Files)                                                                |          1 |         24 |          1 |          4 |         29 |
+| packages\core\app\api\tools\marketplace\items\categories\batch                                                                  |          1 |         30 |          3 |          5 |         38 |
+| packages\core\app\api\tools\marketplace\requests                                                                                |          1 |        101 |          1 |         17 |        119 |
+| packages\core\app\api\v1                                                                                                        |          6 |        173 |          0 |         16 |        189 |
+| packages\core\app\api\v1\get                                                                                                    |          1 |         18 |          0 |          2 |         20 |
+| packages\core\app\api\v1\sync                                                                                                   |          1 |         19 |          0 |          2 |         21 |
+| packages\core\app\api\v1\update                                                                                                 |          4 |        136 |          0 |         12 |        148 |
+| packages\core\app\api\v1\update\fertility                                                                                       |          1 |         34 |          0 |          3 |         37 |
+| packages\core\app\api\v1\update\partner                                                                                         |          1 |         34 |          0 |          3 |         37 |
+| packages\core\app\api\v1\update\pregnancy                                                                                       |          1 |         34 |          0 |          3 |         37 |
+| packages\core\app\api\v1\update\settings                                                                                        |          1 |         34 |          0 |          3 |         37 |
+| packages\core\app\apps                                                                                                          |          1 |        107 |          0 |          7 |        114 |
+| packages\core\app\apps\register                                                                                                 |          1 |        107 |          0 |          7 |        114 |
+| packages\core\app\blog                                                                                                          |          4 |      1,231 |         23 |         61 |      1,315 |
+| packages\core\app\blog (Files)                                                                                                  |          1 |        590 |         18 |         29 |        637 |
+| packages\core\app\blog\[slug]                                                                                                   |          1 |        235 |          0 |          2 |        237 |
+| packages\core\app\blog\public                                                                                                   |          1 |        337 |          4 |         22 |        363 |
+| packages\core\app\blog\rss                                                                                                      |          1 |         69 |          1 |          8 |         78 |
+| packages\core\app\dashboard                                                                                                     |         54 |     12,828 |        237 |        651 |     13,716 |
+| packages\core\app\dashboard (Files)                                                                                             |          2 |        476 |         14 |         31 |        521 |
+| packages\core\app\dashboard\admin                                                                                               |          7 |      1,452 |         14 |         68 |      1,534 |
+| packages\core\app\dashboard\admin (Files)                                                                                       |          2 |      1,148 |         14 |         38 |      1,200 |
+| packages\core\app\dashboard\admin\permissions                                                                                   |          5 |        304 |          0 |         30 |        334 |
+| packages\core\app\dashboard\admin\permissions (Files)                                                                           |          2 |         97 |          0 |         10 |        107 |
+| packages\core\app\dashboard\admin\permissions\overrides                                                                         |          1 |         47 |          0 |          4 |         51 |
+| packages\core\app\dashboard\admin\permissions\roles                                                                             |          2 |        160 |          0 |         16 |        176 |
+| packages\core\app\dashboard\admin\permissions\roles (Files)                                                                     |          1 |         57 |          0 |          6 |         63 |
+| packages\core\app\dashboard\admin\permissions\roles\[roleId]                                                                    |          1 |        103 |          0 |         10 |        113 |
+| packages\core\app\dashboard\apikeys                                                                                             |          4 |        638 |         11 |         40 |        689 |
+| packages\core\app\dashboard\apikeys (Files)                                                                                     |          3 |        216 |          8 |         17 |        241 |
+| packages\core\app\dashboard\apikeys\components                                                                                  |          1 |        422 |          3 |         23 |        448 |
+| packages\core\app\dashboard\blog                                                                                                |          6 |      1,241 |         10 |         79 |      1,330 |
+| packages\core\app\dashboard\blog (Files)                                                                                        |          1 |        164 |          0 |          7 |        171 |
+| packages\core\app\dashboard\blog\categories                                                                                     |          1 |        303 |          1 |         22 |        326 |
+| packages\core\app\dashboard\blog\edit                                                                                           |          1 |        143 |          0 |         10 |        153 |
+| packages\core\app\dashboard\blog\edit\[id]                                                                                      |          1 |        143 |          0 |         10 |        153 |
+| packages\core\app\dashboard\blog\manage                                                                                         |          1 |        276 |          5 |         15 |        296 |
+| packages\core\app\dashboard\blog\new                                                                                            |          1 |        112 |          0 |          8 |        120 |
+| packages\core\app\dashboard\blog\settings                                                                                       |          1 |        243 |          4 |         17 |        264 |
+| packages\core\app\dashboard\configs                                                                                             |          2 |         70 |          0 |          8 |         78 |
+| packages\core\app\dashboard\configs (Files)                                                                                     |          1 |         34 |          0 |          4 |         38 |
+| packages\core\app\dashboard\configs\components                                                                                  |          1 |         36 |          0 |          4 |         40 |
+| packages\core\app\dashboard\entitlements                                                                                        |          2 |         73 |          0 |          8 |         81 |
+| packages\core\app\dashboard\entitlements (Files)                                                                                |          1 |         34 |          0 |          4 |         38 |
+| packages\core\app\dashboard\entitlements\components                                                                             |          1 |         39 |          0 |          4 |         43 |
+| packages\core\app\dashboard\instances                                                                                           |          2 |         85 |          0 |          9 |         94 |
+| packages\core\app\dashboard\instances (Files)                                                                                   |          1 |         33 |          0 |          4 |         37 |
+| packages\core\app\dashboard\instances\components                                                                                |          1 |         52 |          0 |          5 |         57 |
+| packages\core\app\dashboard\objects                                                                                             |          4 |        699 |         17 |         45 |        761 |
+| packages\core\app\dashboard\objects (Files)                                                                                     |          1 |         38 |          1 |          4 |         43 |
+| packages\core\app\dashboard\objects\[id]                                                                                        |          1 |        574 |         15 |         33 |        622 |
+| packages\core\app\dashboard\objects\components                                                                                  |          1 |         40 |          0 |          4 |         44 |
+| packages\core\app\dashboard\objects\new                                                                                         |          1 |         47 |          1 |          4 |         52 |
+| packages\core\app\dashboard\tools                                                                                               |         16 |      4,648 |        145 |        217 |      5,010 |
+| packages\core\app\dashboard\tools\marketplace                                                                                   |         13 |      4,336 |        143 |        182 |      4,661 |
+| packages\core\app\dashboard\tools\marketplace (Files)                                                                           |          1 |          5 |          0 |          3 |          8 |
+| packages\core\app\dashboard\tools\marketplace-scrape                                                                            |          3 |        312 |          2 |         35 |        349 |
+| packages\core\app\dashboard\tools\marketplace\categories                                                                        |          2 |        621 |         35 |         28 |        684 |
+| packages\core\app\dashboard\tools\marketplace\explorer                                                                          |          6 |      2,990 |        103 |        100 |      3,193 |
+| packages\core\app\dashboard\tools\marketplace\explorer (Files)                                                                  |          2 |      1,453 |         37 |         49 |      1,539 |
+| packages\core\app\dashboard\tools\marketplace\explorer\components                                                               |          4 |      1,537 |         66 |         51 |      1,654 |
+| packages\core\app\dashboard\tools\marketplace\new                                                                               |          2 |        581 |          5 |         36 |        622 |
+| packages\core\app\dashboard\tools\marketplace\requests                                                                          |          2 |        139 |          0 |         15 |        154 |
+| packages\core\app\dashboard\userprofile                                                                                         |          4 |      1,847 |         13 |         46 |      1,906 |
+| packages\core\app\dashboard\webhooks                                                                                            |          5 |      1,599 |         13 |        100 |      1,712 |
+| packages\core\app\dashboard\webhooks (Files)                                                                                    |          1 |        134 |          2 |         12 |        148 |
+| packages\core\app\dashboard\webhooks\components                                                                                 |          4 |      1,465 |         11 |         88 |      1,564 |
+| packages\core\app\debug                                                                                                         |          2 |        204 |          4 |         13 |        221 |
+| packages\core\app\debug\api-keys                                                                                                |          1 |         14 |          0 |          3 |         17 |
+| packages\core\app\debug\client-test                                                                                             |          1 |        190 |          4 |         10 |        204 |
+| packages\core\app\marketplace                                                                                                   |          4 |      1,275 |         43 |         75 |      1,393 |
+| packages\core\app\marketplace (Files)                                                                                           |          2 |      1,025 |         39 |         42 |      1,106 |
+| packages\core\app\marketplace\request                                                                                           |          2 |        250 |          4 |         33 |        287 |
+| packages\core\app\oauth                                                                                                         |          2 |        150 |          1 |         11 |        162 |
+| packages\core\app\oauth\authorize                                                                                               |          2 |        150 |          1 |         11 |        162 |
+| packages\core\app\wearing                                                                                                       |          1 |         86 |          3 |          7 |         96 |
+| packages\core\components                                                                                                        |         87 |      8,546 |        116 |        801 |      9,463 |
+| packages\core\components (Files)                                                                                                |         18 |      2,051 |         59 |        144 |      2,254 |
+| packages\core\components\blog                                                                                                   |          4 |        345 |          7 |         31 |        383 |
+| packages\core\components\dashboard                                                                                              |          1 |        134 |          0 |          4 |        138 |
+| packages\core\components\features                                                                                               |         10 |      1,023 |          5 |         54 |      1,082 |
+| packages\core\components\features\auth                                                                                          |          5 |        759 |          2 |         31 |        792 |
+| packages\core\components\features\common                                                                                        |          4 |        263 |          3 |         22 |        288 |
+| packages\core\components\features\shell                                                                                         |          1 |          1 |          0 |          1 |          2 |
+| packages\core\components\pickers                                                                                                |          5 |        705 |         36 |         56 |        797 |
+| packages\core\components\ui                                                                                                     |         49 |      4,288 |          9 |        512 |      4,809 |
+| packages\core\drizzle                                                                                                           |         48 |     48,557 |         66 |         27 |     48,650 |
+| packages\core\drizzle (Files)                                                                                                   |         28 |        732 |         66 |         27 |        825 |
+| packages\core\drizzle\meta                                                                                                      |         20 |     47,825 |          0 |          0 |     47,825 |
+| packages\core\lib                                                                                                               |         24 |      1,494 |         67 |        153 |      1,714 |
+| packages\core\lib (Files)                                                                                                       |         18 |      1,092 |         49 |        123 |      1,264 |
+| packages\core\lib\auth                                                                                                          |          1 |         12 |          5 |          2 |         19 |
+| packages\core\lib\email                                                                                                         |          3 |        178 |          0 |         10 |        188 |
+| packages\core\lib\fertility                                                                                                     |          1 |        136 |          7 |         12 |        155 |
+| packages\core\lib\hljs                                                                                                          |          1 |         76 |          6 |          6 |         88 |
+| packages\core\public                                                                                                            |          3 |         28 |          0 |          2 |         30 |
+| packages\core\public (Files)                                                                                                    |          1 |          8 |          0 |          1 |          9 |
+| packages\core\public\favicon                                                                                                    |          2 |         20 |          0 |          1 |         21 |
+| packages\core\public\favicon (Files)                                                                                            |          1 |          1 |          0 |          0 |          1 |
+| packages\core\public\favicon\light                                                                                              |          1 |         19 |          0 |          1 |         20 |
+| packages\core\schemas                                                                                                           |          7 |        846 |         55 |         93 |        994 |
+| packages\core\types                                                                                                             |          3 |         32 |          0 |          4 |         36 |
+| packages\scraper-cli                                                                                                            |          6 |        534 |          1 |         62 |        597 |
+| packages\scraper-cli (Files)                                                                                                    |          2 |         47 |          0 |          2 |         49 |
+| packages\scraper-cli\src                                                                                                        |          4 |        487 |          1 |         60 |        548 |
+| packages\shared-data                                                                                                            |          3 |         27 |          0 |          3 |         30 |
+| packages\shared-data (Files)                                                                                                    |          2 |         26 |          0 |          2 |         28 |
+| packages\shared-data\src                                                                                                        |          1 |          1 |          0 |          1 |          2 |
++---------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                                                        | language           | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\.backups\home-page.tsx                                                                | TypeScript JSX     |        711 |         12 |         38 |        761 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\.backups\packages\core\app\globals.sanctum-vibes.backup.2025-09-04.css                | PostCSS            |        253 |          2 |         11 |        266 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\.backups\packages\core\app\page.sanctum-vibes.backup.2025-09-04.tsx                   | TypeScript JSX     |        711 |         12 |         38 |        761 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\.copilot_prev_pkg.json                                                                | JSON               |        221 |          0 |          0 |        221 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\.github\copilot-instructions.md                                                       | Markdown           |         88 |          0 |         16 |        104 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\.prettierrc                                                                           | JSON               |          4 |          0 |          1 |          5 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\API_KEYS.md                                                                           | Markdown           |        113 |          0 |         31 |        144 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\README.md                                                                             | Markdown           |         68 |          0 |         35 |        103 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\docs\SecondLife_RLV_Guide.md                                                          | Markdown           |        203 |          0 |         83 |        286 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\docs\performance-todo.md                                                              | Markdown           |         56 |          0 |         23 |         79 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\docs\sl-bodys.md                                                                      | Markdown           |         46 |          0 |          2 |         48 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\docs\sl-system-todo.md                                                                | Markdown           |        114 |          0 |         17 |        131 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\docs\sl_stores_to_scrape.md                                                           | Markdown           |         14 |          0 |          1 |         15 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\docs\sl_viewers.md                                                                    | Markdown           |         28 |          0 |          3 |         31 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\package.json                                                                          | JSON               |         18 |          0 |          1 |         19 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\README.md                                                               | Markdown           |          4 |          0 |          2 |          6 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\(auth)\forget-password\page.tsx                                     | TypeScript JSX     |        120 |          1 |          7 |        128 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\(auth)\reset-password\page.tsx                                      | TypeScript JSX     |         93 |          0 |          3 |         96 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\(auth)\sign-in\loading.tsx                                          | TypeScript JSX     |         16 |          0 |          1 |         17 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\(auth)\sign-in\page.tsx                                             | TypeScript JSX     |         53 |          1 |          4 |         58 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\(auth)\two-factor\otp\page.tsx                                      | TypeScript JSX     |        101 |          2 |          6 |        109 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\(auth)\two-factor\page.tsx                                          | TypeScript JSX     |         93 |          0 |          5 |         98 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\accept-invitation\[id]\invitation-error.tsx                         | TypeScript JSX     |         42 |          0 |          2 |         44 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\accept-invitation\[id]\page.tsx                                     | TypeScript JSX     |        173 |          0 |         10 |        183 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api-docs\page.tsx                                                   | TypeScript JSX     |        312 |          6 |         15 |        333 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\admin\rbac\members\route.ts                                     | TypeScript         |         19 |          1 |          4 |         24 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\admin\rbac\overrides\route.ts                                   | TypeScript         |         67 |          0 |         12 |         79 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\admin\rbac\permissions\route.ts                                 | TypeScript         |         11 |          1 |          2 |         14 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\admin\rbac\roles\[roleId]\members\route.ts                      | TypeScript         |         61 |          1 |         12 |         74 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\admin\rbac\roles\[roleId]\permissions\route.ts                  | TypeScript         |         64 |          2 |         12 |         78 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\admin\rbac\roles\[roleId]\route.ts                              | TypeScript         |         54 |          1 |         10 |         65 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\admin\rbac\roles\route.ts                                       | TypeScript         |         34 |          0 |          7 |         41 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\admin\rbac\seed-org\route.ts                                    | TypeScript         |        216 |          5 |         11 |        232 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\admin\users\[id]\route.ts                                       | TypeScript         |         47 |          1 |          7 |         55 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\auth\[...all]\route.ts                                          | TypeScript         |          3 |          0 |          2 |          5 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\auth\can\route.ts                                               | TypeScript         |         13 |          0 |          2 |         15 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\apikeys\route.ts                                        | TypeScript         |        306 |          9 |         13 |        328 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\blog\route.ts                                           | TypeScript         |        246 |          0 |          6 |        252 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\configs\route.ts                                        | TypeScript         |         40 |          1 |          7 |         48 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\entitlements\route.ts                                   | TypeScript         |         25 |          1 |          7 |         33 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\instances\[id]\token\revoke\route.ts                    | TypeScript         |         32 |          0 |          6 |         38 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\instances\[id]\token\rotate\route.ts                    | TypeScript         |         37 |          0 |          7 |         44 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\instances\route.ts                                      | TypeScript         |        108 |          1 |         11 |        120 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\integrations\discord\channels\[id]\route.ts             | TypeScript         |         38 |          0 |          3 |         41 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\integrations\discord\channels\route.ts                  | TypeScript         |         44 |          0 |          3 |         47 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\integrations\discord\presets\[id]\route.ts              | TypeScript         |         38 |          0 |          3 |         41 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\integrations\discord\presets\route.ts                   | TypeScript         |         44 |          0 |          3 |         47 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\integrations\discord\send-multi\route.ts                | TypeScript         |         40 |          0 |          5 |         45 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\integrations\discord\send\route.ts                      | TypeScript         |         35 |          0 |          6 |         41 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\master-objects\[id]\route.ts                            | TypeScript         |         97 |          0 |          9 |        106 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\master-objects\[id]\versions\route.ts                   | TypeScript         |         38 |          0 |          7 |         45 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\master-objects\route.ts                                 | TypeScript         |         49 |          0 |          8 |         57 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\webhooks\[id]\deliveries\route.ts                       | TypeScript         |         86 |          3 |         12 |        101 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\webhooks\[id]\destinations\[destId]\route.ts            | TypeScript         |         65 |          1 |          3 |         69 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\webhooks\[id]\destinations\route.ts                     | TypeScript         |         52 |          2 |          6 |         60 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\webhooks\[id]\route.ts                                  | TypeScript         |         44 |          0 |          7 |         51 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\webhooks\[id]\test\route.ts                             | TypeScript         |         32 |          1 |          7 |         40 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\webhooks\deliveries\[deliveryId]\retry\route.ts         | TypeScript         |         50 |          2 |          8 |         60 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\webhooks\events\route.ts                                | TypeScript         |         10 |          0 |          3 |         13 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\webhooks\route.ts                                       | TypeScript         |         38 |          0 |          8 |         46 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\creator\webhooks\test\route.ts                                  | TypeScript         |         18 |          0 |          4 |         22 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\docs.ts                                                         | TypeScript         |          0 |          0 |          1 |          1 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\docs\route.ts                                                   | TypeScript         |        272 |          2 |         13 |        287 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\protected\route.ts                                              | TypeScript         |         43 |          3 |          7 |         53 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\public\blog\[postId]\rating\route.ts                            | TypeScript         |        132 |         10 |         18 |        160 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\public\marketplace\categories\route.ts                          | TypeScript         |         17 |          0 |          3 |         20 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\public\marketplace\items\route.ts                               | TypeScript         |         82 |          4 |          9 |         95 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\public\marketplace\requests\route.ts                            | TypeScript         |         69 |          1 |          8 |         78 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\public\webhooks\events\route.ts                                 | TypeScript         |         40 |          0 |          3 |         43 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\sl\entitlements\route.ts                                        | TypeScript         |         65 |          2 |          8 |         75 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\sl\instances\[id]\config\route.ts                               | TypeScript         |        102 |          4 |         21 |        127 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\sl\instances\[id]\route.ts                                      | TypeScript         |         29 |          0 |          5 |         34 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\sl\instances\[id]\snapshots\[snapshotId]\restore\route.ts       | TypeScript         |         64 |          2 |         12 |         78 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\sl\instances\[id]\token\rotate\route.ts                         | TypeScript         |         25 |          0 |          6 |         31 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\sl\register\route.ts                                            | TypeScript         |         76 |          4 |         12 |         92 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\tools\marketplace\admin\route.ts                                | TypeScript         |         16 |          0 |          3 |         19 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\tools\marketplace\categories\[id]\route.ts                      | TypeScript         |         42 |          2 |          4 |         48 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\tools\marketplace\categories\route.ts                           | TypeScript         |         61 |          1 |          4 |         66 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\tools\marketplace\items\[id]\categories\route.ts                | TypeScript         |         67 |          3 |         10 |         80 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\tools\marketplace\items\categories\batch\route.ts               | TypeScript         |         30 |          3 |          5 |         38 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\tools\marketplace\items\categories\route.ts                     | TypeScript         |         24 |          1 |          4 |         29 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\tools\marketplace\items\route.ts                                | TypeScript         |        323 |         12 |         26 |        361 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\tools\marketplace\requests\route.ts                             | TypeScript         |        101 |          1 |         17 |        119 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\v1\get\route.ts                                                 | TypeScript         |         18 |          0 |          2 |         20 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\v1\sync\route.ts                                                | TypeScript         |         19 |          0 |          2 |         21 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\v1\update\fertility\route.ts                                    | TypeScript         |         34 |          0 |          3 |         37 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\v1\update\partner\route.ts                                      | TypeScript         |         34 |          0 |          3 |         37 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\v1\update\pregnancy\route.ts                                    | TypeScript         |         34 |          0 |          3 |         37 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\v1\update\settings\route.ts                                     | TypeScript         |         34 |          0 |          3 |         37 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\api\webhooks.ts                                                     | TypeScript         |         13 |          1 |          4 |         18 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\apps\register\page.tsx                                              | TypeScript JSX     |        107 |          0 |          7 |        114 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\blog\[slug]\page.tsx                                                | TypeScript JSX     |        235 |          0 |          2 |        237 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\blog\page.tsx                                                       | TypeScript JSX     |        590 |         18 |         29 |        637 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\blog\public\page.tsx                                                | TypeScript JSX     |        337 |          4 |         22 |        363 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\blog\rss\route.ts                                                   | TypeScript         |         69 |          1 |          8 |         78 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\admin\AdminDashboard.tsx                                  | TypeScript JSX     |      1,132 |         14 |         36 |      1,182 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\admin\page.tsx                                            | TypeScript JSX     |         16 |          0 |          2 |         18 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\admin\permissions\SeedRbacCard.tsx                        | TypeScript JSX     |         67 |          0 |          7 |         74 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\admin\permissions\overrides\page.tsx                      | TypeScript JSX     |         47 |          0 |          4 |         51 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\admin\permissions\page.tsx                                | TypeScript JSX     |         30 |          0 |          3 |         33 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\admin\permissions\roles\[roleId]\page.tsx                 | TypeScript JSX     |        103 |          0 |         10 |        113 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\admin\permissions\roles\page.tsx                          | TypeScript JSX     |         57 |          0 |          6 |         63 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\apikeys\actions-client.tsx                                | TypeScript JSX     |        109 |          3 |          5 |        117 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\apikeys\client-actions.tsx                                | TypeScript JSX     |         38 |          0 |          5 |         43 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\apikeys\components\table.tsx                              | TypeScript JSX     |        422 |          3 |         23 |        448 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\apikeys\page.tsx                                          | TypeScript JSX     |         69 |          5 |          7 |         81 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\blog\categories\page.tsx                                  | TypeScript JSX     |        303 |          1 |         22 |        326 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\blog\edit\[id]\page.tsx                                   | TypeScript JSX     |        143 |          0 |         10 |        153 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\blog\manage\page.tsx                                      | TypeScript JSX     |        276 |          5 |         15 |        296 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\blog\new\page.tsx                                         | TypeScript JSX     |        112 |          0 |          8 |        120 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\blog\page.tsx                                             | TypeScript JSX     |        164 |          0 |          7 |        171 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\blog\settings\page.tsx                                    | TypeScript JSX     |        243 |          4 |         17 |        264 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\configs\components\table.tsx                              | TypeScript JSX     |         36 |          0 |          4 |         40 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\configs\page.tsx                                          | TypeScript JSX     |         34 |          0 |          4 |         38 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\entitlements\components\table.tsx                         | TypeScript JSX     |         39 |          0 |          4 |         43 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\entitlements\page.tsx                                     | TypeScript JSX     |         34 |          0 |          4 |         38 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\instances\components\table.tsx                            | TypeScript JSX     |         52 |          0 |          5 |         57 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\instances\page.tsx                                        | TypeScript JSX     |         33 |          0 |          4 |         37 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\layout.tsx                                                | TypeScript JSX     |          5 |          0 |          2 |          7 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\objects\[id]\page.tsx                                     | TypeScript JSX     |        574 |         15 |         33 |        622 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\objects\components\columns.tsx                            | TypeScript JSX     |         40 |          0 |          4 |         44 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\objects\new\page.tsx                                      | TypeScript JSX     |         47 |          1 |          4 |         52 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\objects\page.tsx                                          | TypeScript JSX     |         38 |          1 |          4 |         43 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\page.tsx                                                  | TypeScript JSX     |        471 |         14 |         29 |        514 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace-scrape\Importer.tsx                     | TypeScript JSX     |        145 |          0 |         13 |        158 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace-scrape\Scraper.tsx                      | TypeScript JSX     |        123 |          2 |         16 |        141 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace-scrape\page.tsx                         | TypeScript JSX     |         44 |          0 |          6 |         50 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\categories\CategoriesEditor.tsx         | TypeScript JSX     |        588 |         35 |         23 |        646 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\categories\page.tsx                     | TypeScript JSX     |         33 |          0 |          5 |         38 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\explorer\Explorer.tsx                   | TypeScript JSX     |      1,411 |         33 |         43 |      1,487 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\explorer\components\CategoryPicker.tsx  | TypeScript JSX     |        172 |         24 |         12 |        208 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\explorer\components\ExplorerClient.tsx  | TypeScript JSX     |      1,054 |         31 |         28 |      1,113 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\explorer\components\ExplorerToolbar.tsx | TypeScript JSX     |        292 |         10 |          9 |        311 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\explorer\components\types.ts            | TypeScript         |         19 |          1 |          2 |         22 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\explorer\page.tsx                       | TypeScript JSX     |         42 |          4 |          6 |         52 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\new\page.tsx                            | TypeScript JSX     |        190 |          0 |         17 |        207 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\new\ui.tsx                              | TypeScript JSX     |        391 |          5 |         19 |        415 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\page.tsx                                | TypeScript JSX     |          5 |          0 |          3 |          8 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\requests\page.tsx                       | TypeScript JSX     |         29 |          0 |          5 |         34 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\tools\marketplace\requests\ui.tsx                         | TypeScript JSX     |        110 |          0 |         10 |        120 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\userprofile\api-card.tsx                                  | TypeScript JSX     |         10 |          0 |          2 |         12 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\userprofile\organization-card.tsx                         | TypeScript JSX     |        913 |         11 |         22 |        946 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\userprofile\page.tsx                                      | TypeScript JSX     |         37 |          0 |          4 |         41 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\userprofile\user-card.tsx                                 | TypeScript JSX     |        887 |          2 |         18 |        907 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\webhooks\components\create-dialog.tsx                     | TypeScript JSX     |        207 |          1 |          7 |        215 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\webhooks\components\discord-embed-dialog.tsx              | TypeScript JSX     |        589 |          8 |         44 |        641 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\webhooks\components\table.tsx                             | TypeScript JSX     |        592 |          2 |         30 |        624 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\webhooks\components\verification-drawer.tsx               | TypeScript JSX     |         77 |          0 |          7 |         84 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\dashboard\webhooks\page.tsx                                         | TypeScript JSX     |        134 |          2 |         12 |        148 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\debug\api-keys\page.tsx                                             | TypeScript JSX     |         14 |          0 |          3 |         17 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\debug\client-test\page.tsx                                          | TypeScript JSX     |        190 |          4 |         10 |        204 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\error.tsx                                                           | TypeScript JSX     |         60 |          3 |          4 |         67 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\global-error.tsx                                                    | TypeScript JSX     |         44 |          2 |          4 |         50 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\globals.css                                                         | PostCSS            |        390 |         35 |         31 |        456 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\layout.tsx                                                          | TypeScript JSX     |         64 |          1 |          3 |         68 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\marketplace\ClientExplorer.tsx                                      | TypeScript JSX     |      1,014 |         39 |         40 |      1,093 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\marketplace\page.tsx                                                | TypeScript JSX     |         11 |          0 |          2 |         13 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\marketplace\request\page.tsx                                        | TypeScript JSX     |         13 |          0 |          3 |         16 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\marketplace\request\ui.tsx                                          | TypeScript JSX     |        237 |          4 |         30 |        271 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\not-found.tsx                                                       | TypeScript JSX     |         30 |          0 |          2 |         32 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\oauth\authorize\concet-buttons.tsx                                  | TypeScript JSX     |         45 |          0 |          3 |         48 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\oauth\authorize\page.tsx                                            | TypeScript JSX     |        105 |          1 |          8 |        114 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\page.tsx                                                            | TypeScript JSX     |        711 |         13 |         38 |        762 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\sitemap.ts                                                          | TypeScript         |         31 |          1 |          6 |         38 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\app\wearing\page.tsx                                                    | TypeScript JSX     |         86 |          3 |          7 |         96 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components.json                                                         | JSON               |         21 |          0 |          1 |         22 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\account-switch.tsx                                           | TypeScript JSX     |        120 |          0 |          3 |        123 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\action-toast.tsx                                             | TypeScript JSX     |         24 |          0 |          3 |         27 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\api-key-manager.tsx                                          | TypeScript JSX     |        497 |         16 |         38 |        551 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\app-shell.tsx                                                | TypeScript JSX     |        411 |         10 |         11 |        432 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\blog\category-sidebar.tsx                                    | TypeScript JSX     |         65 |          0 |          5 |         70 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\blog\email-template-editor.tsx                               | TypeScript JSX     |         87 |          0 |          7 |         94 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\blog\rating.tsx                                              | TypeScript JSX     |        102 |          4 |          9 |        115 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\blog\toc.tsx                                                 | TypeScript JSX     |         91 |          3 |         10 |        104 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\dashboard\charts.tsx                                         | TypeScript JSX     |        134 |          0 |          4 |        138 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\auth\logout-button.tsx                              | TypeScript JSX     |         36 |          1 |          5 |         42 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\auth\one-tap.tsx                                    | TypeScript JSX     |        210 |          0 |          6 |        216 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\auth\sign-in-btn.tsx                                | TypeScript JSX     |         82 |          1 |          5 |         88 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\auth\sign-in.tsx                                    | TypeScript JSX     |        221 |          0 |          9 |        230 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\auth\sign-up.tsx                                    | TypeScript JSX     |        210 |          0 |          6 |        216 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\common\logo.tsx                                     | TypeScript JSX     |         27 |          0 |          4 |         31 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\common\markdown.tsx                                 | TypeScript JSX     |        157 |          1 |          5 |        163 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\common\theme-toggle.tsx                             | TypeScript JSX     |         19 |          0 |          5 |         24 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\common\work-in-progress-notice.tsx                  | TypeScript JSX     |         60 |          2 |          8 |         70 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\features\shell\app-shell.tsx                                 | TypeScript JSX     |          1 |          0 |          1 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\json-editor.tsx                                              | TypeScript JSX     |        144 |          4 |         12 |        160 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\logo.tsx                                                     | TypeScript JSX     |          1 |          0 |          1 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\logout-button.tsx                                            | TypeScript JSX     |          1 |          0 |          1 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\one-tap.tsx                                                  | TypeScript JSX     |          1 |          0 |          1 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\pickers\org-team-picker.tsx                                  | TypeScript JSX     |        196 |         11 |         17 |        224 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\pickers\scope-options.ts                                     | TypeScript         |         17 |          1 |          2 |         20 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\pickers\scope-selector.tsx                                   | TypeScript JSX     |        167 |          3 |         12 |        182 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\pickers\team-picker.tsx                                      | TypeScript JSX     |        142 |         11 |         12 |        165 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\pickers\user-picker.tsx                                      | TypeScript JSX     |        183 |         10 |         13 |        206 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\sanctum-bg.tsx                                               | TypeScript JSX     |         78 |         10 |         10 |         98 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\sign-in-btn.tsx                                              | TypeScript JSX     |          1 |          0 |          1 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\sign-in.tsx                                                  | TypeScript JSX     |          1 |          0 |          1 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\theme-provider.tsx                                           | TypeScript JSX     |         11 |          0 |          2 |         13 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\theme-toggle.tsx                                             | TypeScript JSX     |          1 |          0 |          1 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\accordion.tsx                                             | TypeScript JSX     |         61 |          0 |          8 |         69 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\alert-dialog.tsx                                          | TypeScript JSX     |        127 |          0 |         15 |        142 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\alert.tsx                                                 | TypeScript JSX     |         60 |          0 |          7 |         67 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\aspect-ratio.tsx                                          | TypeScript JSX     |          4 |          0 |          4 |          8 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\avatar.tsx                                                | TypeScript JSX     |         47 |          0 |          7 |         54 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\badge.tsx                                                 | TypeScript JSX     |         31 |          0 |          6 |         37 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\breadcrumb.tsx                                            | TypeScript JSX     |        106 |          0 |         11 |        117 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\button.tsx                                                | TypeScript JSX     |         55 |          0 |          6 |         61 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\calendar.tsx                                              | TypeScript JSX     |         67 |          0 |          6 |         73 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\canvas-reveal-effect.tsx                                  | TypeScript JSX     |        287 |          5 |         17 |        309 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\card.tsx                                                  | TypeScript JSX     |         61 |          0 |          9 |         70 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\carousel.tsx                                              | TypeScript JSX     |        241 |          0 |         31 |        272 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\chart.tsx                                                 | TypeScript JSX     |        331 |          2 |         42 |        375 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\checkbox.tsx                                              | TypeScript JSX     |         28 |          0 |          5 |         33 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\collapsible.tsx                                           | TypeScript JSX     |          6 |          0 |          6 |         12 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\command.tsx                                               | TypeScript JSX     |        165 |          0 |         13 |        178 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\context-menu.tsx                                          | TypeScript JSX     |        199 |          0 |         19 |        218 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\copy-button.tsx                                           | TypeScript JSX     |         53 |          0 |          6 |         59 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\dialog.tsx                                                | TypeScript JSX     |        122 |          0 |         14 |        136 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\drawer.tsx                                                | TypeScript JSX     |        105 |          0 |         14 |        119 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\dropdown-menu.tsx                                         | TypeScript JSX     |        239 |          0 |         19 |        258 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\form.tsx                                                  | TypeScript JSX     |        169 |          0 |         26 |        195 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\hover-card.tsx                                            | TypeScript JSX     |         28 |          0 |          7 |         35 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\input-otp.tsx                                             | TypeScript JSX     |         69 |          0 |          9 |         78 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\input.tsx                                                 | TypeScript JSX     |         18 |          0 |          4 |         22 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\label.tsx                                                 | TypeScript JSX     |         20 |          0 |          5 |         25 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\menubar.tsx                                               | TypeScript JSX     |        228 |          0 |         20 |        248 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\navigation-menu.tsx                                       | TypeScript JSX     |        145 |          0 |         12 |        157 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\pagination.tsx                                            | TypeScript JSX     |        115 |          0 |         11 |        126 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\password-input.tsx                                        | TypeScript JSX     |         55 |          1 |          7 |         63 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\popover.tsx                                               | TypeScript JSX     |         41 |          0 |          8 |         49 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\progress.tsx                                              | TypeScript JSX     |         28 |          0 |          5 |         33 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\radio-group.tsx                                           | TypeScript JSX     |         40 |          0 |          6 |         46 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\resizable.tsx                                             | TypeScript JSX     |         39 |          0 |          7 |         46 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\scroll-area.tsx                                           | TypeScript JSX     |         46 |          1 |          7 |         54 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\select.tsx                                                | TypeScript JSX     |        146 |          0 |         14 |        160 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\separator.tsx                                             | TypeScript JSX     |         27 |          0 |          5 |         32 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\sheet.tsx                                                 | TypeScript JSX     |        139 |          0 |         16 |        155 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\skeleton.tsx                                              | TypeScript JSX     |         13 |          0 |          3 |         16 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\slider.tsx                                                | TypeScript JSX     |         27 |          0 |          5 |         32 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\sonner.tsx                                                | TypeScript JSX     |         26 |          0 |          6 |         32 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\switch.tsx                                                | TypeScript JSX     |         25 |          0 |          5 |         30 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\table.tsx                                                 | TypeScript JSX     |        105 |          0 |         12 |        117 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\tabs.tsx                                                  | TypeScript JSX     |         48 |          0 |          8 |         56 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\tabs2.tsx                                                 | TypeScript JSX     |        137 |          0 |         10 |        147 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\textarea.tsx                                              | TypeScript JSX     |         20 |          0 |          5 |         25 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\toggle-group.tsx                                          | TypeScript JSX     |         51 |          0 |         10 |         61 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\toggle.tsx                                                | TypeScript JSX     |         34 |          0 |          6 |         40 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\ui\tooltip.tsx                                               | TypeScript JSX     |         54 |          0 |          8 |         62 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\visibility-select.tsx                                        | TypeScript JSX     |         33 |          0 |          3 |         36 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\visual-config-editor.tsx                                     | TypeScript JSX     |        537 |          4 |         26 |        567 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\web-bg.tsx                                                   | TypeScript JSX     |        179 |         15 |         24 |        218 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\wip-notice.tsx                                               | TypeScript JSX     |          2 |          0 |          1 |          3 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\components\wrapper.tsx                                                  | TypeScript JSX     |          9 |          0 |          5 |         14 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle.config.ts                                                       | TypeScript         |         10 |          0 |          2 |         12 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0000_last_thundra.sql                                           | MS SQL             |        103 |          9 |          0 |        112 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0001_dark_roughhouse.sql                                        | MS SQL             |         24 |          1 |          0 |         25 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0002_many_colossus.sql                                          | MS SQL             |          3 |          1 |          0 |          4 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0003_boring_annihilus.sql                                       | MS SQL             |         25 |          3 |          0 |         28 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0004_eminent_hawkeye.sql                                        | MS SQL             |        105 |          8 |          0 |        113 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0005_great_joystick.sql                                         | MS SQL             |         16 |          1 |          0 |         17 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0006_icy_meggan.sql                                             | MS SQL             |         43 |          3 |          0 |         46 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0006_mp_scope_text.sql                                          | MS SQL             |          8 |          3 |          3 |         14 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0007_previous_doomsday.sql                                      | MS SQL             |          6 |          0 |          0 |          6 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0008_slow_mister_sinister.sql                                   | MS SQL             |          2 |          0 |          0 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0009_even_tattoo.sql                                            | MS SQL             |         34 |          3 |          0 |         37 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0010_light_azazel.sql                                           | MS SQL             |         11 |          1 |          0 |         12 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0011_blog_settings_announcements.sql                            | MS SQL             |         23 |          4 |          1 |         28 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0011_jazzy_sage.sql                                             | MS SQL             |         23 |          2 |          0 |         25 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0012_blog_category_visibility.sql                               | MS SQL             |          2 |          2 |          2 |          6 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0012_unusual_forge.sql                                          | MS SQL             |          1 |          0 |          0 |          1 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0013_magical_shocker.sql                                        | MS SQL             |          3 |          0 |          0 |          3 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0014_volatile_toxin.sql                                         | MS SQL             |          4 |          0 |          0 |          4 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0015_marketplace_perf_indexes.sql                               | MS SQL             |          2 |          2 |          1 |          5 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0015_tiny_wild_child.sql                                        | MS SQL             |         81 |          6 |          0 |         87 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0016_marketplace_item_requests.sql                              | MS SQL             |         28 |          1 |          2 |         31 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0016_overjoyed_the_enforcers.sql                                | MS SQL             |         38 |          3 |          1 |         42 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0017_flawless_spirit.sql                                        | MS SQL             |         19 |          2 |          0 |         21 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0017_require_request_fields.sql                                 | MS SQL             |         29 |          4 |          4 |         37 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0018_early_stark_industries.sql                                 | MS SQL             |          2 |          0 |          0 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0018_rbac.sql                                                   | MS SQL             |         63 |          2 |         10 |         75 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0019_discord_embeds.sql                                         | MS SQL             |         19 |          3 |          1 |         23 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\0020_webhook_destinations.sql                                   | MS SQL             |         15 |          2 |          2 |         19 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0000_snapshot.json                                         | JSON               |        716 |          0 |          0 |        716 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0001_snapshot.json                                         | JSON               |        872 |          0 |          0 |        872 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0002_snapshot.json                                         | JSON               |        872 |          0 |          0 |        872 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0003_snapshot.json                                         | JSON               |      1,048 |          0 |          0 |      1,048 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0004_snapshot.json                                         | JSON               |      1,872 |          0 |          0 |      1,872 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0005_snapshot.json                                         | JSON               |      1,984 |          0 |          0 |      1,984 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0006_snapshot.json                                         | JSON               |      2,392 |          0 |          0 |      2,392 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0007_snapshot.json                                         | JSON               |      2,392 |          0 |          0 |      2,392 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0008_snapshot.json                                         | JSON               |      2,404 |          0 |          0 |      2,404 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0009_snapshot.json                                         | JSON               |      2,707 |          0 |          0 |      2,707 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0010_snapshot.json                                         | JSON               |      2,811 |          0 |          0 |      2,811 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0011_snapshot.json                                         | JSON               |      2,988 |          0 |          0 |      2,988 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0012_snapshot.json                                         | JSON               |      2,994 |          0 |          0 |      2,994 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0013_snapshot.json                                         | JSON               |      2,994 |          0 |          0 |      2,994 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0014_snapshot.json                                         | JSON               |      2,994 |          0 |          0 |      2,994 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0015_snapshot.json                                         | JSON               |      3,658 |          0 |          0 |      3,658 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0016_snapshot.json                                         | JSON               |      3,894 |          0 |          0 |      3,894 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0017_snapshot.json                                         | JSON               |      4,047 |          0 |          0 |      4,047 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\0018_snapshot.json                                         | JSON               |      4,047 |          0 |          0 |      4,047 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\drizzle\meta\_journal.json                                              | JSON               |        139 |          0 |          0 |        139 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\eslint.config.mjs                                                       | JavaScript         |         38 |          6 |          5 |         49 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\absolute-url.ts                                                     | TypeScript         |         17 |          0 |          3 |         20 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\admin-access.ts                                                     | TypeScript         |         44 |          5 |          8 |         57 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\auth-client.ts                                                      | TypeScript         |         90 |          0 |          3 |         93 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\auth-types.ts                                                       | TypeScript         |          5 |          0 |          2 |          7 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\auth.ts                                                             | TypeScript         |        231 |          2 |          9 |        242 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\auth\better-auth.ts                                                 | TypeScript         |         12 |          5 |          2 |         19 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\blog-auth.ts                                                        | TypeScript         |         22 |          0 |          3 |         25 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\client-permissions.ts                                               | TypeScript         |         20 |          2 |          3 |         25 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\creator-auth.ts                                                     | TypeScript         |         38 |          5 |          9 |         52 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\db.ts                                                               | TypeScript         |          4 |          0 |          2 |          6 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\email\invitation.tsx                                                | TypeScript JSX     |        104 |          0 |          4 |        108 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\email\resend.ts                                                     | TypeScript         |          2 |          0 |          2 |          4 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\email\reset-password.tsx                                            | TypeScript JSX     |         72 |          0 |          4 |         76 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\fertility\data.ts                                                   | TypeScript         |        136 |          7 |         12 |        155 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\guards.ts                                                           | TypeScript         |         44 |          1 |          8 |         53 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\hljs\lsl.ts                                                         | TypeScript         |         76 |          6 |          6 |         88 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\metadata.ts                                                         | TypeScript         |         26 |          0 |          3 |         29 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\permission-service.ts                                               | TypeScript         |        145 |          2 |         17 |        164 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\permissions.ts                                                      | TypeScript         |         50 |          9 |         10 |         69 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\rate-limit.ts                                                       | TypeScript         |        126 |         10 |          8 |        144 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\shared.ts                                                           | TypeScript         |         18 |          0 |          3 |         21 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\sl-auth.ts                                                          | TypeScript         |         44 |          6 |         13 |         63 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\utils.ts                                                            | TypeScript         |         40 |          3 |          8 |         51 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\lib\webhooks.ts                                                         | TypeScript         |        128 |          4 |         11 |        143 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\middleware.ts                                                           | TypeScript         |         12 |          0 |          3 |         15 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\next.config.ts                                                          | TypeScript         |         33 |          1 |          5 |         39 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\package.json                                                            | JSON               |        132 |          0 |          1 |        133 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\postcss.config.mjs                                                      | JavaScript         |          6 |          1 |          2 |          9 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\public\favicon\light\site.webmanifest                                   | JSON               |         19 |          0 |          1 |         20 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\public\favicon\site.webmanifest                                         | JSON               |          1 |          0 |          0 |          1 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\public\logo.svg                                                         | XML                |          8 |          0 |          1 |          9 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\schemas\auth-schema.ts                                                  | TypeScript         |        176 |          3 |         13 |        192 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\schemas\blog.ts                                                         | TypeScript         |        133 |         11 |         13 |        157 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\schemas\fertility-schema.ts                                             | TypeScript         |         47 |          4 |          5 |         56 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\schemas\rbac.ts                                                         | TypeScript         |         49 |          0 |          6 |         55 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\schemas\sl-schema.ts                                                    | TypeScript         |        330 |         28 |         38 |        396 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\schemas\sl.zod.ts                                                       | TypeScript         |        106 |          9 |         16 |        131 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\schemas\webhook.ts                                                      | TypeScript         |          5 |          0 |          2 |          7 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\tsconfig.json                                                           | JSON with Comments |         30 |          0 |          1 |         31 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\types\react-syntax-highlighter-esm.d.ts                                 | TypeScript         |         12 |          0 |          2 |         14 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\types\redis.d.ts                                                        | TypeScript         |         11 |          0 |          1 |         12 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\types\upstash-redis.d.ts                                                | TypeScript         |          9 |          0 |          1 |         10 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\core\vercel.json                                                             | JSON               |          5 |          0 |          1 |          6 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\scraper-cli\package.json                                                     | JSON               |         29 |          0 |          1 |         30 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\scraper-cli\src\index.ts                                                     | TypeScript         |          2 |          0 |          1 |          3 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\scraper-cli\src\login.ts                                                     | TypeScript         |         27 |          0 |          9 |         36 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\scraper-cli\src\scrape.ts                                                    | TypeScript         |        444 |          1 |         46 |        491 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\scraper-cli\src\utils.ts                                                     | TypeScript         |         14 |          0 |          4 |         18 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\scraper-cli\tsconfig.json                                                    | JSON with Comments |         18 |          0 |          1 |         19 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\shared-data\package.json                                                     | JSON               |         12 |          0 |          1 |         13 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\shared-data\src\index.ts                                                     | TypeScript         |          1 |          0 |          1 |          2 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\packages\shared-data\tsconfig.json                                                    | JSON with Comments |         14 |          0 |          1 |         15 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\pnpm-lock.yaml                                                                        | YAML               |      9,190 |          0 |      2,191 |     11,381 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\pnpm-workspace.yaml                                                                   | YAML               |         16 |          0 |          3 |         19 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\tsconfig.base.json                                                                    | JSON               |          9 |          0 |          1 |         10 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\turbo.json                                                                            | JSON               |         27 |          0 |          1 |         28 |
+| c:\Users\Dabz\Desktop\Dev\sl.itzdabbzz.me\vercel.json                                                                           | JSON               |          7 |          0 |          1 |          8 |
+| Total                                                                                                                           |                    |     94,533 |        804 |      5,093 |    100,430 |
++---------------------------------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
