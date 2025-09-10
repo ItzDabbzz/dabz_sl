@@ -203,7 +203,8 @@ export default function RequestsClient() {
                     {/* Description / Expanded */}
                     {it.description ? (
                       <div className={cn("text-[12px] leading-relaxed text-muted-foreground relative", !isExpanded && "line-clamp-2")}> 
-                        <span className={cn(!isExpanded && "[mask-image:linear-gradient(180deg,#000_70%,transparent)]")}>{it.description}</span>
+                        {/* Preserve user-entered newlines while still allowing clamp when collapsed */}
+                        <span className={cn("whitespace-pre-line", !isExpanded && "[mask-image:linear-gradient(180deg,#000_70%,transparent)]")}>{it.description}</span>
                         {!isExpanded && (
                           <button type="button" onClick={() => toggleExpand(it.id)} className="absolute bottom-0 right-0 text-xs font-medium px-1 bg-background/80 backdrop-blur-sm hover:underline">
                             More
