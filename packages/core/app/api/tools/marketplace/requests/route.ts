@@ -22,7 +22,7 @@ async function getUser(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const user = await getUser(req);
-    if (!isPrivilegedRole(user.adminRole) && !isAdminId(user.id)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    if (!isPrivilegedRole(user.role) && !isAdminId(user.id)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
     const { searchParams } = new URL(req.url);
     const status = (searchParams.get("status") || "pending").toLowerCase();
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const user = await getUser(req);
-    if (!isPrivilegedRole(user.adminRole) && !isAdminId(user.id)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    if (!isPrivilegedRole(user.role) && !isAdminId(user.id)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
     const body = await req.json();
     const singleId = body?.id as string | undefined;
     const ids: string[] = Array.isArray(body?.ids) ? body.ids.filter((x: any) => typeof x === "string") : [];
