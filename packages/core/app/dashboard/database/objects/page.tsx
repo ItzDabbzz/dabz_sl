@@ -25,7 +25,7 @@ export default async function ObjectsPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Master Objects</h1>
-        <Link href="/dashboard/objects/new" className="text-sm underline">New Object</Link>
+        <Link href="/dashboard/database/objects/new" className="text-sm underline">New Object</Link>
       </div>
       <WorkInProgressNotice className="mb-2" message="This Second Life database section is under active development and not in a working state." />
       <Card>

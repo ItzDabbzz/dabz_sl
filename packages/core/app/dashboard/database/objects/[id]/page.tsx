@@ -50,8 +50,8 @@ async function saveDetails(formData: FormData) {
             body: JSON.stringify({ name, description, visibility }),
         },
     );
-    revalidatePath(`/dashboard/objects/${id}`);
-    redirect(`/dashboard/objects/${id}?ok=details`);
+    revalidatePath(`/dashboard/database/objects/${id}`);
+    redirect(`/dashboard/database/objects/${id}?ok=details`);
 }
 
 // Save config schema JSON
@@ -79,8 +79,8 @@ async function saveSchema(formData: FormData) {
             body: JSON.stringify({ configSchemaJson }),
         },
     );
-    revalidatePath(`/dashboard/objects/${id}`);
-    redirect(`/dashboard/objects/${id}?ok=schema`);
+    revalidatePath(`/dashboard/database/objects/${id}`);
+    redirect(`/dashboard/database/objects/${id}?ok=schema`);
 }
 
 // Save default config JSON
@@ -107,8 +107,8 @@ async function saveDefaultConfig(formData: FormData) {
             body: JSON.stringify({ defaultConfigJson }),
         },
     );
-    revalidatePath(`/dashboard/objects/${id}`);
-    redirect(`/dashboard/objects/${id}?ok=defaults`);
+    revalidatePath(`/dashboard/database/objects/${id}`);
+    redirect(`/dashboard/database/objects/${id}?ok=defaults`);
 }
 
 // Create a new version entry
@@ -131,8 +131,8 @@ async function createVersion(formData: FormData) {
             body: JSON.stringify({ version, changelog, migrationRef }),
         },
     );
-    revalidatePath(`/dashboard/objects/${id}`);
-    redirect(`/dashboard/objects/${id}?ok=version`);
+    revalidatePath(`/dashboard/database/objects/${id}`);
+    redirect(`/dashboard/database/objects/${id}?ok=version`);
 }
 
 // Delete object
@@ -148,7 +148,7 @@ async function deleteObject(formData: FormData) {
         `${base}/api/creator/master-objects/${encodeURIComponent(id)}`,
         { method: "DELETE", headers: outHeaders },
     );
-    redirect("/dashboard/objects");
+    redirect("/dashboard/database/objects");
 }
 
 // Promote/demote current version
@@ -169,8 +169,8 @@ async function setCurrentVersion(formData: FormData) {
             body: JSON.stringify({ currentVersion }),
         },
     );
-    revalidatePath(`/dashboard/objects/${id}`);
-    redirect(`/dashboard/objects/${id}?ok=current`);
+    revalidatePath(`/dashboard/database/objects/${id}`);
+    redirect(`/dashboard/database/objects/${id}?ok=current`);
 }
 
 // Save visual config (fields -> JSON Schema + Default Config)
@@ -274,7 +274,7 @@ async function saveVisualConfig(formData: FormData) {
             }),
         },
     );
-    revalidatePath(`/dashboard/objects/${id}`);
+    revalidatePath(`/dashboard/database/objects/${id}`);
 }
 
 export default async function EditObjectPage(props: {
@@ -297,7 +297,7 @@ export default async function EditObjectPage(props: {
         { headers: outHeaders },
     );
     const obj = await res.json().catch(() => null);
-    if (!obj || obj.error) return redirect("/dashboard/objects");
+    if (!obj || obj.error) return redirect("/dashboard/database/objects");
 
     const resV = await fetch(
         `${base}/api/creator/master-objects/${encodeURIComponent(id)}/versions`,

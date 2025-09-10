@@ -288,7 +288,7 @@ export default async function DashboardPage() {
             <Link href="/api-docs">API Docs</Link>
           </Button>
           <Button asChild>
-            <Link href="/dashboard/objects">New Master Object</Link>
+            <Link href="/dashboard/database/objects">New Master Object</Link>
           </Button>
         </div>
       </div>
@@ -486,7 +486,7 @@ export default async function DashboardPage() {
             <CardDescription>Create and manage templates</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="secondary"><Link href="/dashboard/objects">Open</Link></Button>
+            <Button asChild variant="secondary"><Link href="/dashboard/database/objects">Open</Link></Button>
           </CardContent>
         </Card>
         <Card className="hover:bg-muted/40 transition-colors">
@@ -495,7 +495,7 @@ export default async function DashboardPage() {
             <CardDescription>Search and monitor instances</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="secondary"><Link href="/dashboard/instances">Open</Link></Button>
+            <Button asChild variant="secondary"><Link href="/dashboard/database/instances">Open</Link></Button>
           </CardContent>
         </Card>
         <Card className="hover:bg-muted/40 transition-colors">

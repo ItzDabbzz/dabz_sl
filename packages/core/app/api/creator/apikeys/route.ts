@@ -17,7 +17,12 @@ export async function GET(req: NextRequest) {
   const offset = Math.max(parseInt(req.nextUrl.searchParams.get("offset") || "0", 10) || 0, 0);
   const sortKey = (req.nextUrl.searchParams.get("sortKey") as "name" | "createdAt" | "lastUsedAt" | null) || "createdAt";
   const sortDir = (req.nextUrl.searchParams.get("sortDir") as "asc" | "desc" | null) || "desc";
-    const authz = req.headers.get("authorization") || "";
+    let authz = req.headers.get("authorization") || "";
+    // Fallback: accept api_key or key in query string as Bearer token
+    if (!authz) {
+      const qKey = req.nextUrl.searchParams.get("api_key") || req.nextUrl.searchParams.get("key");
+      if (qKey) authz = "Bearer " + qKey;
+    }
     if (authz) {
       // API key flow: require specific scope
       const ctx = await getCreatorContextFromApiKey(req as any);
@@ -94,11 +99,21 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authz = req.headers.get("authorization") || "";
+    // Parse body first so we can accept apiKey in body as a fallback auth method
     let body: any = {};
     try {
       body = await req.json();
     } catch {}
+    let authz = req.headers.get("authorization") || "";
+    // Fallbacks: query string or body fields
+    if (!authz) {
+      const qKey = req.nextUrl.searchParams.get("api_key") || req.nextUrl.searchParams.get("key");
+      if (qKey) authz = "Bearer " + qKey;
+    }
+    if (!authz && body) {
+      const bKey = (body?.apiKey as string) || (body?.api_key as string) || "";
+      if (bKey) authz = "Bearer " + bKey;
+    }
     const name = (body?.name as string) || "New Key";
     const scopes = Array.isArray(body?.scopes) ? (body.scopes as string[]) : [];
     const metadata = body?.metadata as Record<string, any> | undefined;
@@ -214,7 +229,11 @@ export async function DELETE(req: NextRequest) {
     const reason = (body?.reason as string) || undefined;
     if (!keyId) return NextResponse.json({ error: "missing_id" }, { status: 400 });
 
-    const authz = req.headers.get("authorization") || "";
+    let authz = req.headers.get("authorization") || "";
+    if (!authz) {
+      const qKey = req.nextUrl.searchParams.get("api_key") || req.nextUrl.searchParams.get("key");
+      if (qKey) authz = "Bearer " + qKey;
+    }
     if (authz) {
       const ctx = await getCreatorContextFromApiKey(req as any);
       requireScope(ctx, "sl.apikeys:write");
@@ -279,7 +298,12 @@ export async function PATCH(req: NextRequest) {
     // Scopes stored as space-separated string in permissions column
     if (Array.isArray(scopes)) updatePayload.permissions = scopes.join(" ");
 
-    const authz = req.headers.get("authorization") || "";
+    let authz = req.headers.get("authorization") || "";
+    // Accept api_key in query string as fallback
+    if (!authz) {
+      const qKey = req.nextUrl.searchParams.get("api_key") || req.nextUrl.searchParams.get("key");
+      if (qKey) authz = "Bearer " + qKey;
+    }
     if (authz) {
       const ctx = await getCreatorContextFromApiKey(req as any);
       requireScope(ctx, "sl.apikeys:write");

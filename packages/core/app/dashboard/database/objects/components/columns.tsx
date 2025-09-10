@@ -24,7 +24,7 @@ export function MasterObjectsTable({ items }: { items: MasterObject[] }) {
       <TableBody>
         {items?.length ? (
           items.map((m) => (
-            <TableRow key={m.id} className="cursor-pointer hover:bg-muted/40" onClick={() => router.push(`/dashboard/objects/${m.id}`)}>
+            <TableRow key={m.id} className="cursor-pointer hover:bg-muted/40" onClick={() => router.push(`/dashboard/database/objects/${m.id}`)}>
               <TableCell className="font-medium">{m.name}</TableCell>
               <TableCell className="text-muted-foreground">{m.description || "–"}</TableCell>
               <TableCell>{m.currentVersion}</TableCell>

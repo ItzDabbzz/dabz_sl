@@ -17,7 +17,7 @@ async function createObject(formData: FormData) {
   const cookie = hdrs.get('cookie');
   if (cookie) outHeaders.set('cookie', cookie);
   await fetch(`${base}/api/creator/master-objects`, { method: 'POST', headers: outHeaders, body: JSON.stringify({ name, description }) });
-  return redirect('/dashboard/objects');
+  return redirect('/dashboard/database/objects');
 }
 
 export default async function NewObjectPage() {

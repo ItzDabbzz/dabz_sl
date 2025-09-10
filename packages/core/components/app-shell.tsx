@@ -69,14 +69,14 @@ const navSections: ReadonlyArray<NavSection> = [
         title: "Second Life Database",
         items: [
             {
-                href: "/dashboard/objects",
+                href: "/dashboard/database/objects",
                 title: "Master Objects",
                 icon: Boxes,
             },
-            { href: "/dashboard/instances", title: "Instances", icon: Server },
-            { href: "/dashboard/configs", title: "Configs", icon: FileDiff },
+            { href: "/dashboard/database/instances", title: "Instances", icon: Server },
+            { href: "/dashboard/database/configs", title: "Configs", icon: FileDiff },
             {
-                href: "/dashboard/entitlements",
+                href: "/dashboard/database/entitlements",
                 title: "Entitlements",
                 icon: BadgeCheck,
             },
