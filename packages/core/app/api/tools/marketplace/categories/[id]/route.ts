@@ -16,10 +16,10 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   try {
     const { userId } = await getScope();
     const { id } = await ctx.params;
-    const { primary, sub } = await req.json();
+    const { primary, sub, sub2 } = await req.json();
     const [row] = await db
       .update(mpCategories)
-      .set({ ...(primary ? { primary } : {}), ...(sub ? { sub } : {}) })
+      .set({ ...(primary ? { primary } : {}), ...(sub ? { sub } : {}), ...(sub2 ? { sub2 } : {}) })
       .where(and(eq(mpCategories.id as any, id as any) as any, eq(mpCategories.ownerUserId as any, userId as any) as any) as any)
       .returning();
     revalidateTag("marketplace:stats");

@@ -31,12 +31,12 @@ export async function GET(_req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await getScope();
-    const { primary, sub = "All" } = await req.json();
+  const { primary, sub = "All", sub2 = "All" } = await req.json();
     let row;
     try {
       [row] = await db
         .insert(mpCategories)
-        .values({ primary, sub, ownerUserId: userId as any })
+  .values({ primary, sub, sub2, ownerUserId: userId as any })
         .onConflictDoNothing()
         .returning();
     } catch {}
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
           and(
             eq(mpCategories.primary as any, primary as any) as any,
             eq(mpCategories.sub as any, sub as any) as any,
+            eq(mpCategories.sub2 as any, sub2 as any) as any,
             eq(mpCategories.ownerUserId as any, userId as any) as any
           ) as any
         );

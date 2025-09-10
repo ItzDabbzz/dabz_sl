@@ -278,6 +278,9 @@ export const webhookDestinations = pgTable(
 );
 
 // Marketplace Categories (primary/sub hierachy)
+// Extended: add third-level hierarchy field `sub2` (defaults to "All") so users can attach
+// subcategories to existing sub categories without breaking existing data. Existing rows
+// will get sub2 = 'All' via migration.
 export const mpCategories = pgTable(
   "sl_mp_categories",
   {
@@ -289,13 +292,15 @@ export const mpCategories = pgTable(
 
     primary: text("primary").notNull(),
     sub: text("sub").default("All").notNull(),
+    sub2: text("sub2").default("All").notNull(),
 
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
     byScope: index("sl_mp_categories_scope_idx").on(t.orgId, t.teamId, t.ownerUserId),
-    uniq: uniqueIndex("sl_mp_categories_uniq").on(t.primary, t.sub, t.orgId, t.teamId, t.ownerUserId),
+    // Updated uniqueness includes sub2.
+    uniq: uniqueIndex("sl_mp_categories_uniq").on(t.primary, t.sub, t.sub2, t.orgId, t.teamId, t.ownerUserId),
   })
 );
 

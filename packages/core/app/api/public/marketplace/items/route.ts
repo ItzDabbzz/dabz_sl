@@ -10,7 +10,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get("categoryId");
     const q = (searchParams.get("q") || "").trim();
-    const sort = (searchParams.get("sort") || "most").toLowerCase(); // most | least
+  const sort = (searchParams.get("sort") || "most").toLowerCase(); // most | least
+  const author = (searchParams.get("author") || "").trim().toLowerCase();
     const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "24", 10)));
     const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10));
 
@@ -35,6 +36,16 @@ export async function GET(req: NextRequest) {
       where = and(
         where,
         sql`(${lower(mpItems.title)} like ${pat} or ${lower(mpItems.description)} like ${pat})` as any
+      );
+    }
+
+    // Author filter (creator.name JSON -> we store entire object in jsonb creator column)
+    if (author) {
+      const pat = `%${author}%`;
+      // Use textual representation search. For more robust queries consider jsonb_extract_path_text.
+      where = and(
+        where,
+        sql`lower(${mpItems.creator}::text) like ${pat}` as any
       );
     }
 

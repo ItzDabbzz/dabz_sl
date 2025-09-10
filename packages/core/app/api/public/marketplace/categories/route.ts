@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 export async function GET(_req: NextRequest) {
   try {
     const rows = await db
-      .select({ id: mpCategories.id, primary: mpCategories.primary, sub: mpCategories.sub })
+      .select({ id: mpCategories.id, primary: mpCategories.primary, sub: mpCategories.sub, sub2: mpCategories.sub2 })
       .from(mpCategories)
-      .orderBy(asc(mpCategories.primary as any), asc(mpCategories.sub as any));
+      .orderBy(asc(mpCategories.primary as any), asc(mpCategories.sub as any), asc(mpCategories.sub2 as any));
     return NextResponse.json({ items: rows });
   } catch (e: any) {
     console.error(e);

@@ -134,6 +134,13 @@
       "when": 1757425608938,
       "tag": "0018_early_stark_industries",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1757495219072,
+      "tag": "0019_true_lorna_dane",
+      "breakpoints": true
     }
   ]
 }
