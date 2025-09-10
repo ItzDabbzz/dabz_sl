@@ -26,6 +26,7 @@ import {
     PlusCircle,
     Home,
     ExternalLink,
+    ListChecks,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/logo";
@@ -94,6 +95,11 @@ const navSections: ReadonlyArray<NavSection> = [
                 href: "/dashboard/tools/marketplace/new",
                 title: "New Marketplace Item",
                 icon: PlusCircle,
+            },
+            {
+                href: "/dashboard/tools/marketplace/requests",
+                title: "Marketplace Requests",
+                icon: ListChecks,
             },
             {
                 href: "/dashboard/tools/marketplace/categories",
