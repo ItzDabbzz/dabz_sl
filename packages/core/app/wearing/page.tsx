@@ -1,6 +1,6 @@
-// Renders "What They Wearin'" data passed via base64 JSON in the `data` search param.
-// Example URL (HUD sets this as prim media):
-// https://sanctumrp.net/wearing?data=BASE64(JSON)
+// Renders "What They Wearin'" data from a session or base64 JSON
+// New mode: https://sanctumrp.net/wearing?session=SESSION_ID
+// Legacy mode: https://sanctumrp.net/wearing?data=BASE64(JSON)
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ interface WearingItem {
 
 export const dynamic = "force-dynamic";
 
+// Legacy base64 decoding
 function decodeItems(param?: string | string[]): WearingItem[] | null {
 	if (!param) return null;
 	const b64 = Array.isArray(param) ? param[0] : param;
@@ -32,17 +33,55 @@ function decodeItems(param?: string | string[]): WearingItem[] | null {
 	}
 }
 
+// Fetch from session API
+async function fetchSessionItems(sessionId: string): Promise<WearingItem[] | null> {
+	try {
+		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+		const res = await fetch(`${baseUrl}/api/sl/wearing?session=${sessionId}`, {
+			cache: "no-store",
+		});
+
+		if (!res.ok) {
+			console.error("[WhatTheyWearin] Session fetch failed:", res.status);
+			return null;
+		}
+
+		const data = await res.json();
+		return data.items || null;
+	} catch (error) {
+		console.error("[WhatTheyWearin] Error fetching session:", error);
+		return null;
+	}
+}
+
 export default async function WhatTheyWearin({
 	searchParams,
 }: {
 	searchParams?: Promise<Record<string, string | string[]>>;
 }) {
 	const params = await searchParams;
-	console.log('[WhatTheyWearin] searchParams:', params);
-	console.log('[WhatTheyWearin] data param:', params?.data);
+	console.log("[WhatTheyWearin] searchParams:", params);
 
-	const items = decodeItems(params?.data);
-	console.log('[WhatTheyWearin] decoded items:', items);
+	let items: WearingItem[] | null = null;
+	let mode: "session" | "legacy" | "none" = "none";
+
+	// Try session mode first
+	if (params?.session) {
+		const sessionId = Array.isArray(params.session)
+			? params.session[0]
+			: params.session;
+		console.log("[WhatTheyWearin] Fetching session:", sessionId);
+		items = await fetchSessionItems(sessionId);
+		mode = "session";
+	}
+	// Fall back to legacy base64 mode
+	else if (params?.data) {
+		console.log("[WhatTheyWearin] Using legacy base64 mode");
+		items = decodeItems(params.data);
+		mode = "legacy";
+	}
+
+	console.log("[WhatTheyWearin] decoded items:", items);
 
 	return (
 		<div className="w-full p-3 text-foreground">
@@ -52,14 +91,26 @@ export default async function WhatTheyWearin({
 						<CardTitle className="text-base font-semibold">
 							What They Wearin'
 						</CardTitle>
-						<Badge variant="outline" className="text-[10px]">HUD</Badge>
+						<Badge variant="outline" className="text-[10px]">
+							HUD
+						</Badge>
 					</div>
 				</CardHeader>
 				<CardContent className="pt-0">
 					{!items || items.length === 0 ? (
 						<div className="text-sm text-muted-foreground">
-							No data received. Ensure your HUD is active and the prim media URL
-							was set with a data payload.
+							{mode === "session" && (
+								<>Session not found or expired. Touch the HUD to refresh.</>
+							)}
+							{mode === "legacy" && (
+								<>
+									No data received. Ensure your HUD is active and the prim media
+									URL was set with a data payload.
+								</>
+							)}
+							{mode === "none" && (
+								<>No session or data provided. Touch the HUD to begin.</>
+							)}
 						</div>
 					) : (
 						<>
@@ -104,8 +155,8 @@ export default async function WhatTheyWearin({
 								</ul>
 							</ScrollArea>
 							<div className="mt-2 text-[11px] text-muted-foreground/80">
-								Tip: Touch the HUD to refresh. Large outfits may be truncated
-								to fit URL limits.
+								Showing {items.length} item{items.length !== 1 ? "s" : ""}. Touch
+								the HUD to refresh.
 							</div>
 						</>
 					)}
