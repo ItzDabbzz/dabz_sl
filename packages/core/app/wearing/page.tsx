@@ -32,12 +32,17 @@ function decodeItems(param?: string | string[]): WearingItem[] | null {
 	}
 }
 
-export default function WhatTheyWearin({
+export default async function WhatTheyWearin({
 	searchParams,
 }: {
-	searchParams?: Record<string, string | string[]>;
+	searchParams?: Promise<Record<string, string | string[]>>;
 }) {
-	const items = decodeItems(searchParams?.data);
+	const params = await searchParams;
+	console.log('[WhatTheyWearin] searchParams:', params);
+	console.log('[WhatTheyWearin] data param:', params?.data);
+
+	const items = decodeItems(params?.data);
+	console.log('[WhatTheyWearin] decoded items:', items);
 
 	return (
 		<div className="w-full p-3 text-foreground">
