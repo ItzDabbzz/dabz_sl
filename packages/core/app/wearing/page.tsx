@@ -84,9 +84,9 @@ export default async function WhatTheyWearin({
 	console.log("[WhatTheyWearin] decoded items:", items);
 
 	return (
-		<div className="w-full p-3 text-foreground">
-			<Card className="border-border/60 bg-background/70 backdrop-blur shadow-sm">
-				<CardHeader className="py-3">
+		<div className="w-full h-screen p-3 text-foreground overflow-hidden">
+			<Card className="border-border/60 bg-background/70 backdrop-blur shadow-sm h-full flex flex-col">
+				<CardHeader className="py-3 shrink-0">
 					<div className="flex items-baseline gap-2">
 						<CardTitle className="text-base font-semibold">
 							What They Wearin'
@@ -96,7 +96,7 @@ export default async function WhatTheyWearin({
 						</Badge>
 					</div>
 				</CardHeader>
-				<CardContent className="pt-0">
+				<CardContent className="pt-0 flex-1 overflow-hidden flex flex-col">
 					{!items || items.length === 0 ? (
 						<div className="text-sm text-muted-foreground">
 							{mode === "session" && (
@@ -114,8 +114,8 @@ export default async function WhatTheyWearin({
 						</div>
 					) : (
 						<>
-							<ScrollArea className="max-h-80 pr-2">
-								<ul className="grid gap-2">
+							<ScrollArea className="flex-1 pr-2">
+								<ul className="grid gap-2 pb-2">
 									{items.map((it, idx) => (
 										<li
 											key={(it.id ?? it.name ?? "item") + ":" + idx}
@@ -154,7 +154,7 @@ export default async function WhatTheyWearin({
 									))}
 								</ul>
 							</ScrollArea>
-							<div className="mt-2 text-[11px] text-muted-foreground/80">
+							<div className="mt-2 text-[11px] text-muted-foreground/80 shrink-0">
 								Showing {items.length} item{items.length !== 1 ? "s" : ""}. Touch
 								the HUD to refresh.
 							</div>
