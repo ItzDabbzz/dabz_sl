@@ -2,9 +2,13 @@
 // New mode: https://sanctumrp.net/wearing?session=SESSION_ID
 // Legacy mode: https://sanctumrp.net/wearing?data=BASE64(JSON)
 
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface WearingItem {
 	id?: string;
@@ -22,14 +26,11 @@ interface SessionMetadata {
 	sharedPoints?: number[];
 }
 
-export const dynamic = "force-dynamic";
-
 // Legacy base64 decoding
-function decodeItems(param?: string | string[]): WearingItem[] | null {
+function decodeItems(param?: string | null): WearingItem[] | null {
 	if (!param) return null;
-	const b64 = Array.isArray(param) ? param[0] : param;
 	try {
-		const json = Buffer.from(b64, "base64").toString("utf8");
+		const json = atob(param);
 		const data = JSON.parse(json);
 		if (Array.isArray(data)) return data as WearingItem[];
 		if (Array.isArray((data as any)?.items))
@@ -40,65 +41,48 @@ function decodeItems(param?: string | string[]): WearingItem[] | null {
 	}
 }
 
-// Fetch from session API
-async function fetchSessionData(
-	sessionId: string
-): Promise<{ items: WearingItem[]; metadata?: SessionMetadata } | null> {
-	try {
-		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-		const res = await fetch(`${baseUrl}/api/sl/wearing?session=${sessionId}`, {
-			cache: "no-store",
-		});
+export default function WhatTheyWearin() {
+	const searchParams = useSearchParams();
+	const [items, setItems] = useState<WearingItem[] | null>(null);
+	const [metadata, setMetadata] = useState<SessionMetadata | undefined>();
+	const [mode, setMode] = useState<"session" | "legacy" | "none">("none");
+	const [loading, setLoading] = useState(true);
 
-		if (!res.ok) {
-			console.error("[WhatTheyWearin] Session fetch failed:", res.status);
-			return null;
+	useEffect(() => {
+		const sessionId = searchParams.get("session");
+		const dataParam = searchParams.get("data");
+
+		if (sessionId) {
+			// Fetch from session API
+			setMode("session");
+			setLoading(true);
+
+			fetch(`/api/sl/wearing?session=${sessionId}`)
+				.then((res) => {
+					if (!res.ok) throw new Error("Failed to fetch session");
+					return res.json();
+				})
+				.then((data) => {
+					setItems(data.items || []);
+					setMetadata(data.metadata);
+					setLoading(false);
+				})
+				.catch((error) => {
+					console.error("[WhatTheyWearin] Error:", error);
+					setItems([]);
+					setLoading(false);
+				});
+		} else if (dataParam) {
+			// Decode base64
+			setMode("legacy");
+			setItems(decodeItems(dataParam));
+			setLoading(false);
+		} else {
+			setMode("none");
+			setLoading(false);
 		}
+	}, [searchParams]);
 
-		const data = await res.json();
-		return { items: data.items || [], metadata: data.metadata };
-	} catch (error) {
-		console.error("[WhatTheyWearin] Error fetching session:", error);
-		return null;
-	}
-}
-
-export default async function WhatTheyWearin({
-	searchParams,
-}: {
-	searchParams?: Promise<Record<string, string | string[]>>;
-}) {
-	const params = await searchParams;
-	console.log("[WhatTheyWearin] searchParams:", params);
-
-	let items: WearingItem[] | null = null;
-	let metadata: SessionMetadata | undefined = undefined;
-	let mode: "session" | "legacy" | "none" = "none";
-
-	// Try session mode first
-	if (params?.session) {
-		const sessionId = Array.isArray(params.session)
-			? params.session[0]
-			: params.session;
-		console.log("[WhatTheyWearin] Fetching session:", sessionId);
-		const sessionData = await fetchSessionData(sessionId);
-		if (sessionData) {
-			items = sessionData.items;
-			metadata = sessionData.metadata;
-		}
-		mode = "session";
-	}
-	// Fall back to legacy base64 mode
-	else if (params?.data) {
-		console.log("[WhatTheyWearin] Using legacy base64 mode");
-		items = decodeItems(params.data);
-		mode = "legacy";
-	}
-
-	console.log("[WhatTheyWearin] decoded items:", items);
-	console.log("[WhatTheyWearin] metadata:", metadata);
-
-	// Detect shared points from items
 	const sharedPoints = new Set(metadata?.sharedPoints || []);
 
 	return (
@@ -122,7 +106,9 @@ export default async function WhatTheyWearin({
 					</div>
 				</CardHeader>
 				<CardContent className="pt-0 flex-1 overflow-hidden flex flex-col">
-					{!items || items.length === 0 ? (
+					{loading ? (
+						<div className="text-sm text-muted-foreground">Loading...</div>
+					) : !items || items.length === 0 ? (
 						<div className="text-sm text-muted-foreground">
 							{mode === "session" && (
 								<>Session not found or expired. Touch the HUD to refresh.</>
