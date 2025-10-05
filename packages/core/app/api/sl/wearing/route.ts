@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 
+// CORS headers for Second Life
+const corsHeaders = {
+	"Access-Control-Allow-Origin": "*",
+	"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+	"Access-Control-Allow-Headers": "Content-Type",
+};
+
 interface WearingItem {
 	name: string;
 	creator: string;
@@ -28,10 +35,20 @@ setInterval(() => {
 	}
 }, 30 * 60 * 1000);
 
+// OPTIONS: Handle CORS preflight
+export async function OPTIONS() {
+	return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 // POST: Create or update a wearing session
 export async function POST(req: NextRequest) {
+	console.log("[Wearing API] POST request received");
+	console.log("[Wearing API] URL:", req.url);
+	console.log("[Wearing API] Headers:", Object.fromEntries(req.headers.entries()));
+
 	try {
 		const body = await req.json();
+		console.log("[Wearing API] Body:", body);
 		const { sessionId, item, complete } = body;
 
 		// Validate item structure
@@ -64,11 +81,14 @@ export async function POST(req: NextRequest) {
 			sessions.set(sid, session);
 		}
 
-		return NextResponse.json({
-			sessionId: sid,
-			itemCount: session.items.length,
-			complete: complete || false,
-		});
+		return NextResponse.json(
+			{
+				sessionId: sid,
+				itemCount: session.items.length,
+				complete: complete || false,
+			},
+			{ headers: corsHeaders }
+		);
 	} catch (error) {
 		console.error("[Wearing API] Error:", error);
 		return NextResponse.json(
@@ -107,9 +127,12 @@ export async function GET(req: NextRequest) {
 		);
 	}
 
-	return NextResponse.json({
-		items: session.items,
-		itemCount: session.items.length,
-		expiresAt: session.expiresAt,
-	});
+	return NextResponse.json(
+		{
+			items: session.items,
+			itemCount: session.items.length,
+			expiresAt: session.expiresAt,
+		},
+		{ headers: corsHeaders }
+	);
 }
