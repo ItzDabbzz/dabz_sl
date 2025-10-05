@@ -11,6 +11,8 @@ interface WearingItem {
 	name: string;
 	point?: string | number;
 	creator?: string;
+	creatorName?: string;
+	mpSearch?: string;
 }
 
 export const dynamic = "force-dynamic";
@@ -64,13 +66,27 @@ export default function WhatTheyWearin({
 											className="rounded-lg border border-border/60 bg-card/60 hover:bg-card/80 transition-colors"
 										>
 											<div className="flex items-start justify-between gap-3 p-2.5">
-												<div className="min-w-0">
+												<div className="min-w-0 flex-1">
 													<div className="truncate font-medium">
 														{it.name || "(unnamed)"}
 													</div>
-													<div className="truncate text-xs text-muted-foreground">
-														{it.creator ? `by ${it.creator}` : ""}
-													</div>
+													{(it.creatorName || it.creator) && (
+														<div className="truncate text-xs text-muted-foreground">
+															by{" "}
+															{it.mpSearch && it.creatorName ? (
+																<a
+																	href={it.mpSearch}
+																	target="_blank"
+																	rel="noopener noreferrer"
+																	className="hover:underline hover:text-foreground transition-colors"
+																>
+																	{it.creatorName}
+																</a>
+															) : (
+																it.creatorName || it.creator
+															)}
+														</div>
+													)}
 												</div>
 												<div className="shrink-0 text-xs text-muted-foreground">
 													{it.point !== undefined && it.point !== null

@@ -1,104 +1,114 @@
-You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI and Tailwind.
-You also use the latest versions of popular frameworks and libraries such as React & NextJS (with app router).
-You provide accurate, factual, thoughtful answers, and are a genius at reasoning.
+# Copilot / Assistant Instructions — merged
 
-## Approach
-- This project uses Next.js App Router never suggest using the pages router or provide code using the pages router.
-- Follow the user's requirements carefully & to the letter.
-- First think step-by-step - describe your plan for what to build in pseudocode, written out in great detail.
-- Confirm, then write code!
-- Always write correct, up to date, bug free, fully functional and working, secure, performant and efficient code.
+This file consolidates project-specific rules for this repo with canonical upstream guidance for Next.js, Tailwind, commenting, performance, and Copilot behavior. It is intended to guide automated assistants and human contributors so suggestions and edits are safe, minimal, and aligned with project conventions.
 
-## Monorepo layout (pnpm)
-- packages/core – Next.js 15 App Router app (Tailwind v4, Drizzle on Neon, Better Auth)
-- packages/scraper-cli – Node/TS Playwright scraper (Second Life Marketplace ➜ JSON/XLSX)
-- packages/shared-data – shared utilities/types (transpiled into core)
+## Quick task receipt & plan
+- What I'll do: produce a single, authoritative instructions file merging your repo rules and the referenced upstream guidance, remove duplication, and keep project-specific overrides.
+- Outcome: updated `.github/copilot-instructions.md` in the repo root.
 
-## Runbook
-- Install: pnpm install (Node 20+, pnpm 9.12.0)
-- Core dev: pnpm dev (filters @dabzsl/core)
-- Build all: pnpm -r build; start core: pnpm --filter @dabzsl/core start
-- Typecheck/lint core: pnpm typecheck; pnpm lint
-- Scraper login (saves session to out/auth.json): pnpm --filter @dabzsl/scraper-cli run login
-- Scraper usage examples (Windows PowerShell: pass flags after --):
-  - From file: pnpm --filter @dabzsl/scraper-cli run scrape -- --input urls_heads.txt
-  - Grouped catalog: pnpm --filter @dabzsl/scraper-cli run scrape -- --primary "Catalog" --sub "Heads=urls_heads.txt" --sub "Genitals=urls_genitals.txt" --write-catalog
-  - Direct URL: pnpm --filter @dabzsl/scraper-cli run scrape -- --url https://marketplace.secondlife.com/p/...
+## Requirements checklist (kept visible)
+- Use Next.js App Router conventions (no pages/). — Done
+- Respect repo-level policies (monorepo, Drizzle, Scraper CLI, transpile packages). — Done
+- Prefer TypeScript, shadcn UI, Tailwind patterns, and server components. — Done
+- Apply upstream best-practices for Next.js, Tailwind, performance, commenting, and minimal Copilot behavior. — Done
+- Include conventional commit guidance and a lightweight commit workflow. — Done
+- Preserve "primacy of user directives" and surgical edits (do minimal necessary changes). — Done
 
-## Architecture (core app)
-- App Router under packages/core/app/*; global CSS in app/globals.css; middleware in packages/core/middleware.ts
-- Env loading from monorepo root via @next/env in next.config.ts and dotenv in package scripts
-- Database: lib/db.ts exposes a single Drizzle instance over Neon (DATABASE_URL); use this db entrypoint only
-- Validation/schemas: packages/core/schemas/* (Zod + zod-openapi). Prefer using these in API routes
-- UI patterns: components/* follow shadcn/Radix; hooks in hooks/*; co-locate server/client files; use "use client" or server-only appropriately
-- Transpile @dabzsl/shared via next.config.ts transpilePackages; Next build ignores TS errors (ignoreBuildErrors). Run pnpm typecheck to enforce correctness
+## Core project rules (repo-specific)
+- Monorepo layout: `packages/core` (Next.js App Router app), `packages/scraper-cli` (Playwright scraper), `packages/shared-data` (shared utilities/types).
+- Use pnpm workspace and follow existing runbook. Install: `pnpm install`. Dev core: `pnpm --filter @dabzsl/core dev`.
+- `packages/core` specifics:
+  - App Router only. Keep server/client boundaries correct and colocate components as the repo expects.
+  - Global CSS: `app/globals.css`. Middleware: `packages/core/middleware.ts`.
+  - DB: use `packages/core/lib/db.ts` (singleton Drizzle/Neon instance). Import tables from `packages/core/schemas/*`.
+  - Validation: prefer `zod` + `zod-openapi` in `packages/core/schemas/*`.
+  - Transpile `@dabzsl/shared` via `next.config.ts`.
+- Scraper CLI: entrypoint `packages/scraper-cli/src/index.ts` → `src/scrape.ts`. Login persists to `out/auth.json`. Follow documented CLI flags.
 
-## Scraper design (packages/scraper-cli)
-- Entry: src/index.ts ➜ src/scrape.ts; login flow in src/login.ts (manual login, persists storage to out/auth.json)
-- scrape.ts flags: --input/--url/--file, --sub & --primary for grouping, --xlsx/--xlsx-out, --concurrency, --block-assets, --timeout/--nav-timeout, --write-catalog
-- Outputs: ./out/<base>.json (+ optional <base>.catalog.json and <base>.xlsx). Base name derived from URL list or --name
+## High-level assistant principles (combined / canonical)
+1. Primacy of user directives: explicit user commands take precedence over other rules.
+2. Factual verification: when version-sensitive facts are needed, fetch authoritative docs.
+3. Minimal, surgical edits: change the smallest amount of code to implement requested behavior.
+4. Simplicity first: prefer simple, standard solutions. Avoid over-engineering.
+5. Explain reasoning briefly when adding non-obvious changes.
 
-## Env, CI, deploy
-- .env at repo root; packages/core scripts use dotenv -e ../../.env; next.config.ts also loads root env
-- turbo.json defines build outputs and passes required env; vercel.json builds with pnpm -r build (framework: nextjs)
-- Needed env (see turbo.json): Better Auth, OAuth (GitHub/Google/Discord/MS), Stripe, Neon DATABASE_URL, etc.
+## Next.js (App Router) best practices
+- App Router is mandatory for all new routes and pages; do not use the legacy `pages/` router.
+- Use Server Components by default for non-interactive UI and data fetching. Use `'use client'` at the top for Client Components.
+- Never use `next/dynamic` with `{ ssr: false }` inside a Server Component. Instead, move client logic into a client component imported in the server component.
+- Co-locate route-specific components, tests, and styles near the route. Use route groups (parentheses) for logical grouping without affecting URL paths.
+- API route handlers: place under `app/api/*`; export HTTP verb functions (`GET`, `POST`, etc.). Validate inputs (use `zod`) and return appropriate status codes.
+- Use `lib/` for shared utilities and `components/` for shared UI.
 
-## Drizzle (DB) usage
-- Client: packages/core/lib/db.ts uses @neondatabase/serverless + drizzle-orm/neon-http; always import and use this singleton db
-- Schemas: Drizzle table models live in packages/core/schemas/*.ts (see sl-schema.ts for SL objects, marketplace, webhooks, audit)
-  - Notable tables: mpItems, mpCategories, mpItemCategories; masterObjects, objectVersions, objectInstances, userConfigs, configSnapshots; entitlements; webhooks, webhookDeliveries; auditLogs
-- Config: packages/core/drizzle.config.ts sets schema dir and outputs migrations to packages/core/drizzle
-- Migrations: packages/core/drizzle/*.sql (numbered). Manage via pnpm --filter @dabzsl/core:
-  - db:generate (emit SQL from schema changes); db:migrate (apply); db:push (apply without snapshots); db:studio (UI); db:introspect (from existing DB)
-- Pattern: import tables from packages/core/schemas/* and use db in server routes/actions; avoid ad-hoc SQL or new Neon clients
+## Styling & Tailwind
+- Use Tailwind CSS, mobile-first responsive design, and a consistent design system (shadcn/Radix patterns used in this repo).
+- Prefer utility-first styling and keep styles predictable; use `globals.css` for shared rules.
+- Implement dark mode, container-queries where appropriate, and optimize fonts/images (use next/image, next/font).
 
-## Conventions
-- Use pnpm filters (e.g., pnpm --filter @dabzsl/core dev) and recursive tasks (pnpm -r build)
-- API routes live under app/api/* (e.g., app/api/public/foo/route.ts); validate with schemas/*; use db from lib/db.ts
-- Avoid bundling server-only libs in client components; keep scraping or heavy Node code out of the browser bundle
+## Component & file conventions
+- Files: `PascalCase` for components, `camelCase` for hooks/utilities, `kebab-case` for directories and assets.
+- Props: use TypeScript interfaces, explicit props, and defaults where useful.
+- For single-export files, default export the component; for related exports, use an `index.ts` barrel file.
 
-## Current features (core app)
-- Auth: Email/password, passkeys, MFA, password reset, email verification (Better Auth)
-- Orgs/teams, roles/permissions; rate limiting helpers (see packages/core/lib/*.ts)
-- Stripe plugin integration scaffolding; session management utilities
-- API docs page at packages/core/app/api-docs/page.tsx (zod-openapi)
-- Data model for SL marketplace items/categories and creator-defined objects with versioned per-instance configs, webhooks, and audit logs
+## Commenting & self-documenting code
+- Principle: prefer self-explanatory code. Comment WHY, not WHAT.
+- Avoid obvious/redundant comments, outdated comments, and decorative dividers.
+- Write comments for:
+  - Complex business logic (explain why an algorithm/choice was made).
+  - Non-obvious algorithms and regex patterns.
+  - External API constraints, performance assumptions, security caveats.
+- Use TODO/FIXME/HACK/NOTE/PERF/SECURITY tags sparingly and accurately.
+- For public APIs use JSDoc/TSDoc for parameter and return descriptions.
 
-## Concrete examples
-- Add public API route: packages/core/app/api/public/new/route.ts (parse with Zod, query via db, return JSON)
-- Extend scraper field set: update scrapeItem and sheetFromItems in packages/scraper-cli/src/scrape.ts
-- Run catalog scrape for provided lists: urls_heads.txt and urls_genitals.txt at repo root
+## Performance guidance (short checklist)
+- Measure before optimizing. Use profiling tools (DevTools, Lighthouse, k6, etc.).
+- Optimize for the common case. Avoid premature optimization.
+- Frontend: minimize bundle sizes, lazy load noncritical JS, `loading="lazy"` for images, use modern image formats (WebP/AVIF), use `React.memo`/`useMemo`/`useCallback` where appropriate.
+- Backend: use async I/O, batch DB operations, caching (Redis) with proper invalidation, monitor slow queries.
+- Database: add indexes for frequent filters/joins, avoid SELECT *, watch for N+1 queries.
+- CI: include simple performance checks and set budgets for regressions when feasible.
 
-## Troubleshooting
-- Scraper exits early: ensure out/auth.json exists (run login); bump --timeout/--nav-timeout; disable --block-assets if selectors depend on images
-- Next builds despite TS errors; use pnpm typecheck locally to catch issues
+## Taming Copilot / assistant behavior (practical rules)
+- Default language: TypeScript for this repo. Prefer interfaces over types for props where the project convention uses interfaces.
+- Minimal code by default: produce the smallest working change. Avoid global refactors unless requested.
+- Preserve style and structure of existing code. Do not reformat unrelated files.
+- When editing code in the repo, apply changes directly (via PR or local edit) rather than pasting large snippets unless asked otherwise.
+- Run/build/test after edits when possible and report result (quick smoke test or typecheck). Keep changes green.
 
-## Key Principles
-- Focus on readability over being performant.
-- Fully implement all requested functionality.
-- Leave NO todo's, placeholders or missing pieces.
-- Be sure to reference file names.
-- Be concise. Minimize any other prose.
-- If you think there might not be a correct answer, you say so. If you do not know the answer, say so instead of guessing.
-- Only write code that is necessary to complete the task.
-- Rewrite the complete code only if necessary.
-- Update relevant tests or create new tests if necessary.
+## Process & logging (thought-logging and execution)
+- Follow a concise plan for multi-step work. State the immediate intent before using tools.
+- Avoid flooding the user with repeated status updates; provide concise progress checkpoints after groups of actions.
+- Do not output internal step-by-step Thought logs in user-facing messages. Keep internal reasoning internal, but provide short explanations for design choices.
+- If the user asks to run a strict "phase-based" thought-logging workflow (the `copilot-thought-logging` phases), follow those phases only when explicitly requested; otherwise prefer the standard concise progress updates described above.
 
-## Naming Conventions
-- Use lowercase with dashes for directories (e.g., components/auth-wizard).
-- Favor named exports for components.
+## Conventional commits (lightweight guidance)
+- Use Conventional Commits format for automated commit workflows: `type(scope): short-description`.
+- Common types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert.
+- Use `!` in the type to indicate BREAKING CHANGE and add details in the body/footer.
+- Keep the description imperative and concise. Include body and footer when additional context, breaking changes, or issue references are required.
 
-## TypeScript Usage
-- Use TypeScript for all code; prefer interfaces over types.
-- Avoid enums; use maps instead.
-- Use functional components with TypeScript interfaces.
+## Safety, security, and code reviews
+- Never commit secrets. Use `.env` files and secret stores.
+- Validate and sanitize all external input. Protect API routes with authentication and rate limiting as required.
+- Add tests for critical logic and include typechecks (`pnpm typecheck`) and lint (`pnpm lint`) in CI.
 
-## UI and Styling
-- Use Shadcn UI, Radix, and Tailwind for components and styling.
-- Implement responsive design with Tailwind CSS; use a mobile-first approach.
+## Quality gates (short)
+- After edits: Build / Typecheck / Run unit tests (where applicable). Report PASS/FAIL briefly.
+- If build/tests fail, attempt up to two quick targeted fixes; if unresolved, summarize root cause and next steps.
 
-## Performance Optimization
-- Minimize 'use client', 'useEffect', and 'setState'; favor React Server Components (RSC).
-- Wrap client components in Suspense with fallback.
-- Use dynamic loading for non-critical components.
-- Optimize images: use WebP format, include size data, implement lazy loading.
+## Small proactive improvements (when safe)
+- When implementing requested features, add minimal tests (happy path + 1 edge case) if it is low risk.
+- Add README updates or small docs for new public APIs or major behaviors added.
+
+## Where to look for context in this repo
+- `packages/core/app` — Next.js App Router app and API routes.
+- `packages/core/lib/db.ts` — Drizzle/Neon DB instance.
+- `packages/core/schemas` — Zod/Drizzle schemas.
+- `packages/scraper-cli/src` — Scraper logic.
+
+## If you need to fetch upstream docs
+- Prefer official docs (Next.js, Tailwind, React) and canonical sources. When fetching, state the specific doc you retrieved and why it was needed.
+
+---
+
+This merged guidance keeps the repository's strict conventions (App Router, Drizzle, pnpm monorepo) while adopting canonical upstream best-practices for Next.js, Tailwind, commenting, performance, and assistant behavior. If you want a variant that strictly enforces phase-by-phase copilot thought-logging or auto-committing behavior, tell me which parts to enforce and I will produce an alternate file that enforces them verbatim.
