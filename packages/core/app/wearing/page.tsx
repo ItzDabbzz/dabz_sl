@@ -10,9 +10,16 @@ interface WearingItem {
 	id?: string;
 	name: string;
 	point?: string | number;
+	pointName?: string;
 	creator?: string;
 	creatorName?: string;
 	mpSearch?: string;
+	profileUrl?: string;
+}
+
+interface SessionMetadata {
+	freeSlots?: number;
+	sharedPoints?: number[];
 }
 
 export const dynamic = "force-dynamic";
@@ -34,7 +41,9 @@ function decodeItems(param?: string | string[]): WearingItem[] | null {
 }
 
 // Fetch from session API
-async function fetchSessionItems(sessionId: string): Promise<WearingItem[] | null> {
+async function fetchSessionData(
+	sessionId: string
+): Promise<{ items: WearingItem[]; metadata?: SessionMetadata } | null> {
 	try {
 		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 		const res = await fetch(`${baseUrl}/api/sl/wearing?session=${sessionId}`, {
@@ -47,7 +56,7 @@ async function fetchSessionItems(sessionId: string): Promise<WearingItem[] | nul
 		}
 
 		const data = await res.json();
-		return data.items || null;
+		return { items: data.items || [], metadata: data.metadata };
 	} catch (error) {
 		console.error("[WhatTheyWearin] Error fetching session:", error);
 		return null;
@@ -63,6 +72,7 @@ export default async function WhatTheyWearin({
 	console.log("[WhatTheyWearin] searchParams:", params);
 
 	let items: WearingItem[] | null = null;
+	let metadata: SessionMetadata | undefined = undefined;
 	let mode: "session" | "legacy" | "none" = "none";
 
 	// Try session mode first
@@ -71,7 +81,11 @@ export default async function WhatTheyWearin({
 			? params.session[0]
 			: params.session;
 		console.log("[WhatTheyWearin] Fetching session:", sessionId);
-		items = await fetchSessionItems(sessionId);
+		const sessionData = await fetchSessionData(sessionId);
+		if (sessionData) {
+			items = sessionData.items;
+			metadata = sessionData.metadata;
+		}
 		mode = "session";
 	}
 	// Fall back to legacy base64 mode
@@ -82,18 +96,29 @@ export default async function WhatTheyWearin({
 	}
 
 	console.log("[WhatTheyWearin] decoded items:", items);
+	console.log("[WhatTheyWearin] metadata:", metadata);
+
+	// Detect shared points from items
+	const sharedPoints = new Set(metadata?.sharedPoints || []);
 
 	return (
 		<div className="w-full h-screen p-3 text-foreground overflow-hidden">
 			<Card className="border-border/60 bg-background/70 backdrop-blur shadow-sm h-full flex flex-col">
 				<CardHeader className="py-3 shrink-0">
-					<div className="flex items-baseline gap-2">
-						<CardTitle className="text-base font-semibold">
-							What They Wearin'
-						</CardTitle>
-						<Badge variant="outline" className="text-[10px]">
-							HUD
-						</Badge>
+					<div className="flex items-center justify-between gap-2">
+						<div className="flex items-baseline gap-2">
+							<CardTitle className="text-base font-semibold">
+								What They Wearin'
+							</CardTitle>
+							<Badge variant="outline" className="text-[10px]">
+								HUD
+							</Badge>
+						</div>
+						{metadata?.freeSlots !== undefined && (
+							<Badge variant="secondary" className="text-[10px]">
+								{metadata.freeSlots} free slot{metadata.freeSlots !== 1 ? "s" : ""}
+							</Badge>
+						)}
 					</div>
 				</CardHeader>
 				<CardContent className="pt-0 flex-1 overflow-hidden flex flex-col">
@@ -116,42 +141,69 @@ export default async function WhatTheyWearin({
 						<>
 							<ScrollArea className="flex-1 pr-2">
 								<ul className="grid gap-2 pb-2">
-									{items.map((it, idx) => (
-										<li
-											key={(it.id ?? it.name ?? "item") + ":" + idx}
-											className="rounded-lg border border-border/60 bg-card/60 hover:bg-card/80 transition-colors"
-										>
-											<div className="flex items-start justify-between gap-3 p-2.5">
-												<div className="min-w-0 flex-1">
-													<div className="truncate font-medium">
-														{it.name || "(unnamed)"}
+									{items.map((it, idx) => {
+										const isShared =
+											typeof it.point === "number" &&
+											sharedPoints.has(it.point);
+										return (
+											<li
+												key={(it.id ?? it.name ?? "item") + ":" + idx}
+												className="rounded-lg border border-border/60 bg-card/60 hover:bg-card/80 transition-colors"
+											>
+												<div className="flex items-start gap-2 p-2.5">
+													{/* Shared indicator */}
+													<div className="shrink-0 text-sm pt-0.5">
+														{isShared ? "🔁" : "☑️"}
 													</div>
-													{(it.creatorName || it.creator) && (
-														<div className="truncate text-xs text-muted-foreground">
-															by{" "}
-															{it.mpSearch && it.creatorName ? (
-																<a
-																	href={it.mpSearch}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																	className="hover:underline hover:text-foreground transition-colors"
-																>
-																	{it.creatorName}
-																</a>
-															) : (
-																it.creatorName || it.creator
-															)}
+
+													<div className="min-w-0 flex-1">
+														<div className="truncate font-medium text-sm">
+															{it.name || "(unnamed)"}
 														</div>
-													)}
+
+														{/* Attachment point */}
+														{it.pointName && (
+															<div className="text-[11px] text-muted-foreground/70">
+																({it.pointName})
+															</div>
+														)}
+
+														{/* Creator info */}
+														{(it.creatorName || it.creator) && (
+															<div className="truncate text-xs text-muted-foreground mt-0.5">
+																[
+																{it.profileUrl && it.creatorName ? (
+																	<a
+																		href={it.profileUrl}
+																		className="hover:underline hover:text-foreground transition-colors"
+																	>
+																		{it.creatorName}
+																	</a>
+																) : (
+																	it.creatorName || it.creator
+																)}
+																]
+																{it.mpSearch && (
+																	<>
+																		{" "}
+																		•{" "}
+																		<a
+																			href={it.mpSearch}
+																			target="_blank"
+																			rel="noopener noreferrer"
+																			className="hover:underline hover:text-foreground transition-colors"
+																		>
+																			MP
+																		</a>
+																	</>
+																)}
+															</div>
+														)}
+													</div>
 												</div>
-												<div className="shrink-0 text-xs text-muted-foreground">
-													{it.point !== undefined && it.point !== null
-														? `@ ${it.point}`
-														: ""}
-												</div>
-											</div>
-										</li>
-									))}
+											</li>
+										);
+									})}
 								</ul>
 							</ScrollArea>
 							<div className="mt-2 text-[11px] text-muted-foreground/80 shrink-0">

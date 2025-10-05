@@ -20,6 +20,10 @@ interface WearingSession {
 	items: WearingItem[];
 	createdAt: number;
 	expiresAt: number;
+	metadata?: {
+		freeSlots?: number;
+		sharedPoints?: number[];
+	};
 }
 
 // In-memory session storage (upgrade to Redis for production)
@@ -49,7 +53,7 @@ export async function POST(req: NextRequest) {
 	try {
 		const body = await req.json();
 		console.log("[Wearing API] Body:", body);
-		const { sessionId, item, complete } = body;
+		const { sessionId, item, complete, metadata } = body;
 
 		// Validate item structure
 		if (!item || !item.name || !item.creator || item.point === undefined) {
@@ -70,6 +74,11 @@ export async function POST(req: NextRequest) {
 			session = sessions.get(sid)!;
 			session.items.push(item);
 			session.expiresAt = expiresAt; // Extend expiry
+
+			// Update metadata if provided (usually on final complete request)
+			if (metadata) {
+				session.metadata = metadata;
+			}
 		} else {
 			// Create new session
 			sid = nanoid(16);
@@ -77,6 +86,7 @@ export async function POST(req: NextRequest) {
 				items: [item],
 				createdAt: now,
 				expiresAt,
+				metadata,
 			};
 			sessions.set(sid, session);
 		}
@@ -132,6 +142,7 @@ export async function GET(req: NextRequest) {
 			items: session.items,
 			itemCount: session.items.length,
 			expiresAt: session.expiresAt,
+			metadata: session.metadata,
 		},
 		{ headers: corsHeaders }
 	);
