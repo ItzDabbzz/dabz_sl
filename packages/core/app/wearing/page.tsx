@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 interface WearingItem {
 	id?: string;
@@ -41,7 +41,7 @@ function decodeItems(param?: string | null): WearingItem[] | null {
 	}
 }
 
-export default function WhatTheyWearin() {
+function WhatTheyWearinContent() {
 	const searchParams = useSearchParams();
 	const [items, setItems] = useState<WearingItem[] | null>(null);
 	const [metadata, setMetadata] = useState<SessionMetadata | undefined>();
@@ -201,5 +201,33 @@ export default function WhatTheyWearin() {
 				</CardContent>
 			</Card>
 		</div>
+	);
+}
+
+export default function WhatTheyWearin() {
+	return (
+		<Suspense
+			fallback={
+				<div className="w-full h-screen p-3 text-foreground overflow-hidden">
+					<Card className="border-border/60 bg-background/70 backdrop-blur shadow-sm h-full flex flex-col">
+						<CardHeader className="py-3 shrink-0">
+							<div className="flex items-baseline gap-2">
+								<CardTitle className="text-base font-semibold">
+									What They Wearin'
+								</CardTitle>
+								<Badge variant="outline" className="text-[10px]">
+									HUD
+								</Badge>
+							</div>
+						</CardHeader>
+						<CardContent className="pt-0 flex-1 overflow-hidden flex flex-col">
+							<div className="text-sm text-muted-foreground">Loading...</div>
+						</CardContent>
+					</Card>
+				</div>
+			}
+		>
+			<WhatTheyWearinContent />
+		</Suspense>
 	);
 }
