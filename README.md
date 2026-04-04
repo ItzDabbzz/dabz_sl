@@ -1,102 +1,37 @@
-# Better Auth Demo App
+# dabz_sl
 
-Welcome to the Better Auth demo app! This project is built with [Next.js](https://nextjs.org) using [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Monorepo for the Sanctum / Second Life toolchain.
 
-## Getting Started
+## Packages
 
-Here’s how you can get the app running locally:
+- `packages/core`: Next.js 15 app deployed to Vercel
+- `packages/scraper-api`: scraper service and parsing helpers
+- `packages/scraper-cli`: local scraper CLI
+- `packages/shared-data`: shared workspace package
 
-### Prerequisites
-
-1. **Clone the repo**:
-
-   ```bash
-   git clone https://github.com/better-auth/better-auth
-   cd better-auth/demo/nextjs
-   ```
-
-2. **Install the dependencies**:
-
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
-
-3. **Set up your environment variables**:
-
-   - Rename the `.env.example` file to `.env`:
-
-     ```bash
-     mv .env.example .env
-     ```
-
-   - Open `.env` and fill in the required details. These will include things like API URLs, client IDs, and secrets needed to connect to the Better Auth service.
-
-### Start the Development Server
-
-Once everything is set up, start the development server with:
+## Workspace Commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
+pnpm build
+pnpm lint
+pnpm typecheck
 ```
 
-The app will be live at [http://localhost:3000](http://localhost:3000). Open it in your browser, and you’re good to go!
+## Core App
 
-Feel free to jump in and edit the app by modifying `app/page.tsx`. Any changes you make will update automatically in the browser.
+The main product lives in `packages/core`.
 
-## Features
+- Local dev: `pnpm --filter @dabzsl/core dev`
+- Production build: `pnpm --filter @dabzsl/core build`
+- Local start: `pnpm --filter @dabzsl/core start`
 
-Here’s what this app supports out of the box:
+See [packages/core/README.md](/mnt/dev/GitRepos/dabz_sl/packages/core/README.md) for structure, deployment notes, and the ranked TODO list.
 
-- **[Email & Password](https://www.better-auth.com/docs/basic-usage#email-password)**: Simple and secure authentication.
-- **[Organization / Teams](https://www.better-auth.com/docs/plugins/organization)**: Manage users within organizations or teams.
-- **[Passkeys](https://www.better-auth.com/docs/plugins/passkey)**: Passwordless login using modern authentication standards.
-- **[Multi-Factor Authentication (MFA)](https://www.better-auth.com/docs/plugins/2fa)**: Add an extra layer of security.
-- **[Password Reset](https://www.better-auth.com/docs/concepts/email#password-reset-email)**: Let users reset their passwords if they forget them.
-- **[Email Verification](https://www.better-auth.com/docs/concepts/email#email-verification)**: Ensure users verify their email addresses.
-- **[Roles & Permissions](https://www.better-auth.com/docs/plugins/admin#role)**: Define and manage who can do what.
-- **[Rate Limiting](https://www.better-auth.com/docs/concepts/rate-limit)**: Protect your app from abuse with smart limits.
-- **[Session Management](https://www.better-auth.com/docs/concepts/session-management)**: Handle user sessions seamlessly.
-- **[Stripe Plugin](https://www.better-auth.com/docs/plugins/stripe)**: Integrate Stripe for customer management, subscriptions, and webhooks.
+## Deployment
 
-## Learn More
+`vercel.json` is configured for a Next.js build from the monorepo root.
 
-Here are some helpful links if you want to dive deeper:
-
-- [Better Auth Documentation](https://better-auth.com/docs) - Everything you need to know to integrate Better Auth.
-- [Next.js Documentation](https://nextjs.org/docs) - Learn about the framework we used to build this app.
-- [Learn Next.js](https://nextjs.org/learn) - A hands-on tutorial for Next.js.
-
----
-
-If you run into issues or have suggestions, feel free to open an issue or submit a pull request on the [GitHub repo](https://github.com/better-auth/better-auth).
-
-Happy coding!
-
----
-
-Monorepo workspace (pnpm) for dabz_sl
-
-Packages:
-
-- packages/core (Next.js app)
-- packages/scraper-cli (CLI)
-- packages/shared-data (shared library)
-
-Commands:
-
-- pnpm dev (run core)
-- pnpm -r build (build all)
-
-Vercel:
-
-- vercel.json targets packages/core via @vercel/next
+- Install: `pnpm install --frozen-lockfile`
+- Build: `pnpm -r build`
+- Runtime target: `packages/core`
