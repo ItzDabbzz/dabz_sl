@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { RefreshCw } from "lucide-react";
 import ExplorerToolbar from "./ExplorerToolbar";
 import CategoryPicker from "./CategoryPicker";
-import type { Item, Category, Page } from "./types";
+import type { Item, Category, Page } from "../../shared/types";
 
 /**
  * ExplorerClient
