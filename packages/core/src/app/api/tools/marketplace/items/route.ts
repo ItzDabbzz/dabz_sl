@@ -103,6 +103,8 @@ export async function GET(req: NextRequest) {
             10,
         );
         const idsParam = (searchParams.get("ids") || "").trim();
+        const idsOnly =
+            (searchParams.get("idsOnly") || "").toLowerCase() === "true";
         const idList = idsParam
             ? idsParam
                   .split(",")
@@ -134,7 +136,8 @@ export async function GET(req: NextRequest) {
             const ids = itemIdRows.map((r: any) => r.itemId);
             if (!ids.length)
                 return NextResponse.json({
-                    items: [],
+                    items: idsOnly ? undefined : [],
+                    ids: idsOnly ? [] : undefined,
                     total: 0,
                     limit,
                     offset,
@@ -176,6 +179,17 @@ export async function GET(req: NextRequest) {
             .select({ value: count() })
             .from(mpItems)
             .where(where as any)) as any;
+
+        if (idsOnly) {
+            const idRows = await db
+                .select({ id: mpItems.id })
+                .from(mpItems)
+                .where(where as any);
+            return NextResponse.json({
+                ids: idRows.map((row: any) => row.id),
+                total,
+            });
+        }
 
         let query = db
             .select()
@@ -362,17 +376,36 @@ export async function PATCH(req: NextRequest) {
         await requirePermission("marketplace.moderate", req.headers as any);
         const body = await req.json();
         const id = body?.id as string | undefined;
+        const ids = Array.isArray(body?.ids)
+            ? (body.ids as unknown[])
+                  .filter((value): value is string => typeof value === "string")
+                  .map((value) => value.trim())
+                  .filter(Boolean)
+            : [];
         const updates = body?.updates ? { ...body.updates } : null;
-        if (!id || !updates)
+        if ((!id && !ids.length) || !updates)
             return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
         if ("isNsfw" in updates) {
             updates.isNsfw = normalizeIsNsfw(updates.isNsfw);
         }
 
-        const row = await updateMarketplaceItem(id, {
+        const now = new Date() as any;
+
+        if (ids.length) {
+            const uniqueIds = Array.from(new Set(ids));
+            await db
+                .update(mpItems)
+                .set({ ...updates, updatedAt: now } as any)
+                .where(inArray(mpItems.id as any, uniqueIds as any) as any);
+
+            revalidateTag("marketplace:stats");
+            return NextResponse.json({ updated: uniqueIds.length });
+        }
+
+        const row = await updateMarketplaceItem(id!, {
             ...updates,
-            updatedAt: new Date() as any,
+            updatedAt: now,
         });
 
         revalidateTag("marketplace:stats");
@@ -393,10 +426,62 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
     try {
         await requirePermission("marketplace.admin", req.headers as any);
+        const user = await getUserFromRequest(req);
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
-        if (!id)
+        const idsParam = (searchParams.get("ids") || "").trim();
+        let idsFromBody: string[] = [];
+        if (!idsParam && !id) {
+            try {
+                const body = await req.json();
+                idsFromBody = Array.isArray(body?.ids)
+                    ? (body.ids as unknown[])
+                          .filter((value): value is string =>
+                              typeof value === "string",
+                          )
+                          .map((value) => value.trim())
+                          .filter(Boolean)
+                    : [];
+            } catch {}
+        }
+
+        const ids = idsParam
+            ? idsParam
+                  .split(",")
+                  .map((value) => value.trim())
+                  .filter(Boolean)
+            : idsFromBody;
+
+        if (!id && !ids.length)
             return NextResponse.json({ error: "bad_request" }, { status: 400 });
+
+        if (ids.length) {
+            const ownedRows = await db
+                .select({ id: mpItems.id })
+                .from(mpItems)
+                .where(
+                    and(
+                        inArray(mpItems.id as any, ids as any) as any,
+                        eq(mpItems.ownerUserId as any, user.id as any) as any,
+                    ) as any,
+                );
+            const ownedIds = ownedRows.map((row: any) => row.id);
+            if (!ownedIds.length) {
+                return NextResponse.json({ deleted: 0 });
+            }
+
+            await db
+                .delete(mpItemCategories)
+                .where(
+                    inArray(mpItemCategories.itemId as any, ownedIds as any) as any,
+                );
+            await db
+                .delete(mpItems)
+                .where(inArray(mpItems.id as any, ownedIds as any) as any);
+
+            revalidateTag("marketplace:stats");
+            return NextResponse.json({ deleted: ownedIds.length });
+        }
 
         // Delete mappings first to satisfy FK if any, then item
         await db

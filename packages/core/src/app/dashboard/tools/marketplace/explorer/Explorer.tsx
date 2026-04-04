@@ -35,12 +35,14 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 
 type Item = {
     id: string;
     url: string;
     title: string;
+    isNsfw?: boolean | null;
     version?: string | null;
     price?: string;
     creator?: { name: string; link: string } | null;
@@ -77,6 +79,13 @@ export default function Explorer() {
     const [catOpen, setCatOpen] = useState(false);
     const [sort, setSort] = useState<"most" | "least">("most");
     const [isAdmin, setIsAdmin] = useState(false);
+    const [bulkNsfwSaving, setBulkNsfwSaving] = useState(false);
+    const [bulkTagSaving, setBulkTagSaving] = useState(false);
+    const [bulkDeleteSaving, setBulkDeleteSaving] = useState(false);
+    const [selectFilteredLoading, setSelectFilteredLoading] = useState(false);
+    const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+    const [bulkTagOpen, setBulkTagOpen] = useState(false);
+    const [bulkTagMode, setBulkTagMode] = useState<"add" | "remove">("add");
     const [editOpen, setEditOpen] = useState(false);
     type EditDraft = Partial<Item> & {
         id?: string;
@@ -568,6 +577,74 @@ export default function Explorer() {
         page.offset + page.limit < page.total &&
         loadItems({ offset: page.offset + page.limit });
 
+    const selectedSet = useMemo(() => new Set(selectedItemIds), [selectedItemIds]);
+    const selectedCount = selectedItemIds.length;
+    const selectedVisibleCount = useMemo(
+        () => items.filter((it) => selectedSet.has(it.id)).length,
+        [items, selectedSet],
+    );
+    const allVisibleSelected = items.length > 0 && selectedVisibleCount === items.length;
+
+    const toggleSelectItem = (itemId: string, checked: boolean) => {
+        setSelectedItemIds((prev) => {
+            if (checked) {
+                if (prev.includes(itemId)) return prev;
+                return [...prev, itemId];
+            }
+            return prev.filter((id) => id !== itemId);
+        });
+    };
+
+    const toggleSelectVisible = () => {
+        const visibleIds = items.map((it) => it.id);
+        setSelectedItemIds((prev) => {
+            if (allVisibleSelected) {
+                return prev.filter((id) => !visibleIds.includes(id));
+            }
+            const next = new Set(prev);
+            visibleIds.forEach((id) => next.add(id));
+            return Array.from(next);
+        });
+    };
+
+    const selectAllFiltered = async () => {
+        try {
+            setSelectFilteredLoading(true);
+            const sp = new URLSearchParams();
+            if (categoryId) sp.set("categoryId", categoryId);
+            if (q) sp.set("q", q);
+            sp.set("sort", sort);
+            const idsArg = justImported ? lastImportedIds : [];
+            if (idsArg.length) sp.set("ids", idsArg.join(","));
+            if (onlyUncategorized) sp.set("uncategorized", "true");
+            if (typeof sinceMinutes === "number" && sinceMinutes > 0) {
+                sp.set("sinceMinutes", String(sinceMinutes));
+            }
+            sp.set("idsOnly", "true");
+
+            const res = await fetch(
+                `/api/tools/marketplace/items?${sp.toString()}`,
+                { credentials: "include" },
+            );
+            if (!res.ok) {
+                alert("Failed to select filtered items.");
+                return;
+            }
+            const data = await res.json();
+            const ids: string[] = Array.isArray(data?.ids)
+                ? data.ids.filter(
+                      (value: unknown): value is string =>
+                          typeof value === "string",
+                  )
+                : [];
+            setSelectedItemIds(ids);
+        } finally {
+            setSelectFilteredLoading(false);
+        }
+    };
+
+    const clearSelection = () => setSelectedItemIds([]);
+
     const startEdit = (it: Item) => {
         setEditDraft({
             id: it.id,
@@ -650,6 +727,92 @@ export default function Explorer() {
             { method: "DELETE", credentials: "include" },
         );
         loadItems();
+    };
+
+    const bulkSetNsfw = async (value: boolean) => {
+        const ids = selectedItemIds.filter(Boolean);
+        if (!ids.length) return;
+
+        const label = value ? "NSFW" : "not NSFW";
+        if (!confirm(`Mark ${ids.length} selected item(s) as ${label}?`)) return;
+
+        try {
+            setBulkNsfwSaving(true);
+            const res = await fetch(`/api/tools/marketplace/items`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ ids, updates: { isNsfw: value } }),
+            });
+            if (!res.ok) {
+                alert("Failed to update NSFW tags.");
+                return;
+            }
+            await loadItems({ preserveDetails: true });
+        } finally {
+            setBulkNsfwSaving(false);
+        }
+    };
+
+    const bulkApplyCategory = async (
+        mode: "add" | "remove",
+        categoryId: string,
+    ) => {
+        const ids = selectedItemIds.filter(Boolean);
+        if (!ids.length || !categoryId) return;
+        const action = mode === "add" ? "add" : "remove";
+        if (!confirm(`${action === "add" ? "Add" : "Remove"} this tag for ${ids.length} selected item(s)?`)) {
+            return;
+        }
+
+        try {
+            setBulkTagSaving(true);
+            const res = await fetch(`/api/tools/marketplace/items/categories/batch`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    itemIds: ids,
+                    categoryIds: [categoryId],
+                    mode,
+                }),
+            });
+            if (!res.ok) {
+                alert("Failed to update tags.");
+                return;
+            }
+
+            setBulkTagOpen(false);
+            await loadItems({ preserveDetails: true });
+        } finally {
+            setBulkTagSaving(false);
+        }
+    };
+
+    const bulkDeleteSelected = async () => {
+        const ids = selectedItemIds.filter(Boolean);
+        if (!ids.length) return;
+        if (!confirm(`Delete ${ids.length} selected item(s)? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            setBulkDeleteSaving(true);
+            const res = await fetch(`/api/tools/marketplace/items`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ ids }),
+            });
+            if (!res.ok) {
+                alert("Failed to delete selected items.");
+                return;
+            }
+            clearSelection();
+            await loadItems({ preserveDetails: false });
+        } finally {
+            setBulkDeleteSaving(false);
+        }
     };
 
     return (
@@ -754,7 +917,9 @@ export default function Explorer() {
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
                                 />
-                                {q && (
+                                {loading ? (
+                                    <RefreshCw className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground pointer-events-none" />
+                                ) : q ? (
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -770,7 +935,7 @@ export default function Explorer() {
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
-                                )}
+                                ) : null}
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -848,6 +1013,181 @@ export default function Explorer() {
                             >
                                 Uncategorized
                             </Button>
+                            {isAdmin && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        className="h-9"
+                                        onClick={toggleSelectVisible}
+                                        disabled={!items.length}
+                                    >
+                                        {allVisibleSelected
+                                            ? "Unselect page"
+                                            : "Select page"}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="h-9"
+                                        onClick={selectAllFiltered}
+                                        disabled={!page.total || selectFilteredLoading}
+                                    >
+                                        {selectFilteredLoading
+                                            ? "Selecting…"
+                                            : `Select filtered (${page.total})`}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="h-9"
+                                        onClick={clearSelection}
+                                        disabled={!selectedCount}
+                                    >
+                                        Clear ({selectedCount})
+                                    </Button>
+                                </>
+                            )}
+                            {isAdmin && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="h-9"
+                                            disabled={!selectedCount || bulkNsfwSaving}
+                                        >
+                                            {bulkNsfwSaving
+                                                ? "Applying…"
+                                                : "Bulk NSFW"}
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                            onClick={() => bulkSetNsfw(true)}
+                                        >
+                                            Mark selected as NSFW
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => bulkSetNsfw(false)}
+                                        >
+                                            Mark selected as SFW
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                            {isAdmin && (
+                                <Popover
+                                    open={bulkTagOpen}
+                                    onOpenChange={setBulkTagOpen}
+                                >
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="h-9"
+                                            disabled={
+                                                !selectedCount ||
+                                                bulkTagSaving ||
+                                                !categories.length
+                                            }
+                                        >
+                                            {bulkTagSaving
+                                                ? "Applying tags…"
+                                                : "Bulk Tags"}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[340px] p-0" align="end">
+                                        <div className="flex items-center gap-2 border-b p-2">
+                                            <Button
+                                                size="sm"
+                                                variant={
+                                                    bulkTagMode === "add"
+                                                        ? "default"
+                                                        : "outline"
+                                                }
+                                                onClick={() => setBulkTagMode("add")}
+                                            >
+                                                Add
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant={
+                                                    bulkTagMode === "remove"
+                                                        ? "default"
+                                                        : "outline"
+                                                }
+                                                onClick={() =>
+                                                    setBulkTagMode("remove")
+                                                }
+                                            >
+                                                Remove
+                                            </Button>
+                                            <span className="text-xs text-muted-foreground ml-auto">
+                                                {selectedCount} selected
+                                            </span>
+                                        </div>
+                                        <Command>
+                                            <CommandInput placeholder="Search categories…" />
+                                            <CommandList>
+                                                <CommandEmpty>
+                                                    No category found.
+                                                </CommandEmpty>
+                                                <CommandGroup heading="Categories">
+                                                    {categories.map((c) => (
+                                                        <CommandItem
+                                                            key={c.id}
+                                                            value={`${c.primary} ${c.sub}`}
+                                                            onSelect={() =>
+                                                                bulkApplyCategory(
+                                                                    bulkTagMode,
+                                                                    c.id,
+                                                                )
+                                                            }
+                                                        >
+                                                            {c.primary} › {c.sub}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                            )}
+                            {isAdmin && (
+                                <Button
+                                    variant="destructive"
+                                    className="h-9"
+                                    disabled={!selectedCount || bulkDeleteSaving}
+                                    onClick={bulkDeleteSelected}
+                                >
+                                    {bulkDeleteSaving
+                                        ? "Deleting…"
+                                        : `Delete (${selectedCount})`}
+                                </Button>
+                            )}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="h-9">
+                                        Rows: {page.limit}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    {[25, 50, 100].map((size) => (
+                                        <DropdownMenuItem
+                                            key={size}
+                                            onClick={() => {
+                                                setPage((p) => ({
+                                                    ...p,
+                                                    limit: size,
+                                                    offset: 0,
+                                                }));
+                                                loadItems({
+                                                    limit: size,
+                                                    offset: 0,
+                                                });
+                                            }}
+                                        >
+                                            Show {size}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="h-9">
@@ -905,9 +1245,6 @@ export default function Explorer() {
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            {loading && (
-                                <Badge variant="secondary">Loading…</Badge>
-                            )}
                             <Button
                                 variant="outline"
                                 onClick={exportXlsx}
@@ -923,6 +1260,23 @@ export default function Explorer() {
                         <table className="w-full text-sm">
                             <thead className="bg-muted/50">
                                 <tr>
+                                    {isAdmin && (
+                                        <th className="px-3 py-2 text-left w-10">
+                                            <Checkbox
+                                                checked={
+                                                    allVisibleSelected
+                                                        ? true
+                                                        : selectedVisibleCount > 0
+                                                          ? "indeterminate"
+                                                          : false
+                                                }
+                                                onCheckedChange={() =>
+                                                    toggleSelectVisible()
+                                                }
+                                                aria-label="Select visible items"
+                                            />
+                                        </th>
+                                    )}
                                     <th className="px-3 py-2 text-left">
                                         Title
                                     </th>
@@ -955,6 +1309,20 @@ export default function Explorer() {
                                 {items.map((it) => (
                                     <Fragment key={it.id}>
                                         <tr className="border-t align-top">
+                                            {isAdmin && (
+                                                <td className="px-3 py-2 align-top">
+                                                    <Checkbox
+                                                        checked={selectedSet.has(it.id)}
+                                                        onCheckedChange={(checked) =>
+                                                            toggleSelectItem(
+                                                                it.id,
+                                                                checked === true,
+                                                            )
+                                                        }
+                                                        aria-label={`Select ${it.title}`}
+                                                    />
+                                                </td>
+                                            )}
                                             <td className="px-3 py-2 max-w-[28rem]">
                                                 <div className="font-medium line-clamp-1">
                                                     {it.title}
@@ -1120,7 +1488,7 @@ export default function Explorer() {
                                             <tr className="border-t">
                                                 {/* colSpan increased by 1 due to new Categories column */}
                                                 <td
-                                                    colSpan={9}
+                                                    colSpan={isAdmin ? 10 : 9}
                                                     className="px-3 py-3 bg-muted/20"
                                                 >
                                                     <div className="grid gap-3 md:grid-cols-3">
@@ -1192,7 +1560,7 @@ export default function Explorer() {
                                     <tr>
                                         {/* colSpan increased by 1 due to new Categories column */}
                                         <td
-                                            colSpan={9}
+                                            colSpan={isAdmin ? 10 : 9}
                                             className="px-3 py-6 text-center text-muted-foreground"
                                         >
                                             No items
@@ -1473,14 +1841,6 @@ export default function Explorer() {
                 </DialogContent>
             </Dialog>
 
-            {/* Floating refresh button */}
-            <Button
-                className="fixed bottom-6 right-6 h-10 w-10 rounded-full shadow-lg"
-                title="Refresh"
-                onClick={() => loadItems({ preserveDetails: true })}
-            >
-                <RefreshCw className={cn("h-5 w-5", loading ? "animate-spin" : "")} />
-            </Button>
         </div>
     );
 }

@@ -60,3 +60,5 @@ certificates
 .agents/
 skills-lock.json
 .codex
+packages/scripts
+sl_stores_to_scrape.md
