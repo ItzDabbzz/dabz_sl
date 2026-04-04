@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import OrgTeamPicker from "@/components/pickers/org-team-picker";
+import OrgTeamPicker from "@/features/admin/components/pickers/org-team-picker";
 import { Button } from "@/components/ui/button";
 
 export function SeedRbacCard() {

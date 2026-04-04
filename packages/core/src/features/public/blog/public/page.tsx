@@ -2,7 +2,7 @@ import { db } from "@/server/db/client";
 import { blogPosts, blogPostCategories, blogCategories, blogPostRatings } from "@/schemas/blog";
 import { and, desc, eq, inArray, sql, or, ilike } from "drizzle-orm";
 import Link from "next/link";
-import { CategorySidebar } from "@/components/blog/category-sidebar";
+import { CategorySidebar } from "@/features/public/blog/components/category-sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";

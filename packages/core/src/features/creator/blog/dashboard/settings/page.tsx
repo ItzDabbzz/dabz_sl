@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { revalidatePath } from "next/cache";
-import { EmailTemplateEditor } from "@/components/blog/email-template-editor";
+import { EmailTemplateEditor } from "@/features/creator/blog/components/email-template-editor";
 import { requirePermission } from "@/server/auth/guards";
 import { headers } from "next/headers";
 

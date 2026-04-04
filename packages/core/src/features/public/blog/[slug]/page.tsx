@@ -9,12 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { user } from "@/schemas/auth-schema";
-import { Rating } from "@/components/blog/rating";
+import { Rating } from "@/features/public/blog/components/rating";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { TableOfContents, TocItem } from "@/components/blog/toc";
+import { TableOfContents, TocItem } from "@/features/public/blog/components/toc";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import SanctumBg from "@/components/sanctum-bg";
+import SanctumBg from "@/features/public/home/components/sanctum-bg";
 
 export const revalidate = 60; // ISR
 

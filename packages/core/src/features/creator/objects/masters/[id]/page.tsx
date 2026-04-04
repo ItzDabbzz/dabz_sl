@@ -4,11 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { revalidatePath } from "next/cache";
-import { JsonEditor } from "@/components/json-editor";
-import { VisualConfigEditor } from "@/components/visual-config-editor";
+import { JsonEditor } from "@/features/shared/components/json-editor";
+import { VisualConfigEditor } from "@/features/creator/objects/components/visual-config-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { VisibilitySelect } from "@/components/visibility-select";
+import { VisibilitySelect } from "@/features/creator/objects/components/visibility-select";
 import { ActionToast } from "@/components/action-toast";
 import {
     Accordion,

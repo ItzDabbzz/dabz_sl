@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getMarketplaceStats, getSecondLifeSnapshot } from "@/features/public/home/server/site-stats";
-import HomeAccountPill from "@/components/home-account-pill";
+import HomeAccountPill from "@/features/auth/profile/components/home-account-pill";
 import {
     Card,
     CardContent,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import SanctumBg from "@/components/sanctum-bg";
+import SanctumBg from "@/features/public/home/components/sanctum-bg";
 
 export const revalidate = 300;
 

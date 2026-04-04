@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { createCategory, updateCategory, deleteCategory } from "./actions";
-import { OrgTeamPicker } from "@/components/pickers/org-team-picker";
-import { UserPicker } from "@/components/pickers/user-picker";
+import { OrgTeamPicker } from "@/features/admin/components/pickers/org-team-picker";
+import { UserPicker } from "@/features/admin/components/pickers/user-picker";
 import { cn } from "@/lib/utils";
 
 interface CategoryRecord {

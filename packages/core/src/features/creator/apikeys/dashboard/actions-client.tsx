@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import ScopeSelector from "@/components/pickers/scope-selector";
-import { defaultScopeOptions } from "@/components/pickers/scope-options";
+import ScopeSelector from "@/features/creator/objects/components/scope-selector";
+import { defaultScopeOptions } from "@/features/creator/objects/components/scope-options";
 export function ActionsClient() {
   const router = useRouter();
   const [scopes, setScopes] = React.useState<string[]>([]);

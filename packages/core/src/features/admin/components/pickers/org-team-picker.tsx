@@ -11,7 +11,7 @@ import {
     CommandList,
 } from "@/components/ui/command";
 import { useListOrganizations, useActiveOrganization } from "@/features/auth/client";
-import { TeamPicker } from "@/components/pickers/team-picker";
+import { TeamPicker } from "@/features/admin/components/pickers/team-picker";
 
 /**
  * OrgTeamPicker (generalized)

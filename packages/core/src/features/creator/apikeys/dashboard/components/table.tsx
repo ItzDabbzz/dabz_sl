@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import ScopeSelector from "@/components/pickers/scope-selector";
-import { defaultScopeOptions } from "@/components/pickers/scope-options";
+import ScopeSelector from "@/features/creator/objects/components/scope-selector";
+import { defaultScopeOptions } from "@/features/creator/objects/components/scope-options";
 import { toast } from "sonner";
 
 export type ApiKeyItem = {

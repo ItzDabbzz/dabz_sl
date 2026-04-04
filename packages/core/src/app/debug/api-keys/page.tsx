@@ -1,4 +1,4 @@
-import { ApiKeyManager } from "@/components/api-key-manager"
+import { ApiKeyManager } from "@/features/creator/apikeys/components/api-key-manager"
 
 export default function ApiKeysPage() {
   return (
