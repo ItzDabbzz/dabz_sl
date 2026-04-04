@@ -1,1 +1,1 @@
-export { OneTap as default } from "@/components/features/auth/one-tap";
+export { OneTap as default } from "@/features/auth/components/one-tap";

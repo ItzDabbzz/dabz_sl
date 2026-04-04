@@ -1,1 +1,1 @@
-export { default } from "@/components/features/auth/sign-in";
+export { default } from "@/features/auth/components/sign-in";

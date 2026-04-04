@@ -1,1 +1,1 @@
-export { default, LogoutButton } from "@/components/features/auth/logout-button";
+export { default, LogoutButton } from "@/features/auth/components/logout-button";

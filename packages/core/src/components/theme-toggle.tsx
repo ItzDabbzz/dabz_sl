@@ -1,1 +1,1 @@
-export { default, ThemeToggle } from "@/components/features/common/theme-toggle";
+export { default, ThemeToggle } from "@/components/shared/theme-toggle";
