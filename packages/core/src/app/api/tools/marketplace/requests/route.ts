@@ -126,7 +126,10 @@ export async function PATCH(req: NextRequest) {
       try {
         [itemRow] = await db.insert(mpItems).values(values).returning();
       } catch {
-        const [existing] = await db.select().from(mpItems).where(eq(mpItems.url as any, (reqRow as any).url as any) as any);
+        const [existing] = await db
+          .select({ id: mpItems.id })
+          .from(mpItems)
+          .where(eq(mpItems.url as any, (reqRow as any).url as any) as any);
         if (existing) itemRow = existing;
       }
 

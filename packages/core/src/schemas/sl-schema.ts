@@ -325,6 +325,7 @@ export const mpItems = pgTable(
     description: text("description"),
     features: jsonb("features").$type<string[]>(),
     contents: jsonb("contents").$type<string[]>(),
+    isNsfw: boolean("is_nsfw").default(false).notNull(),
     updatedOn: text("updated_on"),
 
     // New: ratings

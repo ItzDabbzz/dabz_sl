@@ -4,30 +4,56 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
 
+function isMissingColumnError(error: unknown) {
+  const candidate = error as { code?: string; cause?: { code?: string } };
+  return candidate?.code === "42703" || candidate?.cause?.code === "42703";
+}
+
 // Returns distinct creators (authors) from marketplace items.
 // Each author entry: { name, link, itemCount }
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const q = (searchParams.get("q") || "").trim().toLowerCase();
+    const showNsfw = searchParams.get("showNsfw") === "true";
     const limit = Math.max(1, Math.min(500, parseInt(searchParams.get("limit") || "100", 10)));
 
     // Use parameterized SQL for safety; filter name via lower(name) LIKE pattern if q provided.
     const pattern = q ? `%${q}%` : undefined;
-    const rows: Array<{ name: string | null; link: string | null; itemCount: number }> = (await db.execute(sql`
-      select
-        nullif(trim(creator->>'name'), '') as name,
-        nullif(trim(creator->>'link'), '') as link,
-        count(*)::int as "itemCount"
-      from sl_mp_items
-      where creator is not null
-        ${q ? sql`and lower(creator->>'name') like ${pattern}` : sql``}
-      group by 1,2
-      having nullif(trim(creator->>'name'), '') is not null
-      -- Use positional ordinals to avoid quoted identifier mismatch ("itemCount")
-      order by 3 desc, 1 asc
-      limit ${limit}
-    `) as any).rows || [];
+    let rows: Array<{ name: string | null; link: string | null; itemCount: number }> = [];
+
+    try {
+      rows = ((await db.execute(sql`
+        select
+          nullif(trim(creator->>'name'), '') as name,
+          nullif(trim(creator->>'link'), '') as link,
+          count(*)::int as "itemCount"
+        from sl_mp_items
+        where creator is not null
+          ${showNsfw ? sql`` : sql`and coalesce(is_nsfw, false) = false`}
+          ${q ? sql`and lower(creator->>'name') like ${pattern}` : sql``}
+        group by 1,2
+        having nullif(trim(creator->>'name'), '') is not null
+        order by 3 desc, 1 asc
+        limit ${limit}
+      `) as any).rows || []) as typeof rows;
+    } catch (error) {
+      if (!isMissingColumnError(error)) throw error;
+
+      rows = ((await db.execute(sql`
+        select
+          nullif(trim(creator->>'name'), '') as name,
+          nullif(trim(creator->>'link'), '') as link,
+          count(*)::int as "itemCount"
+        from sl_mp_items
+        where creator is not null
+          ${q ? sql`and lower(creator->>'name') like ${pattern}` : sql``}
+        group by 1,2
+        having nullif(trim(creator->>'name'), '') is not null
+        order by 3 desc, 1 asc
+        limit ${limit}
+      `) as any).rows || []) as typeof rows;
+    }
 
     const items = rows
       .filter(r => r.name)

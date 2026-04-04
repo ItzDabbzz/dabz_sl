@@ -12,6 +12,7 @@ export type Item = {
     permissions?: { copy?: string; modify?: string; transfer?: string } | null;
     features?: string[] | null;
     contents?: string[] | null;
+    isNsfw?: boolean | null;
     updatedOn?: string | null;
     ratingAvg?: number | string | null;
     ratingCount?: number | null;

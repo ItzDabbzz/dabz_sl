@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, Loader2 } from "lucide-react";
@@ -33,6 +34,7 @@ export default function Page() {
   const [permCopy, setPermCopy] = useState("");
   const [permModify, setPermModify] = useState("");
   const [permTransfer, setPermTransfer] = useState("");
+  const [isNsfw, setIsNsfw] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -75,7 +77,7 @@ export default function Page() {
       : [];
 
     const body = {
-      items: [{ url, title, version: version || null, images, price: price || null, creator, store: store || null, permissions, description, features, contents, updatedOn: null }],
+      items: [{ url, title, version: version || null, images, price: price || null, creator, store: store || null, permissions, description, features, contents, isNsfw, updatedOn: null }],
       assign: assignEntry,
     };
 
@@ -135,6 +137,15 @@ export default function Page() {
           <div>
             <div className="text-xs mb-1">Description</div>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+          </div>
+          <div className="flex items-center justify-between rounded-md border px-3 py-2">
+            <div className="space-y-1">
+              <div className="text-sm font-medium">NSFW</div>
+              <div className="text-xs text-muted-foreground">
+                Hide this item from public visitors unless they enable the NSFW toggle.
+              </div>
+            </div>
+            <Switch checked={isNsfw} onCheckedChange={setIsNsfw} />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>

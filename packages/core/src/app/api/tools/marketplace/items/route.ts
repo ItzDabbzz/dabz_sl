@@ -23,6 +23,64 @@ async function getUserFromRequest(req: NextRequest) {
     return ses.user;
 }
 
+function isMissingColumnError(error: unknown) {
+    const candidate = error as { code?: string; cause?: { code?: string } };
+    return candidate?.code === "42703" || candidate?.cause?.code === "42703";
+}
+
+function normalizeIsNsfw(value: unknown): boolean {
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        return ["true", "1", "yes", "on"].includes(normalized);
+    }
+
+    return value === true || value === 1;
+}
+
+async function insertMarketplaceItem(values: Record<string, unknown>) {
+    try {
+        const [row] = await db.insert(mpItems).values(values as any).returning();
+        return row;
+    } catch (error) {
+        if (!isMissingColumnError(error) || !("isNsfw" in values)) {
+            throw error;
+        }
+
+        const { isNsfw: _isNsfw, ...legacyValues } = values;
+        const [row] = await db
+            .insert(mpItems)
+            .values(legacyValues as any)
+            .returning();
+        return row;
+    }
+}
+
+async function updateMarketplaceItem(
+    id: string,
+    values: Record<string, unknown>,
+) {
+    try {
+        const [row] = await db
+            .update(mpItems)
+            .set(values as any)
+            .where(eq(mpItems.id as any, id as any) as any)
+            .returning();
+        return row;
+    } catch (error) {
+        if (!isMissingColumnError(error) || !("isNsfw" in values)) {
+            throw error;
+        }
+
+        const { isNsfw: _isNsfw, ...legacyValues } = values;
+        const [row] = await db
+            .update(mpItems)
+            .set(legacyValues as any)
+            .where(eq(mpItems.id as any, id as any) as any)
+            .returning();
+        return row;
+    }
+}
+
 export async function GET(req: NextRequest) {
     try {
         const user = await getUserFromRequest(req);
@@ -241,24 +299,24 @@ export async function POST(req: NextRequest) {
                 description: it.description || null,
                 features: it.features || [],
                 contents: it.contents || [],
+                isNsfw: normalizeIsNsfw(it.isNsfw),
                 updatedOn: it.updatedOn || null,
             } as any;
 
             let row;
             try {
-                [row] = await db.insert(mpItems).values(values).returning();
+                row = await insertMarketplaceItem(values);
             } catch {
                 // conflict on url -> update
                 const [existing] = await db
-                    .select()
+                    .select({ id: mpItems.id })
                     .from(mpItems)
                     .where(eq(mpItems.url as any, it.url as any) as any);
                 if (existing) {
-                    [row] = await db
-                        .update(mpItems)
-                        .set({ ...values, updatedAt: new Date() as any })
-                        .where(eq(mpItems.id as any, existing.id as any) as any)
-                        .returning();
+                    row = await updateMarketplaceItem(existing.id, {
+                        ...values,
+                        updatedAt: new Date() as any,
+                    });
                 }
             }
             if (!row) continue;
@@ -304,15 +362,18 @@ export async function PATCH(req: NextRequest) {
         await requirePermission("marketplace.moderate", req.headers as any);
         const body = await req.json();
         const id = body?.id as string | undefined;
-        const updates = body?.updates as any;
+        const updates = body?.updates ? { ...body.updates } : null;
         if (!id || !updates)
             return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
-        const [row] = await db
-            .update(mpItems)
-            .set({ ...updates, updatedAt: new Date() as any })
-            .where(eq(mpItems.id as any, id as any) as any)
-            .returning();
+        if ("isNsfw" in updates) {
+            updates.isNsfw = normalizeIsNsfw(updates.isNsfw);
+        }
+
+        const row = await updateMarketplaceItem(id, {
+            ...updates,
+            updatedAt: new Date() as any,
+        });
 
         revalidateTag("marketplace:stats");
         return NextResponse.json({ item: row });

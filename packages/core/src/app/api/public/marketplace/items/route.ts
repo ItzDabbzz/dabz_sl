@@ -5,70 +5,91 @@ import { db } from "@/lib/db";
 import { mpItems, mpItemCategories } from "@/schemas/sl-schema";
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 
+function isMissingColumnError(error: unknown) {
+  const candidate = error as { code?: string; cause?: { code?: string } };
+  return candidate?.code === "42703" || candidate?.cause?.code === "42703";
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get("categoryId");
     const q = (searchParams.get("q") || "").trim();
-  const sort = (searchParams.get("sort") || "most").toLowerCase(); // most | least
-  const author = (searchParams.get("author") || "").trim().toLowerCase();
+    const sort = (searchParams.get("sort") || "most").toLowerCase(); // most | least
+    const author = (searchParams.get("author") || "").trim().toLowerCase();
+    const showNsfw = searchParams.get("showNsfw") === "true";
     const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "24", 10)));
     const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10));
 
-    let where: any = sql`true` as any;
+    const buildWhere = async (includeNsfwFilter: boolean) => {
+      let where: any = sql`true` as any;
 
-    // Filter by category via join table
-    if (categoryId) {
-      const itemIdRows = await db
-        .select({ itemId: mpItemCategories.itemId })
-        .from(mpItemCategories)
-        .where(eq(mpItemCategories.categoryId as any, categoryId as any) as any);
-      const ids = itemIdRows.map((r: any) => r.itemId);
-      if (!ids.length)
-        return NextResponse.json({ items: [], total: 0, limit, offset });
-      where = and(where, inArray(mpItems.id as any, ids as any) as any);
-    }
+      if (categoryId) {
+        const itemIdRows = await db
+          .select({ itemId: mpItemCategories.itemId })
+          .from(mpItemCategories)
+          .where(eq(mpItemCategories.categoryId as any, categoryId as any) as any);
+        const ids = itemIdRows.map((r: any) => r.itemId);
+        if (!ids.length) return null;
+        where = and(where, inArray(mpItems.id as any, ids as any) as any);
+      }
 
-    // Text search on title/description
-    if (q) {
-      const pat = `%${q.toLowerCase()}%`;
-      const lower = (c: any) => sql`lower(${c})` as any;
-      where = and(
-        where,
-        sql`(${lower(mpItems.title)} like ${pat} or ${lower(mpItems.description)} like ${pat})` as any
-      );
-    }
+      if (q) {
+        const pat = `%${q.toLowerCase()}%`;
+        const lower = (c: any) => sql`lower(${c})` as any;
+        where = and(
+          where,
+          sql`(${lower(mpItems.title)} like ${pat} or ${lower(mpItems.description)} like ${pat})` as any
+        );
+      }
 
-    // Author filter (creator.name JSON -> we store entire object in jsonb creator column)
-    if (author) {
-      const pat = `%${author}%`;
-      // Use textual representation search. For more robust queries consider jsonb_extract_path_text.
-      where = and(
-        where,
-        sql`lower(${mpItems.creator}::text) like ${pat}` as any
-      );
-    }
+      if (author) {
+        const pat = `%${author}%`;
+        where = and(
+          where,
+          sql`lower(${mpItems.creator}::text) like ${pat}` as any
+        );
+      }
 
-    const [{ value: total }] = (await db
-      .select({ value: count() })
-      .from(mpItems)
-      .where(where as any)) as any;
+      if (includeNsfwFilter) {
+        where = and(where, sql`coalesce(${mpItems.isNsfw}, false) = false` as any);
+      }
 
-    // Order by ratings if available; fallback handled below
-    let query: any = db.select().from(mpItems).where(where as any);
-    if (sort === "most") {
-      query = query.orderBy(desc(mpItems.ratingCount as any), desc(mpItems.ratingAvg as any));
-    } else if (sort === "least") {
-      query = query.orderBy(asc(mpItems.ratingCount as any), asc(mpItems.ratingAvg as any));
-    }
+      return where;
+    };
 
     try {
+      const where = await buildWhere(!showNsfw);
+      if (!where) {
+        return NextResponse.json({ items: [], total: 0, limit, offset });
+      }
+
+      const [{ value: total }] = (await db
+        .select({ value: count() })
+        .from(mpItems)
+        .where(where as any)) as any;
+
+      let query: any = db.select().from(mpItems).where(where as any);
+      if (sort === "most") {
+        query = query.orderBy(desc(mpItems.ratingCount as any), desc(mpItems.ratingAvg as any));
+      } else if (sort === "least") {
+        query = query.orderBy(asc(mpItems.ratingCount as any), asc(mpItems.ratingAvg as any));
+      }
+
       const itemRows = await query.limit(limit as any).offset(offset as any);
       return NextResponse.json({ items: itemRows, total, limit, offset });
     } catch (err: any) {
-      // Fallback if rating columns missing
-      const pgCode = err?.code || err?.cause?.code;
-      if (pgCode === "42703") {
+      if (isMissingColumnError(err)) {
+        const fallbackWhere = await buildWhere(false);
+        if (!fallbackWhere) {
+          return NextResponse.json({ items: [], total: 0, limit, offset });
+        }
+
+        const [{ value: fallbackTotal }] = (await db
+          .select({ value: count() })
+          .from(mpItems)
+          .where(fallbackWhere as any)) as any;
+
         const fallbackRows = await db
           .select({
             id: mpItems.id,
@@ -91,10 +112,10 @@ export async function GET(req: NextRequest) {
             updatedAt: mpItems.updatedAt,
           })
           .from(mpItems)
-          .where(where as any)
+          .where(fallbackWhere as any)
           .limit(limit as any)
           .offset(offset as any);
-        return NextResponse.json({ items: fallbackRows, total, limit, offset });
+        return NextResponse.json({ items: fallbackRows, total: fallbackTotal, limit, offset });
       }
       throw err;
     }

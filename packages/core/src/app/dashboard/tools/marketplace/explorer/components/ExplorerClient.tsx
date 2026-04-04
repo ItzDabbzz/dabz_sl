@@ -4,7 +4,9 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import * as XLSX from "xlsx";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
     Dialog,
     DialogContent,
@@ -292,6 +294,7 @@ export default function ExplorerClient() {
             PermTransfer: it.permissions?.transfer || "",
             Features: (it.features || []).join(" | "),
             Contents: (it.contents || []).join(" | "),
+            IsNsfw: it.isNsfw ? "Yes" : "No",
             Rating:
                 typeof it.ratingCount === "number" && it.ratingCount > 0
                     ? `★ ${(() => {
@@ -364,6 +367,7 @@ export default function ExplorerClient() {
             imagesText: (it.images || []).join("\n"),
             featuresText: (it.features || []).join("\n"),
             contentsText: (it.contents || []).join("\n"),
+            isNsfw: !!it.isNsfw,
             permCopy: it.permissions?.copy ?? "",
             permModify: it.permissions?.modify ?? "",
             permTransfer: it.permissions?.transfer ?? "",
@@ -416,6 +420,7 @@ export default function ExplorerClient() {
                     images,
                     features,
                     contents,
+                    isNsfw: !!editDraft.isNsfw,
                     permissions,
                 },
             }),
@@ -505,6 +510,13 @@ export default function ExplorerClient() {
                                                 <div className="font-medium line-clamp-1">
                                                     {it.title}
                                                 </div>
+                                                {!!it.isNsfw && (
+                                                    <div className="mt-1 flex flex-wrap gap-1">
+                                                        <Badge variant="destructive">
+                                                            NSFW
+                                                        </Badge>
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-3 py-2 whitespace-nowrap">
                                                 {it.version || "-"}
@@ -718,6 +730,13 @@ export default function ExplorerClient() {
                                                 >
                                                     <div className="grid gap-3 md:grid-cols-3">
                                                         <div className="md:col-span-2">
+                                                            {!!it.isNsfw && (
+                                                                <div className="mb-3 flex flex-wrap gap-2">
+                                                                    <Badge variant="destructive">
+                                                                        NSFW
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
                                                             <div className="text-xs uppercase text-muted-foreground mb-1">
                                                                 Description
                                                             </div>
@@ -978,6 +997,23 @@ export default function ExplorerClient() {
                                     }
                                 />
                             </div>
+                        </div>
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                            <div className="space-y-1">
+                                <div className="text-sm font-medium">NSFW</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Hide this item from the public marketplace unless viewers enable the NSFW toggle.
+                                </div>
+                            </div>
+                            <Switch
+                                checked={!!editDraft.isNsfw}
+                                onCheckedChange={(checked) =>
+                                    setEditDraft((draft) => ({
+                                        ...draft,
+                                        isNsfw: checked,
+                                    }))
+                                }
+                            />
                         </div>
                         <div>
                             <div className="text-xs mb-1">Description</div>

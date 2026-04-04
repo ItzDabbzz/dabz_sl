@@ -10,6 +10,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -44,6 +45,7 @@ type Item = {
     description?: string | null;
     creator?: { name?: string; link?: string } | null;
     store?: string | null;
+    isNsfw?: boolean | null;
 };
 
 type Category = { id: string; primary: string; sub: string; sub2?: string };
@@ -73,6 +75,7 @@ export default function ClientExplorer() {
     const [view, setView] = useState<"grid" | "list">("grid");
     const [scrollMode, setScrollMode] = useState<"pages" | "infinite">("pages");
     const [hasImageOnly, setHasImageOnly] = useState(false);
+    const [showNsfw, setShowNsfw] = useState(false);
     const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
     const [compare, setCompare] = useState<Set<string>>(() => new Set());
     const [recent, setRecent] = useState<string[]>([]);
@@ -101,9 +104,39 @@ export default function ClientExplorer() {
 
     useEffect(() => { const t = setTimeout(() => { const term = q.trim(); if (!term) return; setRecent(prev => { const next = [term, ...prev.filter(s => s !== term)].slice(0, 8); try { localStorage.setItem("mp_recent_searches", JSON.stringify(next)); } catch {}; return next; }); }, 600); return () => clearTimeout(t); }, [q]);
 
-    useEffect(() => { if (!cats.length) return; const qp = new URLSearchParams(searchParams.toString()); const nq = qp.get("q") || ""; const ns = (qp.get("sort") as any) || "most"; const nl = parseInt(qp.get("limit") || "24", 10); const np = qp.get("primary") || ""; const nsub = qp.get("sub") || ""; const nsub2 = qp.get("sub2") || ""; const nauthor = qp.get("author") || ""; setQ(nq); setSort(["most", "least", "priceAsc", "priceDesc"].includes(ns) ? (ns as any) : "most"); if (!Number.isNaN(nl)) setLimit(nl); setPrimary(np); setSub(nsub); setSub2(nsub2); setAuthor(nauthor); }, [cats, searchParams]);
+    useEffect(() => {
+        if (!cats.length) return;
+        const qp = new URLSearchParams(searchParams.toString());
+        const nq = qp.get("q") || "";
+        const ns = (qp.get("sort") as any) || "most";
+        const nl = parseInt(qp.get("limit") || "24", 10);
+        const np = qp.get("primary") || "";
+        const nsub = qp.get("sub") || "";
+        const nsub2 = qp.get("sub2") || "";
+        const nauthor = qp.get("author") || "";
+        const nShowNsfw = qp.get("showNsfw") === "true";
+        setQ(nq);
+        setSort(["most", "least", "priceAsc", "priceDesc"].includes(ns) ? (ns as any) : "most");
+        if (!Number.isNaN(nl)) setLimit(nl);
+        setPrimary(np);
+        setSub(nsub);
+        setSub2(nsub2);
+        setAuthor(nauthor);
+        setShowNsfw(nShowNsfw);
+    }, [cats, searchParams]);
 
-    useEffect(() => { const qp = new URLSearchParams(); if (q.trim()) qp.set("q", q.trim()); if (sort !== "most") qp.set("sort", sort); if (limit !== 24) qp.set("limit", String(limit)); if (primary) qp.set("primary", primary); if (sub) qp.set("sub", sub); if (sub2) qp.set("sub2", sub2); if (author) qp.set("author", author); router.replace(`${pathname}?${qp.toString()}` as any, { scroll: false }); }, [q, sort, limit, primary, sub, sub2, author, router, pathname]);
+    useEffect(() => {
+        const qp = new URLSearchParams();
+        if (q.trim()) qp.set("q", q.trim());
+        if (sort !== "most") qp.set("sort", sort);
+        if (limit !== 24) qp.set("limit", String(limit));
+        if (primary) qp.set("primary", primary);
+        if (sub) qp.set("sub", sub);
+        if (sub2) qp.set("sub2", sub2);
+        if (author) qp.set("author", author);
+        if (showNsfw) qp.set("showNsfw", "true");
+        router.replace(`${pathname}?${qp.toString()}` as any, { scroll: false });
+    }, [q, sort, limit, primary, sub, sub2, author, showNsfw, router, pathname]);
 
     // Fetch authors (distinct creators) when authors tab active or author search changes (debounced)
     useEffect(() => {
@@ -113,6 +146,7 @@ export default function ClientExplorer() {
             try {
                 const usp = new URLSearchParams();
                 if (author.trim()) usp.set("q", author.trim());
+                if (showNsfw) usp.set("showNsfw", "true");
                 const res = await fetch(`/api/public/marketplace/authors?${usp.toString()}`, { cache: "no-store" });
                 const data = await res.json();
                 setAuthors(Array.isArray(data.items) ? data.items : []);
@@ -123,10 +157,35 @@ export default function ClientExplorer() {
             }
         }, 250);
         return () => clearTimeout(handle);
-    }, [activeTab, author]);
+    }, [activeTab, author, showNsfw]);
 
-    const fetchItems = useCallback(async (options: { reset?: boolean; pageIndex: number }) => { const { reset = false, pageIndex } = options; setLoading(true); try { const params = new URLSearchParams(); if (q.trim()) params.set("q", q.trim()); if (selectedCategoryId) params.set("categoryId", selectedCategoryId); if (author.trim()) params.set("author", author.trim()); if (sort) params.set("sort", sort); params.set("limit", String(limit)); params.set("offset", String(pageIndex * limit)); const res = await fetch(`/api/public/marketplace/items?${params.toString()}`, { cache: "no-store" }); const data: ItemsResp = await res.json(); setTotal(data.total || 0); setItems(prev => (reset ? data.items || [] : [...prev, ...(data.items || [])])); setPage(pageIndex); } finally { setLoading(false); } }, [q, sort, selectedCategoryId, limit, author]);
-    useEffect(() => { const t = setTimeout(() => { fetchItems({ reset: true, pageIndex: 0 }); }, 250); return () => clearTimeout(t); }, [q, sort, selectedCategoryId, limit, author, fetchItems]);
+    const fetchItems = useCallback(async (options: { reset?: boolean; pageIndex: number }) => {
+        const { reset = false, pageIndex } = options;
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (q.trim()) params.set("q", q.trim());
+            if (selectedCategoryId) params.set("categoryId", selectedCategoryId);
+            if (author.trim()) params.set("author", author.trim());
+            if (sort) params.set("sort", sort);
+            if (showNsfw) params.set("showNsfw", "true");
+            params.set("limit", String(limit));
+            params.set("offset", String(pageIndex * limit));
+            const res = await fetch(`/api/public/marketplace/items?${params.toString()}`, { cache: "no-store" });
+            const data: ItemsResp = await res.json();
+            setTotal(data.total || 0);
+            setItems(prev => (reset ? data.items || [] : [...prev, ...(data.items || [])]));
+            setPage(pageIndex);
+        } finally {
+            setLoading(false);
+        }
+    }, [q, sort, selectedCategoryId, limit, author, showNsfw]);
+    useEffect(() => {
+        const t = setTimeout(() => {
+            fetchItems({ reset: true, pageIndex: 0 });
+        }, 250);
+        return () => clearTimeout(t);
+    }, [q, sort, selectedCategoryId, limit, author, showNsfw, fetchItems]);
 
     useEffect(() => { function onKey(e: KeyboardEvent) { if (e.key === "/") { e.preventDefault(); inputRef.current?.focus(); } if (e.key === "Escape") setQ(""); if (e.key === "ArrowLeft" && scrollMode === "pages") { const next = page - 1; if (next >= 0) fetchItems({ reset: true, pageIndex: next }); } if (e.key === "ArrowRight" && scrollMode === "pages") { const next = page + 1; if (next * limit < total) fetchItems({ reset: true, pageIndex: next }); } } window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [page, limit, total, scrollMode, fetchItems]);
 
@@ -152,13 +211,14 @@ export default function ClientExplorer() {
                             <div className="flex items-center gap-2 justify-center"><span className="text-xs text-muted-foreground">Sort</span><Select value={sort} onValueChange={(v: any) => setSort(v)}><SelectTrigger className="w-44"><SelectValue placeholder="Sort" /></SelectTrigger><SelectContent><SelectItem value="most">Most rated</SelectItem><SelectItem value="least">Least rated</SelectItem><SelectItem value="priceAsc">Price: Low → High</SelectItem><SelectItem value="priceDesc">Price: High → Low</SelectItem></SelectContent></Select></div>
                             <div className="flex items-center gap-2 justify-center"><span className="text-xs text-muted-foreground">Per page</span><Select value={String(limit)} onValueChange={v => setLimit(parseInt(v, 10))}><SelectTrigger className="w-28"><SelectValue /></SelectTrigger><SelectContent>{[12,24,36,48].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent></Select></div>
                             <div className="flex items-center gap-2 justify-center"><span className="text-xs text-muted-foreground">Has image</span><Switch checked={hasImageOnly} onCheckedChange={setHasImageOnly} /></div>
+                            <div className="flex items-center gap-2 justify-center"><span className="text-xs text-muted-foreground">Show NSFW</span><Switch checked={showNsfw} onCheckedChange={setShowNsfw} /></div>
                             <div className="flex items-center gap-2 justify-center"><span className="text-xs text-muted-foreground">View</span><div className="flex rounded-md border p-1"><Button variant={view === "grid" ? "secondary" : "ghost"} size="sm" onClick={() => setView("grid")}> <LayoutGrid className="h-4 w-4" /> </Button><Button variant={view === "list" ? "secondary" : "ghost"} size="sm" onClick={() => setView("list")}> <ListIcon className="h-4 w-4" /> </Button></div></div>
                             <div className="flex items-center gap-2 justify-center"><span className="text-xs text-muted-foreground">Scroll</span><Select value={scrollMode} onValueChange={(v: any) => setScrollMode(v)}><SelectTrigger className="w-32"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pages">Pages</SelectItem><SelectItem value="infinite">Infinite</SelectItem></SelectContent></Select></div>
-                            <div className="flex items-center gap-2 justify-center"><Button variant="outline" size="sm" onClick={() => { setQ(""); setPrimary(""); setSub(""); setSub2(""); setAuthor(""); setHasImageOnly(false); fetchItems({ reset: true, pageIndex: 0 }); }}> <Trash2 className="h-4 w-4 mr-1" /> Reset </Button></div>
+                            <div className="flex items-center gap-2 justify-center"><Button variant="outline" size="sm" onClick={() => { setQ(""); setPrimary(""); setSub(""); setSub2(""); setAuthor(""); setHasImageOnly(false); setShowNsfw(false); }}> <Trash2 className="h-4 w-4 mr-1" /> Reset </Button></div>
                             <div className="flex items-center gap-2 justify-center"><Button variant="outline" size="sm" onClick={() => router.push("/marketplace/request")}> <PlusCircle className="h-4 w-4 mr-1" /> Request item </Button></div>
                         </div>
                         {recent.length > 0 && <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">{recent.map(r => <Button key={r} size="sm" variant="ghost" className="h-7 px-2" onClick={() => setQ(r)}>{r}</Button>)}</div>}
-                        {(q || primary || sub || sub2 || author || hasImageOnly) && <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">{q && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setQ("")}>q: {q} <X className="ml-1 h-3 w-3" /></Button>}{primary && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => { setPrimary(""); setSub(""); setSub2(""); setAuthor(""); }}>primary: {primary} <X className="ml-1 h-3 w-3" /></Button>}{sub && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setSub("")}>sub: {sub} <X className="ml-1 h-3 w-3" /></Button>}{sub2 && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setSub2("")}>sub2: {sub2} <X className="ml-1 h-3 w-3" /></Button>}{author && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setAuthor("")}>author: {author} <X className="ml-1 h-3 w-3" /></Button>}{hasImageOnly && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setHasImageOnly(false)}>has image <X className="ml-1 h-3 w-3" /></Button>}</div>}
+                        {(q || primary || sub || sub2 || author || hasImageOnly || showNsfw) && <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">{q && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setQ("")}>q: {q} <X className="ml-1 h-3 w-3" /></Button>}{primary && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => { setPrimary(""); setSub(""); setSub2(""); setAuthor(""); }}>primary: {primary} <X className="ml-1 h-3 w-3" /></Button>}{sub && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setSub("")}>sub: {sub} <X className="ml-1 h-3 w-3" /></Button>}{sub2 && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setSub2("")}>sub2: {sub2} <X className="ml-1 h-3 w-3" /></Button>}{author && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setAuthor("")}>author: {author} <X className="ml-1 h-3 w-3" /></Button>}{hasImageOnly && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setHasImageOnly(false)}>has image <X className="ml-1 h-3 w-3" /></Button>}{showNsfw && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setShowNsfw(false)}>show nsfw <X className="ml-1 h-3 w-3" /></Button>}</div>}
                         <div className="mt-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">{total ? (scrollMode === "pages" ? (<><Button variant="ghost" size="icon" aria-label="Previous page" disabled={page <= 0} onClick={() => { const next = page - 1; if (next >= 0) fetchItems({ reset: true, pageIndex: next }); }}><ChevronLeft className="h-4 w-4" /></Button><span>{new Intl.NumberFormat().format(total)} results • Page {page + 1} of {Math.max(1, Math.ceil(total / limit))}</span><Button variant="ghost" size="icon" aria-label="Next page" disabled={(page + 1) * limit >= total} onClick={() => { const next = page + 1; if (next * limit < total) fetchItems({ reset: true, pageIndex: next }); }}><ChevronRight className="h-4 w-4" /></Button></>) : (<span>{new Intl.NumberFormat().format(total)} results</span>)) : (<span>Type to search or use filters</span>)}</div>
                     </div>
                 </CardContent>
@@ -276,6 +336,7 @@ export default function ClientExplorer() {
                                                                                 {showStore && <>{creatorName ? <span>{" · "}</span> : null}<a className="underline underline-offset-4 hover:no-underline" href={storeLink!} target="_blank" rel="noopener noreferrer">Store</a></>}
                                                                             </div>
                                                                         )}
+                                                                        {it.isNsfw && showNsfw && <Badge variant="destructive" className="w-fit">NSFW</Badge>}
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex flex-col items-end gap-2 min-w-[110px]">
@@ -320,6 +381,7 @@ export default function ClientExplorer() {
                                                                         {it.store?.trim() && it.store?.trim() !== it.creator?.link?.trim() && <> {it.creator?.name ? <span>{" · "}</span> : null}<a className="underline underline-offset-4 hover:no-underline" href={it.store!} target="_blank" rel="noopener noreferrer">Store</a></>}
                                                                     </div>
                                                                 )}
+                                                                {it.isNsfw && showNsfw && <Badge variant="destructive" className="w-fit">NSFW</Badge>}
                                                             </div>
                                                             <div className="flex flex-wrap items-center gap-2 pt-2">
                                                                 <Button variant={fav ? "secondary" : "ghost"} size="icon" aria-label="Favorite" onClick={e => { e.preventDefault(); const next = new Set(favorites); next.has(it.id) ? next.delete(it.id) : next.add(it.id); setFavorites(next); }}><Heart className={`h-4 w-4 ${fav ? "text-pink-500" : ""}`} /></Button>
@@ -346,7 +408,7 @@ export default function ClientExplorer() {
                     <DialogHeader><DialogTitle>{descItem?.title || "Item details"}</DialogTitle><DialogDescription>Listing description and details.</DialogDescription></DialogHeader>
                     <div className="space-y-3">
                         {descItem?.images?.[0] && <div className="h-64 sm:h-72 md:h-80 overflow-hidden rounded bg-muted max-w-[900px] mx-auto relative"><Image src={descItem.images[0]} alt={descItem.title || "Image"} className="object-cover" fill sizes="(max-width: 900px) 100vw, 900px" /></div>}
-                        <div className="flex items-center justify-between text-sm"><div className="font-medium truncate">{descItem?.title || "Untitled"}</div><div className="text-sm text-muted-foreground">L$ {descItem?.price ?? "-"}</div></div>
+                        <div className="flex items-center justify-between gap-3 text-sm"><div className="min-w-0 space-y-1"><div className="font-medium truncate">{descItem?.title || "Untitled"}</div>{descItem?.isNsfw && showNsfw && <Badge variant="destructive" className="w-fit">NSFW</Badge>}</div><div className="shrink-0 text-sm text-muted-foreground">L$ {descItem?.price ?? "-"}</div></div>
                         <div className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">{descItem?.description || "No description provided."}</div>
                         <div className="pt-1">{descItem?.url && <Button asChild size="sm"><a href={descItem.url} target="_blank" rel="noopener noreferrer">Open listing</a></Button>}</div>
                     </div>
@@ -372,6 +434,7 @@ export default function ClientExplorer() {
                                 <CardContent className="p-4 space-y-3">
                                     <div className="aspect-video overflow-hidden rounded bg-muted relative">{it.images?.[0] && <Image src={it.images[0]} alt={it.title} className="object-cover" fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw" />}</div>
                                     <div className="text-sm font-medium line-clamp-2">{it.title || "Untitled"}</div>
+                                    {it.isNsfw && showNsfw && <Badge variant="destructive" className="w-fit">NSFW</Badge>}
                                     <div className="text-sm text-muted-foreground">L$ {it.price ?? "-"}</div>
                                     {creatorName && <div className="text-[11px] text-muted-foreground">by {creatorName}</div>}
                                     <div className="flex items-center gap-2 pt-1 flex-wrap w-full">
