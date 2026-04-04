@@ -16,7 +16,7 @@ import {
     admin as adminRole,
     member,
     myCustomRole,
-} from "./permissions";
+} from "@/lib/permissions";
 import { toast } from "sonner";
 import {
     adminAccessControl,
@@ -27,7 +27,7 @@ import {
     trustedAdminRole,
     creatorAdminRole,
     userAdminRole,
-} from "./admin-access";
+} from "@/lib/admin-access";
 
 export const client = createAuthClient({
     plugins: [

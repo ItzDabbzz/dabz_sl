@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/server/db";
+import { db } from "@/server/db/client";
 import { mpCategories, mpItemCategories } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";

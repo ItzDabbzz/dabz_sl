@@ -14,11 +14,11 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import Image from "next/image";
 import { Loader2, X } from "lucide-react";
-import { signUp } from "@/lib/auth-client";
+import { signUp } from "@/features/auth/client";
 import { toast } from "sonner";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCallbackURL } from "@/lib/shared";
+import { getCallbackURL } from "@/features/auth/shared";
  
 export function SignUp() {
 	const [firstName, setFirstName] = useState("");

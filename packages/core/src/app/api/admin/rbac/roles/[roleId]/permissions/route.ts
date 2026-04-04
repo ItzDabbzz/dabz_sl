@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { requirePermission, getActiveOrgId } from "@/lib/guards";
 import { rbacRolePermissions, rbacRoles } from "@/schemas/rbac";
 import { and, asc, eq } from "drizzle-orm";

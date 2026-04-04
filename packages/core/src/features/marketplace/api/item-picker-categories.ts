@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/server/db";
+import { db } from "@/server/db/client";
 import { mpCategories } from "@/schemas/sl-schema";
 import { eq, asc } from "drizzle-orm";
 import { requireUserFromRequest } from "@/server/auth/session";

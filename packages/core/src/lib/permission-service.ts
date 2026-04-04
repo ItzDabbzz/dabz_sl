@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { and, eq, inArray } from "drizzle-orm";
 import { member } from "@/schemas/auth-schema";
 import {

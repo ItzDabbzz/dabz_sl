@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { blogPosts, blogPostCategories, blogCategories } from "@/schemas/blog";
 import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";

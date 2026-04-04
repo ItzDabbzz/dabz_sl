@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { and, eq } from "drizzle-orm";
 import { member } from "@/schemas/auth-schema";
 import {
@@ -11,7 +11,7 @@ import {
     rbacPermissions,
 } from "@/schemas/rbac";
 import { randomUUID } from "crypto";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 
 const ROLE_DEFS: Array<{
     slug: string;

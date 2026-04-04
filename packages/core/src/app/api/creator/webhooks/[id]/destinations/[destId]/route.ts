@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { webhookDestinations, webhooks } from "@/schemas/sl-schema";
 import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
 

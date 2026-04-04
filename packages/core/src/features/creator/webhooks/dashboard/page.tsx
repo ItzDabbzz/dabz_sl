@@ -1,11 +1,11 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 import { randomBytes } from "node:crypto";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { WebhooksTable, type WebhookItem } from "./components/table";
-import { absoluteUrl } from "@/lib/absolute-url";
+import { absoluteUrl } from "@/server/http/absolute-url";
 import { CreateWebhookDialog } from "./components/create-dialog";
 import { VerificationDocsDrawer } from "./components/verification-drawer";
 import { DiscordEmbedDialog } from "./components/discord-embed-dialog";

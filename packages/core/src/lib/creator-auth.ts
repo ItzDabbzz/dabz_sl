@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 
 export type CreatorContext = {
   userId: string;

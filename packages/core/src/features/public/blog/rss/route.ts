@@ -1,8 +1,8 @@
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { blogPosts, blogPostCategories, blogCategories } from "@/schemas/blog";
 import { desc } from "drizzle-orm";
 import { headers } from "next/headers";
-import { absoluteUrl } from "@/lib/absolute-url";
+import { absoluteUrl } from "@/server/http/absolute-url";
 import { sql } from "drizzle-orm";
 
 function escapeXml(s: string) {

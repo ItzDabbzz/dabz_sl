@@ -1,6 +1,6 @@
 import { getBlogEditorUser } from "@/lib/blog-auth";
 import Link from "next/link";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { blogPosts } from "@/schemas/blog";
 import { desc, eq, sql } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

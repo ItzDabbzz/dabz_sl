@@ -16,8 +16,8 @@ import {
 	CommandSeparator,
 } from "@/components/ui/command";
 import { ChevronDown, PlusCircle } from "lucide-react";
-import { Session } from "@/lib/auth-types";
-import { client, useSession } from "@/lib/auth-client";
+import { Session } from "@/features/auth/types";
+import { client, useSession } from "@/features/auth/client";
 import { useRouter } from "next/navigation";
 
 export default function AccountSwitcher({ sessions }: { sessions: Session[] }) {

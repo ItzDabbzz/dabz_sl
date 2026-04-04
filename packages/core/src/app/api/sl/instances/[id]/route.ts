@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { objectInstances } from "@/schemas/sl-schema";
 import { SlInstanceDetailsResponse } from "@/schemas/sl.zod";
 import { z } from "zod";

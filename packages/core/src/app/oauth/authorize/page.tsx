@@ -1,10 +1,10 @@
 import { Metadata } from "next";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 import { headers } from "next/headers";
 import { ArrowLeftRight, ArrowUpRight, Mail, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Logo } from "@/components/logo";
+import { Logo } from "@/components/shared/logo";
 import Image from "next/image";
 import { ConsentBtns } from "./concet-buttons";
 

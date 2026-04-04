@@ -20,7 +20,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { client, useSession } from "@/lib/auth-client";
+import { client, useSession } from "@/features/auth/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {

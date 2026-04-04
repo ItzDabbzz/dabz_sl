@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual as tSafeEqual, createHash } from "crypto";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { objectInstances } from "@/schemas/sl-schema";
 import { eq } from "drizzle-orm";
 

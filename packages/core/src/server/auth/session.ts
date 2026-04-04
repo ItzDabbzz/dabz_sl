@@ -1,5 +1,5 @@
 import { headers as nextHeaders } from "next/headers";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 
 type HeaderCarrier = {
     headers: Headers;

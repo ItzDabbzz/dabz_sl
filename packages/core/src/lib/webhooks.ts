@@ -1,5 +1,5 @@
 import { createHmac } from "crypto";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { webhookDeliveries, webhookDestinations } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
 

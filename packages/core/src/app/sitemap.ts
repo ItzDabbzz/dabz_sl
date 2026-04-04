@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { blogPosts } from "@/schemas/blog";
 import { eq } from "drizzle-orm";
 

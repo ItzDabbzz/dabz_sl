@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { apiKey as apiKeyTable } from "@/schemas/auth-schema";
 import { auditLogs } from "@/schemas/sl-schema";
 import { and, desc, eq, sql } from "drizzle-orm";

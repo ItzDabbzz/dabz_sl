@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { auth } from "@/server/auth/core";
+import { db } from "@/server/db/client";
 import { user as userTable } from "@/schemas/auth-schema";
 import { eq } from "drizzle-orm";
 

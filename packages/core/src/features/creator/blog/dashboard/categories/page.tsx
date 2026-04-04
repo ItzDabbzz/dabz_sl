@@ -1,5 +1,5 @@
 import { getBlogEditorUser } from "@/lib/blog-auth";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { blogCategories } from "@/schemas/blog";
 import { desc, sql } from "drizzle-orm";
 import { CategoriesClient } from "./categories-client";

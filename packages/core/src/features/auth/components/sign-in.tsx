@@ -14,12 +14,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
-import { signIn } from "@/lib/auth-client";
+import { signIn } from "@/features/auth/client";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { getCallbackURL } from "@/lib/shared";
+import { getCallbackURL } from "@/features/auth/shared";
 
 export default function SignIn() {
 	const [email, setEmail] = useState("");

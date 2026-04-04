@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { mpItemRequests } from "@/schemas/sl-schema";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 
 function normalizeImages(input: string): string[] {
   return (input || "")

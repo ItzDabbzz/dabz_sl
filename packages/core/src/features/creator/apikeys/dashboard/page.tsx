@@ -1,9 +1,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiKeysTable, type ApiKeyItem } from "./components/table";
-import WorkInProgressNotice from "@/components/wip-notice";
+import WorkInProgressNotice from "@/components/shared/work-in-progress-notice";
 import { ActionsClient } from "./actions-client";
 
 export default async function ApiKeysPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {

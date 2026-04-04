@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 import { PermissionService } from "@/lib/permission-service";
 
 // Allowed high-level roles that can always access blog editor features.

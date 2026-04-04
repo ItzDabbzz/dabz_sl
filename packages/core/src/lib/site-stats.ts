@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { count, sql } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { mpCategories, mpItemCategories, mpItems } from "@/schemas/sl-schema";
 
 const SECOND_LIFE_FEED_REVALIDATE_SECONDS = 300;

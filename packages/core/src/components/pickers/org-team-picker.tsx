@@ -10,7 +10,7 @@ import {
     CommandItem,
     CommandList,
 } from "@/components/ui/command";
-import { useListOrganizations, useActiveOrganization } from "@/lib/auth-client";
+import { useListOrganizations, useActiveOrganization } from "@/features/auth/client";
 import { TeamPicker } from "@/components/pickers/team-picker";
 
 /**

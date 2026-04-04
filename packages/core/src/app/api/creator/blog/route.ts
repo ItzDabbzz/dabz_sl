@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import {
     blogPosts,
     blogCategories,
@@ -12,7 +12,7 @@ import {
 import { getBlogEditorUser } from "@/lib/blog-auth";
 import { eq } from "drizzle-orm";
 import { resend } from "@/lib/email/resend";
-import { absoluteUrl } from "@/lib/absolute-url";
+import { absoluteUrl } from "@/server/http/absolute-url";
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/guards";
 

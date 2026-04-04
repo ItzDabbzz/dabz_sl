@@ -10,7 +10,7 @@ import {
     CommandItem,
     CommandList,
 } from "@/components/ui/command";
-import { useActiveOrganization } from "@/lib/auth-client";
+import { useActiveOrganization } from "@/features/auth/client";
 
 /**
  * TeamPicker

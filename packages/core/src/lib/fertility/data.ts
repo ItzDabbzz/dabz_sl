@@ -1,5 +1,5 @@
 
-import { db } from "../db";
+import { db } from "../../server/db/client";
 import {
     fertilityData,
     pregnancyData,

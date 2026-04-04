@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { userConfigs } from "@/schemas/sl-schema";
 import { and, desc, eq } from "drizzle-orm";
 import { requirePermission } from "@/lib/guards";
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
         // For now, scope down by user (can be adjusted to org/team when SLDB object ownership is fully org-scoped)
         const sesResp = await (
-            await import("@/lib/auth")
+            await import("@/server/auth/core")
         ).auth.api.getSession({ headers: req.headers as any });
         const userId = (sesResp as any)?.user?.id as string;
 

@@ -1,4 +1,4 @@
-import { auth } from '../auth';
+import { auth } from "@/server/auth/core";
 import { NextRequest } from 'next/server';
 
 // Helper to require API key authentication for API routes

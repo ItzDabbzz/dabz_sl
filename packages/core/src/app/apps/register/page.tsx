@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { client } from "@/lib/auth-client";
+import { client } from "@/features/auth/client";
 
 export default function RegisterOAuthClient() {
 	const [name, setName] = useState("");

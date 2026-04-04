@@ -1,7 +1,7 @@
 "use client";
 
-import { client, signIn } from "@/lib/auth-client";
-import { getCallbackURL } from "@/lib/shared";
+import { client, signIn } from "@/features/auth/client";
+import { getCallbackURL } from "@/features/auth/shared";
 import { useEffect, useState } from "react";
 import {
 	Dialog,

@@ -2,7 +2,7 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EntitlementsTable, type EntitlementItem } from "./components/table";
-import WorkInProgressNotice from "@/components/wip-notice";
+import WorkInProgressNotice from "@/components/shared/work-in-progress-notice";
 import { getOptionalSession } from "@/server/auth/session";
 import { fetchInternalApiJson } from "@/server/services/internal-api";
 

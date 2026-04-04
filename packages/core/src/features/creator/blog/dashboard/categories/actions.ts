@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { blogCategories } from "@/schemas/blog";
 import { eq } from "drizzle-orm";
 import { getBlogEditorUser } from "@/lib/blog-auth";

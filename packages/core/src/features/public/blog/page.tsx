@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import {
     blogPosts,
     blogPostCategories,
@@ -15,7 +15,7 @@ import { user } from "@/schemas/auth-schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Heart } from "lucide-react";
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 import { canViewCategory } from "@/lib/permissions";
 import WebBg from "@/components/web-bg";
 

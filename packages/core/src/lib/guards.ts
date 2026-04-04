@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 import { PermissionService } from "@/lib/permission-service";
 
 function isSuperAdmin(userId: string | null | undefined): boolean {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { blogPosts, blogPostCategories } from "@/schemas/blog";
 import { and, desc, eq, ilike, or, sql, inArray } from "drizzle-orm";
 import { getBlogEditorUser } from "@/lib/blog-auth";

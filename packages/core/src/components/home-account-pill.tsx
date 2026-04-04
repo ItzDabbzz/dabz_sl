@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { LogoutButton } from "@/components/logout-button";
+import { LogoutButton } from "@/features/auth/components/logout-button";
 import { Button } from "@/components/ui/button";
-import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/features/auth/client";
 
 export function HomeAccountPill() {
   const { data: session, isPending } = useSession();

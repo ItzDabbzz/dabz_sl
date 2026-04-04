@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
-import { client } from "@/lib/auth-client";
+import { client } from "@/features/auth/client";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

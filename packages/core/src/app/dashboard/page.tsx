@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 import { getMarketplaceStats, getSecondLifeSnapshot } from "@/lib/site-stats";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import {
   masterObjects,
   objectInstances,

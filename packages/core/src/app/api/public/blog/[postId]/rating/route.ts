@@ -1,10 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { and, eq, sql } from "drizzle-orm";
 import { blogPostRatings, blogPosts } from "@/schemas/blog";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/core";
 import { rateLimit } from "@/lib/rate-limit";
 
 function getIp(req: NextRequest) {

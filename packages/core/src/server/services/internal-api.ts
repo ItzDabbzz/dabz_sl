@@ -1,5 +1,5 @@
 import { headers as nextHeaders } from "next/headers";
-import { absoluteUrl } from "@/lib/absolute-url";
+import { absoluteUrl } from "@/server/http/absolute-url";
 
 function buildInternalApiHeaders(source: Headers) {
     const requestHeaders = new Headers();

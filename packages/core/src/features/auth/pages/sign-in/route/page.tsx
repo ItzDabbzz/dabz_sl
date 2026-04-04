@@ -1,14 +1,14 @@
 "use client";
 
-import SignIn from "@/components/sign-in";
+import SignIn from "@/features/auth/components/sign-in";
 import { SignUp } from "@/features/auth/components/sign-up";
 // Replace custom Tabs2 with shadcn Tabs (Radix)
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { client } from "@/lib/auth-client";
+import { client } from "@/features/auth/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { getCallbackURL } from "@/lib/shared";
+import { getCallbackURL } from "@/features/auth/shared";
 import Image from "next/image";
 
 export default function Page() {

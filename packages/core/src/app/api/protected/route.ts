@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { auth } from "@/lib/auth"
+import { auth } from "@/server/auth/core"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {

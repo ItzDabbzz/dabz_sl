@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/server/db/client";
 import { objectInstances, userConfigs, configSnapshots, auditLogs } from "@/schemas/sl-schema";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";

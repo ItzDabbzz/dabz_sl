@@ -23,8 +23,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
-import { client, signOut, useSession } from "@/lib/auth-client";
-import { Session } from "@/lib/auth-types";
+import { client, signOut, useSession } from "@/features/auth/client";
+import { Session } from "@/features/auth/types";
 import { MobileIcon } from "@radix-ui/react-icons";
 import {
 	Edit,

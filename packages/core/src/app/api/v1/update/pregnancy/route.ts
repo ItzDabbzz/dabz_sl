@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiKey } from "@/lib/auth/better-auth";
+import { requireApiKey } from "@/server/auth/api-key";
 import { getPregnancyData, updatePregnancyData } from "@/lib/fertility/data";
 
 export async function GET(req: NextRequest) {

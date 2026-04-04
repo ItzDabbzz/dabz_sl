@@ -10,7 +10,7 @@ import {
     CommandItem,
     CommandList,
 } from "@/components/ui/command";
-import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/features/auth/client";
 
 /**
  * UserPicker

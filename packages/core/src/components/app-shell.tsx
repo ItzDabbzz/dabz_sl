@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { useSession } from "@/lib/auth-client";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { useSession } from "@/features/auth/client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -29,7 +29,7 @@ import {
     ListChecks,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Logo } from "@/components/logo";
+import { Logo } from "@/components/shared/logo";
 import WebBG from "@/components/web-bg";
 import { useCan } from "@/lib/client-permissions";
 
