@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { auth } from "@/server/auth/core";
-import { PermissionService } from "@/lib/permission-service";
+import { PermissionService } from "@/server/auth/permission-service";
 
 // Allowed high-level roles that can always access blog editor features.
 const ALLOW_ROLES = new Set(["owner", "developer", "dev", "admin", "mod", "moderator"]);

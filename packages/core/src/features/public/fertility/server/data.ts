@@ -1,11 +1,10 @@
-
-import { db } from "../../server/db/client";
+import { db } from "@/server/db/client";
 import {
     fertilityData,
     pregnancyData,
     partnerData,
     settingsData,
-} from "../../schemas/fertility-schema";
+} from "@/schemas/fertility-schema";
 import { eq, desc } from "drizzle-orm";
 
 // Get all data for a user

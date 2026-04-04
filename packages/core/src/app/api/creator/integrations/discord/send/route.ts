@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
+import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
 
 function isDiscordWebhookUrl(url: string): boolean {
   try {

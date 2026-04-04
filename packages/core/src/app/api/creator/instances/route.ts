@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { objectInstances } from "@/schemas/sl-schema";
 import { and, desc, eq } from "drizzle-orm";
-import { getCreatorContextFromApiKey } from "@/lib/creator-auth";
-import { requirePermission } from "@/lib/guards";
+import { getCreatorContextFromApiKey } from "@/features/creator/api/auth";
+import { requirePermission } from "@/server/auth/guards";
 
 export async function GET(req: NextRequest) {
     try {

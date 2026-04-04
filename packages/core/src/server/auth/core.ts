@@ -18,11 +18,11 @@ import {
     admin as adminRole,
     member,
     myCustomRole,
-} from "@/lib/permissions";
-import { reactInvitationEmail } from "@/lib/email/invitation";
+} from "@/features/auth/permissions/access-control";
+import { reactInvitationEmail } from "@/server/email/invitation";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { reactResetPasswordEmail } from "@/lib/email/reset-password";
-import { resend } from "@/lib/email/resend";
+import { reactResetPasswordEmail } from "@/server/email/reset-password";
+import { resend } from "@/server/email/resend";
 import { nextCookies } from "better-auth/next-js";
 import { passkey } from "better-auth/plugins/passkey";
 import { db } from "@/server/db/client";
@@ -70,7 +70,7 @@ import {
     trustedAdminRole,
     creatorAdminRole,
     userAdminRole,
-} from "@/lib/admin-access";
+} from "@/features/auth/permissions/admin-access";
 
 export const auth = betterAuth({
     appName: "Sanctum Realms Project",

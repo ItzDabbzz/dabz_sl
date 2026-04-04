@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { db } from "@/server/db/client";
-import { getActiveOrgId, requirePermission } from "@/lib/guards";
+import { getActiveOrgId, requirePermission } from "@/server/auth/guards";
 import Link from "next/link";
 import { rbacRoles } from "@/schemas/rbac";
 import { and, asc, eq, ilike } from "drizzle-orm";

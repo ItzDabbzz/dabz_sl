@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { db } from "@/server/db/client";
 import { discordChannels } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
-import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
+import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
 
 export async function GET(req: NextRequest) {
   try {

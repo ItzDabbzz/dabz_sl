@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { getMarketplaceStats, getSecondLifeSnapshot } from "@/lib/site-stats";
+import { getMarketplaceStats, getSecondLifeSnapshot } from "@/features/public/home/server/site-stats";
 import HomeAccountPill from "@/components/home-account-pill";
 import {
     Card,

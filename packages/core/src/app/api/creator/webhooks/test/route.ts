@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
-import { deliverWebhook } from "@/lib/webhooks";
+import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
+import { deliverWebhook } from "@/features/creator/webhooks/server/delivery";
 
 export async function POST(req: NextRequest) {
   try {

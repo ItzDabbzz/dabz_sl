@@ -7,8 +7,8 @@ import { SlConfigResponse, SlConfigUpdateBody, SlConfigUpdateResponse } from "@/
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { makeConfigHash, makeEtagFromHash, stableStringify } from "@/lib/utils";
-import { verifyInstanceSignature } from "@/lib/sl-auth";
-import { rateLimit, checkReplay } from "@/lib/rate-limit";
+import { verifyInstanceSignature } from "@/server/auth/sl";
+import { rateLimit, checkReplay } from "@/server/cache/rate-limit";
 
 function rlHeaders(rl: any) {
   if (!rl) return {} as Record<string, string>;

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { db } from "@/server/db/client";
 import { blogPosts, blogPostCategories } from "@/schemas/blog";
 import { and, desc, eq, ilike, or, sql, inArray } from "drizzle-orm";
-import { getBlogEditorUser } from "@/lib/blog-auth";
+import { getBlogEditorUser } from "@/features/creator/blog/server/access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiKey } from "@/server/auth/api-key";
-import { syncFertilityData } from "@/lib/fertility/data";
+import { syncFertilityData } from "@/features/public/fertility/server/data";
 
 export async function POST(req: NextRequest) {
     const auth = await requireApiKey(req);

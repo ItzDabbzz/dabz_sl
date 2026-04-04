@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { userConfigs } from "@/schemas/sl-schema";
 import { and, desc, eq } from "drizzle-orm";
-import { requirePermission } from "@/lib/guards";
+import { requirePermission } from "@/server/auth/guards";
 
 export async function GET(req: NextRequest) {
     try {

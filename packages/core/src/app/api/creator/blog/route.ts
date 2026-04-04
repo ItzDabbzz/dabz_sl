@@ -9,12 +9,12 @@ import {
     blogPostAnnouncements,
     blogSettings,
 } from "@/schemas/blog";
-import { getBlogEditorUser } from "@/lib/blog-auth";
+import { getBlogEditorUser } from "@/features/creator/blog/server/access";
 import { eq } from "drizzle-orm";
-import { resend } from "@/lib/email/resend";
+import { resend } from "@/server/email/resend";
 import { absoluteUrl } from "@/server/http/absolute-url";
 import { revalidatePath } from "next/cache";
-import { requirePermission } from "@/lib/guards";
+import { requirePermission } from "@/server/auth/guards";
 
 export async function POST(req: NextRequest) {
     const user = await getBlogEditorUser();

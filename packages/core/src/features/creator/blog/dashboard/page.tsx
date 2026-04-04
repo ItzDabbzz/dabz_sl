@@ -1,4 +1,4 @@
-import { getBlogEditorUser } from "@/lib/blog-auth";
+import { getBlogEditorUser } from "@/features/creator/blog/server/access";
 import Link from "next/link";
 import { db } from "@/server/db/client";
 import { blogPosts } from "@/schemas/blog";

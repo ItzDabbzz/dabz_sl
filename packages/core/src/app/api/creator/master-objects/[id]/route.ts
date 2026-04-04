@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { masterObjects } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
-import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
+import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {

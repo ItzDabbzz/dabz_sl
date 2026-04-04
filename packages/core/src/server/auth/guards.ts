@@ -1,5 +1,5 @@
 import { auth } from "@/server/auth/core";
-import { PermissionService } from "@/lib/permission-service";
+import { PermissionService } from "@/server/auth/permission-service";
 
 function isSuperAdmin(userId: string | null | undefined): boolean {
     const admins = (process.env.BETTER_AUTH_ADMIN_IDS || "")

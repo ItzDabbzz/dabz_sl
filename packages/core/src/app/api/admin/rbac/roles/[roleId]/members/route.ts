@@ -3,11 +3,11 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/server/db/client";
-import { requirePermission, getActiveOrgId } from "@/lib/guards";
+import { requirePermission, getActiveOrgId } from "@/server/auth/guards";
 import { rbacMemberRoles, rbacRoles } from "@/schemas/rbac";
 import { and, asc, eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
-import { PermissionService } from "@/lib/permission-service";
+import { PermissionService } from "@/server/auth/permission-service";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ roleId: string }> }) {
   await requirePermission("rbac.manage", await headers());

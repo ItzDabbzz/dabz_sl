@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { webhookDeliveries, webhooks } from "@/schemas/sl-schema";
 import { eq } from "drizzle-orm";
-import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
+import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
 
 async function deliver({ url, event, payload, secret }: { url: string; event: string; payload: any; secret?: string }) {
   // Lightweight inline deliver to avoid adding new lib here.

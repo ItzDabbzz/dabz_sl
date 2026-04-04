@@ -1,4 +1,4 @@
-import { getBlogEditorUser } from "@/lib/blog-auth";
+import { getBlogEditorUser } from "@/features/creator/blog/server/access";
 import { db } from "@/server/db/client";
 import { blogCategories, blogSettings, blogPostRatings } from "@/schemas/blog";
 import { desc, eq, sql } from "drizzle-orm";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { revalidatePath } from "next/cache";
 import { EmailTemplateEditor } from "@/components/blog/email-template-editor";
-import { requirePermission } from "@/lib/guards";
+import { requirePermission } from "@/server/auth/guards";
 import { headers } from "next/headers";
 
 async function saveSettings(formData: FormData) {

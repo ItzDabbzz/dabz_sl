@@ -1,4 +1,4 @@
-import { getBlogEditorUser } from "@/lib/blog-auth";
+import { getBlogEditorUser } from "@/features/creator/blog/server/access";
 import { db } from "@/server/db/client";
 import { blogCategories } from "@/schemas/blog";
 import { desc, sql } from "drizzle-orm";

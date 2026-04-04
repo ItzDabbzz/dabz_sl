@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { requirePermission } from "@/lib/guards";
+import { requirePermission } from "@/server/auth/guards";
 import { headers } from "next/headers";
 
 export async function GET(req: NextRequest) {

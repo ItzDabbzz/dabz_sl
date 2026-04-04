@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { webhooks } from "@/schemas/sl-schema";
 import { eq } from "drizzle-orm";
-import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
-import { deliverWebhook, deliverToDestinations } from "@/lib/webhooks";
+import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
+import { deliverWebhook, deliverToDestinations } from "@/features/creator/webhooks/server/delivery";
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {

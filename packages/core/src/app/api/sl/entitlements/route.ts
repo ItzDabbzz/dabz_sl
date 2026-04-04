@@ -6,7 +6,7 @@ import { entitlements, auditLogs } from "@/schemas/sl-schema";
 import { SlEntitlementBody, SlEntitlementResponse } from "@/schemas/sl.zod";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit } from "@/server/cache/rate-limit";
 
 function rlHeaders(rl: any) {
   if (!rl) return {} as Record<string, string>;

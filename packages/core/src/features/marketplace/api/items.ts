@@ -14,7 +14,7 @@ import {
     notInArray,
 } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { requirePermission } from "@/lib/guards";
+import { requirePermission } from "@/server/auth/guards";
 import { requireUserFromRequest } from "@/server/auth/session";
 
 function isMissingColumnError(error: unknown) {

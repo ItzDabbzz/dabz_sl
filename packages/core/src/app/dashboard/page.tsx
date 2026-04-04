@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { auth } from "@/server/auth/core";
-import { getMarketplaceStats, getSecondLifeSnapshot } from "@/lib/site-stats";
+import { getMarketplaceStats, getSecondLifeSnapshot } from "@/features/public/home/server/site-stats";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db/client";

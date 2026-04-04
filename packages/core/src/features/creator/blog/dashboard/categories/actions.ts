@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/server/db/client";
 import { blogCategories } from "@/schemas/blog";
 import { eq } from "drizzle-orm";
-import { getBlogEditorUser } from "@/lib/blog-auth";
+import { getBlogEditorUser } from "@/features/creator/blog/server/access";
 
 // Local helper (not exported) to avoid Next.js server actions export rule.
 function slugifyLocal(v: string) {

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { webhooks, webhookDeliveries, webhookDestinations, discordChannels } from "@/schemas/sl-schema";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
-import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
+import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

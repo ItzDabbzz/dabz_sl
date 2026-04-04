@@ -31,7 +31,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import WebBG from "@/components/web-bg";
-import { useCan } from "@/lib/client-permissions";
+import { useCan } from "@/features/auth/permissions/client";
 
 function useLocalStorageBoolean(key: string, initial: boolean) {
     const [value, setValue] = useState(initial);

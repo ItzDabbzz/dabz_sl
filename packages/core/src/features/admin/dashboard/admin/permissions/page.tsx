@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { requirePermission } from "@/lib/guards";
+import { requirePermission } from "@/server/auth/guards";
 import Link from "next/link";
 import SeedRbacCard from "./SeedRbacCard";
 

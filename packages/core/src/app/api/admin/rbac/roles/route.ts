@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/server/db/client";
-import { requirePermission, getActiveOrgId } from "@/lib/guards";
+import { requirePermission, getActiveOrgId } from "@/server/auth/guards";
 import { rbacRoles } from "@/schemas/rbac";
 import { and, asc, eq, ilike } from "drizzle-orm";
 import { randomUUID } from "crypto";

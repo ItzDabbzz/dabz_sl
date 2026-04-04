@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { mpItemCategories, mpItems } from "@/schemas/sl-schema";
 import { and, eq, inArray } from "drizzle-orm";
-import { requirePermission } from "@/lib/guards";
+import { requirePermission } from "@/server/auth/guards";
 import { requireUserFromRequest } from "@/server/auth/session";
 
 // POST: { itemIds: string[] } -> { mappings: Array<{ itemId: string, categoryId: string }> }

@@ -5,7 +5,7 @@ import { db } from "@/server/db/client";
 import { and, eq, sql } from "drizzle-orm";
 import { blogPostRatings, blogPosts } from "@/schemas/blog";
 import { auth } from "@/server/auth/core";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit } from "@/server/cache/rate-limit";
 
 function getIp(req: NextRequest) {
     const xff = req.headers.get("x-forwarded-for");

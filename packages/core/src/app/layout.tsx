@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
-import { createMetadata } from "@/lib/metadata";
+import { createMetadata } from "@/app/metadata";
 
 export const metadata = createMetadata({
 	title: {

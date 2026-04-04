@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { objectInstances, auditLogs } from "@/schemas/sl-schema";
 import { eq } from "drizzle-orm";
-import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
+import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
 import { generateToken, hashToken } from "@/lib/utils";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

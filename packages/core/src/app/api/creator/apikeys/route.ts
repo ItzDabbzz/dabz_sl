@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/server/auth/core";
-import { getCreatorContextFromApiKey, requireScope } from "@/lib/creator-auth";
+import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
 import { db } from "@/server/db/client";
 import { apiKey as apiKeyTable } from "@/schemas/auth-schema";
 import { auditLogs } from "@/schemas/sl-schema";

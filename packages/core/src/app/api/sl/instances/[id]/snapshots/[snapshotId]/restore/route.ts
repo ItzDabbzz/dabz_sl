@@ -5,8 +5,8 @@ import { db } from "@/server/db/client";
 import { objectInstances, userConfigs, configSnapshots, auditLogs } from "@/schemas/sl-schema";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
-import { verifyInstanceSignature } from "@/lib/sl-auth";
-import { rateLimit, checkReplay } from "@/lib/rate-limit";
+import { verifyInstanceSignature } from "@/server/auth/sl";
+import { rateLimit, checkReplay } from "@/server/cache/rate-limit";
 
 function rlHeaders(rl: any) {
   if (!rl) return {} as Record<string, string>;
