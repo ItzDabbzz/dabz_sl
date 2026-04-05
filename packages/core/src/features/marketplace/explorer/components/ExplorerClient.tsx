@@ -39,6 +39,7 @@ export default function ExplorerClient() {
     // ui state
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState<Page>({ limit: 25, offset: 0, total: 0 });
+    const [loadingAllIds, setLoadingAllIds] = useState(false);
     const [detailsOpen, setDetailsOpen] = useState<Record<string, boolean>>({});
     const [preview, setPreview] = useState<{
         open: boolean;
@@ -447,6 +448,32 @@ export default function ExplorerClient() {
     const clearSelection = () => setSelectedIds(new Set());
     const allSelected = items.length > 0 && items.every((i) => selectedIds.has(i.id));
 
+    // Fetch all matching IDs for the current filter (used by select-all-searched)
+    const selectAllSearched = async () => {
+        setLoadingAllIds(true);
+        try {
+            const sp = new URLSearchParams();
+            if (categoryId) sp.set("categoryId", categoryId);
+            if (q) sp.set("q", q);
+            sp.set("sort", sort);
+            if (justImported && lastImportedIds.length) sp.set("ids", lastImportedIds.join(","));
+            if (onlyUncategorized) sp.set("uncategorized", "true");
+            if (typeof sinceMinutes === "number" && sinceMinutes > 0)
+                sp.set("sinceMinutes", String(sinceMinutes));
+            sp.set("idsOnly", "true");
+            const res = await fetch(`/api/tools/marketplace/items?${sp.toString()}`, {
+                credentials: "include",
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const ids: string[] = Array.isArray(data?.ids) ? data.ids : [];
+                setSelectedIds(new Set(ids));
+            }
+        } finally {
+            setLoadingAllIds(false);
+        }
+    };
+
     const bulkSetNsfw = async (value: boolean) => {
         if (!selectedIds.size) return;
         await fetch("/api/tools/marketplace/items", {
@@ -489,6 +516,7 @@ export default function ExplorerClient() {
                             justImported,
                             onlyUncategorized,
                             sinceMinutes,
+                            limit: page.limit,
                         }}
                         loading={loading}
                         lastImportedIds={lastImportedIds}
@@ -503,6 +531,8 @@ export default function ExplorerClient() {
                                 setOnlyUncategorized(next.onlyUncategorized);
                             if (next.sinceMinutes !== undefined)
                                 setSinceMinutes(next.sinceMinutes);
+                            if (next.limit !== undefined)
+                                loadItems({ limit: next.limit, offset: 0 });
                         }}
                         onRefresh={() => loadItems({ preserveDetails: true })}
                         onExport={exportXlsx}
@@ -511,8 +541,18 @@ export default function ExplorerClient() {
                 </CardHeader>
                 <CardContent>
                     {isAdmin && selectedIds.size > 0 && (
-                        <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
                             <span className="font-medium">{selectedIds.size} selected</span>
+                            {selectedIds.size < page.total && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={loadingAllIds}
+                                    onClick={selectAllSearched}
+                                >
+                                    {loadingAllIds ? "Loading…" : `Select all ${page.total}`}
+                                </Button>
+                            )}
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -548,13 +588,14 @@ export default function ExplorerClient() {
                             <thead className="bg-muted/50">
                                 <tr>
                                     {isAdmin && (
-                                        <th className="px-3 py-2 w-8">
+                                        <th className="px-3 py-2 w-10">
                                             <Checkbox
                                                 checked={allSelected}
                                                 onCheckedChange={(v) =>
                                                     v ? selectAll() : clearSelection()
                                                 }
-                                                aria-label="Select all"
+                                                aria-label="Select all on page"
+                                                className="h-5 w-5"
                                             />
                                         </th>
                                     )}
@@ -590,11 +631,12 @@ export default function ExplorerClient() {
                                     <Fragment key={it.id}>
                                         <tr className="border-t align-top">
                                             {isAdmin && (
-                                                <td className="px-3 py-2 w-8 align-middle">
+                                                <td className="px-3 py-2 w-10 align-middle">
                                                     <Checkbox
                                                         checked={selectedIds.has(it.id)}
                                                         onCheckedChange={() => toggleSelect(it.id)}
                                                         aria-label={`Select ${it.title}`}
+                                                        className="h-5 w-5"
                                                     />
                                                 </td>
                                             )}
@@ -610,8 +652,13 @@ export default function ExplorerClient() {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2 whitespace-nowrap">
-                                                {it.version || "-"}
+                                            <td className="px-3 py-2">
+                                                <span
+                                                    className="block max-w-[10rem] truncate"
+                                                    title={it.version || undefined}
+                                                >
+                                                    {it.version || "-"}
+                                                </span>
                                             </td>
                                             <td className="px-3 py-2 whitespace-nowrap">
                                                 {it.price

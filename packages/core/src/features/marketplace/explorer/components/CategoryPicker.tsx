@@ -140,19 +140,44 @@ export default function CategoryPicker({
         setOpen(o);
     };
 
+    const CAT_VISIBLE = 8;
+    const [showAllCats, setShowAllCats] = useState(false);
+    const visibleSelected = showAllCats ? selected : selected.slice(0, CAT_VISIBLE);
+    const hiddenCount = selected.length - CAT_VISIBLE;
+
     return (
         <div className="space-y-1">
             <div className="flex flex-wrap gap-1 min-h-[1.25rem]">
                 {selected.length ? (
-                    selected.map((id) => (
-                        <Badge
-                            key={id}
-                            variant="secondary"
-                            title={labelFor(id)}
-                        >
-                            {labelFor(id)}
-                        </Badge>
-                    ))
+                    <>
+                        {visibleSelected.map((id) => (
+                            <Badge
+                                key={id}
+                                variant="secondary"
+                                title={labelFor(id)}
+                            >
+                                {labelFor(id)}
+                            </Badge>
+                        ))}
+                        {!showAllCats && hiddenCount > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowAllCats(true)}
+                                className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground hover:bg-muted"
+                            >
+                                +{hiddenCount} more
+                            </button>
+                        )}
+                        {showAllCats && selected.length > CAT_VISIBLE && (
+                            <button
+                                type="button"
+                                onClick={() => setShowAllCats(false)}
+                                className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground hover:bg-muted"
+                            >
+                                Show less
+                            </button>
+                        )}
+                    </>
                 ) : nothingLoaded ? (
                     <span className="text-xs text-muted-foreground">
                         Loading…

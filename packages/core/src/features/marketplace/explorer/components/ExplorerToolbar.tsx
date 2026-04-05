@@ -38,7 +38,10 @@ export interface ToolbarState {
     justImported: boolean;
     onlyUncategorized: boolean;
     sinceMinutes: number | null;
+    limit: number;
 }
+
+export const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
 export interface ExplorerToolbarProps {
     categories: Category[];
@@ -289,6 +292,27 @@ export default function ExplorerToolbar({
                         >
                             Last 24h
                         </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                {/* Per-page */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-9">
+                            {state.limit} / page
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {([25, 50, 100] as const).map((n) => (
+                            <DropdownMenuItem
+                                key={n}
+                                onClick={() => onChange({ limit: n })}
+                            >
+                                {n} per page
+                                {state.limit === n && (
+                                    <Check className="ml-auto h-4 w-4" />
+                                )}
+                            </DropdownMenuItem>
+                        ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
                 {loading && <Badge variant="secondary">Loading…</Badge>}
