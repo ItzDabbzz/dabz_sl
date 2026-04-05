@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { RefreshCw } from "lucide-react";
 import ExplorerToolbar from "./ExplorerToolbar";
 import CategoryPicker from "./CategoryPicker";
@@ -46,6 +47,7 @@ export default function ExplorerClient() {
         title: string;
     }>({ open: false, images: [], index: 0, title: "" });
     const [isAdmin, setIsAdmin] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     // toolbar model
     const [q, setQ] = useState("");
@@ -149,6 +151,7 @@ export default function ExplorerClient() {
                 const data = await res.json();
                 const itemsData: Item[] = data.items || [];
                 setItems(itemsData);
+                setSelectedIds(new Set());
                 setPage({
                     limit: data.limit || limit,
                     offset: data.offset || offset,
@@ -183,14 +186,6 @@ export default function ExplorerClient() {
             window.removeEventListener("mp:itemsImported" as any, onImported);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    // Prefetch for first visible rows
-    useEffect(() => {
-        const ids = items.slice(0, 8).map((i) => i.id);
-        ids.forEach((id) => {
-            if (itemCats[id] === undefined) fetchItemCats(id);
-        });
-    }, [items, itemCats]);
 
     // admin gate
     useEffect(() => {
@@ -231,12 +226,14 @@ export default function ExplorerClient() {
                 );
                 if (!res.ok) return;
                 const data = await res.json();
+                // Seed every requested id with [] so items with no categories
+                // are marked as loaded and this effect doesn't loop.
                 const grouped: Record<string, string[]> = {};
+                for (const id of need) grouped[id] = [];
                 for (const m of (data?.mappings || []) as Array<{
                     itemId: string;
                     categoryId: string;
                 }>) {
-                    if (!grouped[m.itemId]) grouped[m.itemId] = [];
                     grouped[m.itemId].push(m.categoryId);
                 }
                 setItemCats((old) => ({ ...old, ...grouped }));
@@ -438,6 +435,46 @@ export default function ExplorerClient() {
         loadItems();
     };
 
+    // multi-select helpers
+    const toggleSelect = (id: string) =>
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    const selectAll = () => setSelectedIds(new Set(items.map((i) => i.id)));
+    const clearSelection = () => setSelectedIds(new Set());
+    const allSelected = items.length > 0 && items.every((i) => selectedIds.has(i.id));
+
+    const bulkSetNsfw = async (value: boolean) => {
+        if (!selectedIds.size) return;
+        await fetch("/api/tools/marketplace/items", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+                ids: Array.from(selectedIds),
+                updates: { isNsfw: value },
+            }),
+        });
+        clearSelection();
+        loadItems({ preserveDetails: true });
+    };
+
+    const bulkRemove = async () => {
+        if (!selectedIds.size) return;
+        if (!confirm(`Remove ${selectedIds.size} item(s)?`)) return;
+        await fetch("/api/tools/marketplace/items", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ ids: Array.from(selectedIds) }),
+        });
+        clearSelection();
+        loadItems({ offset: 0 });
+    };
+
     return (
         <div className="space-y-4">
             <Card>
@@ -468,13 +505,59 @@ export default function ExplorerClient() {
                                 setSinceMinutes(next.sinceMinutes);
                         }}
                         onRefresh={() => loadItems({ preserveDetails: true })}
+                        onExport={exportXlsx}
+                        exportDisabled={!items.length}
                     />
                 </CardHeader>
                 <CardContent>
+                    {isAdmin && selectedIds.size > 0 && (
+                        <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                            <span className="font-medium">{selectedIds.size} selected</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => bulkSetNsfw(true)}
+                            >
+                                Mark NSFW
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => bulkSetNsfw(false)}
+                            >
+                                Unmark NSFW
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={bulkRemove}
+                            >
+                                Remove selected
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={clearSelection}
+                            >
+                                Clear
+                            </Button>
+                        </div>
+                    )}
                     <div className="overflow-x-auto rounded-md border">
                         <table className="w-full text-sm">
                             <thead className="bg-muted/50">
                                 <tr>
+                                    {isAdmin && (
+                                        <th className="px-3 py-2 w-8">
+                                            <Checkbox
+                                                checked={allSelected}
+                                                onCheckedChange={(v) =>
+                                                    v ? selectAll() : clearSelection()
+                                                }
+                                                aria-label="Select all"
+                                            />
+                                        </th>
+                                    )}
                                     <th className="px-3 py-2 text-left">
                                         Title
                                     </th>
@@ -506,6 +589,15 @@ export default function ExplorerClient() {
                                 {items.map((it) => (
                                     <Fragment key={it.id}>
                                         <tr className="border-t align-top">
+                                            {isAdmin && (
+                                                <td className="px-3 py-2 w-8 align-middle">
+                                                    <Checkbox
+                                                        checked={selectedIds.has(it.id)}
+                                                        onCheckedChange={() => toggleSelect(it.id)}
+                                                        aria-label={`Select ${it.title}`}
+                                                    />
+                                                </td>
+                                            )}
                                             <td className="px-3 py-2 max-w-[28rem]">
                                                 <div className="font-medium line-clamp-1">
                                                     {it.title}
@@ -725,7 +817,7 @@ export default function ExplorerClient() {
                                         {detailsOpen[it.id] && (
                                             <tr className="border-t">
                                                 <td
-                                                    colSpan={9}
+                                                    colSpan={isAdmin ? 10 : 9}
                                                     className="px-3 py-3 bg-muted/20"
                                                 >
                                                     <div className="grid gap-3 md:grid-cols-3">
@@ -827,7 +919,7 @@ export default function ExplorerClient() {
                                 {!items.length && (
                                     <tr>
                                         <td
-                                            colSpan={9}
+                                            colSpan={isAdmin ? 10 : 9}
                                             className="px-3 py-6 text-center text-muted-foreground"
                                         >
                                             No items
@@ -1135,14 +1227,7 @@ export default function ExplorerClient() {
                 />
             </Button>
 
-            {/* Export */}
-            <Button
-                variant="outline"
-                onClick={exportXlsx}
-                disabled={!items.length}
-            >
-                Export XLSX
-            </Button>
+
         </div>
     );
 }

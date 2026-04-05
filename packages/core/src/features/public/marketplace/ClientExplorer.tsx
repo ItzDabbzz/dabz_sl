@@ -97,7 +97,7 @@ export default function ClientExplorer() {
         setSelectedCategoryId(match?.id);
     }, [primary, sub, sub2, cats]);
 
-    useEffect(() => { (async () => { try { const r = await fetch("/api/public/marketplace/categories", { cache: "no-store" }); const d: CatsResp = await r.json(); setCats(d.items || []); } catch {} })(); }, []);
+    useEffect(() => { (async () => { try { const r = await fetch("/api/public/marketplace/categories"); const d: CatsResp = await r.json(); setCats(d.items || []); } catch {} })(); }, []);
     useEffect(() => { try { setFavorites(new Set(JSON.parse(localStorage.getItem("mp_favorites") || "[]"))); } catch {} try { setCompare(new Set(JSON.parse(localStorage.getItem("mp_compare") || "[]"))); } catch {} try { const r = JSON.parse(localStorage.getItem("mp_recent_searches") || "[]"); setRecent(Array.isArray(r) ? r.slice(0, 8) : []); } catch {}; }, []);
     useEffect(() => { try { localStorage.setItem("mp_favorites", JSON.stringify(Array.from(favorites))); } catch {}; }, [favorites]);
     useEffect(() => { try { localStorage.setItem("mp_compare", JSON.stringify(Array.from(compare))); } catch {}; }, [compare]);
