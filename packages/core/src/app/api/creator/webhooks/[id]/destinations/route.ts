@@ -30,10 +30,14 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const ctxAuth = await getCreatorContextFromApiKey(req as any);
+    // Auth and body parse are independent — run them concurrently
+    const [ctxAuth, body] = await Promise.all([
+      getCreatorContextFromApiKey(req as any),
+      req.json(),
+    ]);
     requireScope(ctxAuth, "sl.webhooks:write");
 
-    const { type, enabled = true, events = [], configJson = {} } = await req.json();
+    const { type, enabled = true, events = [], configJson = {} } = body;
     if (!type || !Array.isArray(events)) return NextResponse.json({ error: "invalid_body" }, { status: 400 });
 
     const params = await ctx.params;

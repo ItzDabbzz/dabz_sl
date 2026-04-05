@@ -26,8 +26,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       (wh.scopeType === "user" && wh.scopeId === (authCtx.userId as any));
     if (!scopeOk) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-    const httpRes = await deliverWebhook({ url: wh.targetUrl, event, payload, secret: wh.secret as any, webhookId: id });
-    const destRes = await deliverToDestinations({ webhookId: id, event, payload });
+    // Both deliveries are independent — run them concurrently
+    const [httpRes, destRes] = await Promise.all([
+      deliverWebhook({ url: wh.targetUrl, event, payload, secret: wh.secret as any, webhookId: id }),
+      deliverToDestinations({ webhookId: id, event, payload }),
+    ]);
 
     return NextResponse.json({ http: httpRes, destinations: destRes }, { status: 200 });
   } catch (e: any) {

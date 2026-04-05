@@ -22,19 +22,25 @@ export default async function Page() {
     redirect("/sign-in");
   }
 
+  // Serialize each object once so RSC can deduplicate by reference across props
+  const s = JSON.parse(JSON.stringify(session));
+  const sActiveSessions = JSON.parse(JSON.stringify(activeSessions));
+  const sDeviceSessions = JSON.parse(JSON.stringify(deviceSessions));
+  const sOrganization = JSON.parse(JSON.stringify(organization));
+
   return (
     <div className="w-full">
       <div className="flex gap-4 flex-col">
-        <AccountSwitcher sessions={JSON.parse(JSON.stringify(deviceSessions))} />
+        <AccountSwitcher sessions={sDeviceSessions} />
         <UserCard
-          session={JSON.parse(JSON.stringify(session))}
-          activeSessions={JSON.parse(JSON.stringify(activeSessions))}
+          session={s}
+          activeSessions={sActiveSessions}
         />
         <OrganizationCard
-          session={JSON.parse(JSON.stringify(session))}
-          activeOrganization={JSON.parse(JSON.stringify(organization))}
+          session={s}
+          activeOrganization={sOrganization}
         />
-        <APICard session={JSON.parse(JSON.stringify(session))} />
+        <APICard session={s} />
       </div>
     </div>
   );

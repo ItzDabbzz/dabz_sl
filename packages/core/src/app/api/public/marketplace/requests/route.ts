@@ -12,8 +12,11 @@ function normalizeImages(input: string): string[] {
 
 export async function POST(req: NextRequest) {
   try {
-    const ses = await auth.api.getSession({ headers: req.headers as any }).catch(() => null);
-    const body = await req.json();
+    // Run session lookup and body parse concurrently — neither depends on the other
+    const [ses, body] = await Promise.all([
+      auth.api.getSession({ headers: req.headers as any }).catch(() => null),
+      req.json(),
+    ]);
 
     // Basic validation: required fields
     const title = (body?.title || "").trim();
