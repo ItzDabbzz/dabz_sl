@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Heart } from "lucide-react";
 import { headers } from "next/headers";
 import { auth } from "@/server/auth/core";
-import { canViewCategory } from "@/features/auth/permissions/access-control";
+import { canViewCategory } from "@/features/auth/permissions/admin-access";
 import WebBg from "@/components/web-bg";
 import { Suspense } from "react";
 

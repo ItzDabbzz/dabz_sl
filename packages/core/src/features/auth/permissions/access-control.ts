@@ -25,13 +25,6 @@ export const admin = ac.newRole({
 export const member = ac.newRole({
   // Members can only read teams by default
   team: [],
-  // Add more permissions for member if needed
-});
-
-// Example: custom role
-export const myCustomRole = ac.newRole({
-  team: ["create", "update"],
-  // Add more permissions for this custom role
 });
 
 export type ViewerContext = {

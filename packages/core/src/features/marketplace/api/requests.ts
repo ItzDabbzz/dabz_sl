@@ -5,16 +5,12 @@ import { db } from "@/server/db/client";
 import { mpItemCategories, mpItemRequests, mpItems } from "@/schemas/sl-schema";
 import { desc, eq, ilike, or, and } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import {
-  isConfiguredAdminId,
-  isPrivilegedMarketplaceRole,
-} from "@/server/auth/roles";
+import { requirePermission } from "@/server/auth/guards";
 import { requireUserFromRequest } from "@/server/auth/session";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await requireUserFromRequest(req);
-    if (!isPrivilegedMarketplaceRole((user as any).role) && !isConfiguredAdminId((user as any).id)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    await requirePermission("marketplace.requests", req.headers as any);
 
     const { searchParams } = new URL(req.url);
     const status = (searchParams.get("status") || "pending").toLowerCase();
@@ -65,8 +61,8 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    await requirePermission("marketplace.requests", req.headers as any);
     const user = await requireUserFromRequest(req);
-    if (!isPrivilegedMarketplaceRole((user as any).role) && !isConfiguredAdminId((user as any).id)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
     const body = await req.json();
     const singleId = body?.id as string | undefined;
     const ids: string[] = Array.isArray(body?.ids) ? body.ids.filter((x: any) => typeof x === "string") : [];

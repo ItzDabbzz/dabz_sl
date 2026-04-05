@@ -6,6 +6,10 @@ import { mpItemCategories, mpItems, mpCategories } from "@/schemas/sl-schema";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { requireUserFromRequest } from "@/server/auth/session";
+import {
+    isConfiguredAdminId,
+    isPrivilegedMarketplaceRole,
+} from "@/server/auth/roles";
 
 // Fetch existing categories for an item
 export async function GET(
@@ -15,13 +19,16 @@ export async function GET(
   try {
     const user = await requireUserFromRequest(req);
     const { id } = await ctx.params;
+    const privileged =
+        isPrivilegedMarketplaceRole((user as any).role) ||
+        isConfiguredAdminId((user as any).id);
 
-    // Ensure item belongs to the user
+    // Ensure item exists; privileged users may access any item
     const [item] = await db
       .select({ id: mpItems.id, ownerUserId: mpItems.ownerUserId })
       .from(mpItems)
       .where(eq(mpItems.id as any, id as any) as any);
-    if (!item || (item as any).ownerUserId !== (user as any).id) {
+    if (!item || (!privileged && (item as any).ownerUserId !== (user as any).id)) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 

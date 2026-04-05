@@ -380,7 +380,10 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
-        await requirePermission("marketplace.moderate", req.headers as any);
+        const user = await requireUserFromRequest(req);
+        if (!isPrivileged(user)) {
+            await requirePermission("marketplace.moderate", req.headers as any);
+        }
         const body = await req.json();
         const id = body?.id as string | undefined;
         const ids = Array.isArray(body?.ids)

@@ -10,6 +10,7 @@ import {
 } from "@/schemas/rbac";
 import { randomUUID } from "crypto";
 import { auth } from "@/server/auth/core";
+import { ROLE_GRANTS } from "@/server/auth/role-permissions";
 
 const ROLE_DEFS: Array<{
     slug: string;
@@ -28,82 +29,8 @@ const ROLE_DEFS: Array<{
     { slug: "user", name: "User" },
 ];
 
-// Default grants per role
-const GRANTS: Record<string, string[]> = {
-    owner: [
-        "org.view",
-        "org.delete",
-        "dashboard.view",
-        "settings.view",
-        "apikey.manage",
-        "marketplace.view",
-        "marketplace.edit",
-        "marketplace.moderate",
-        "marketplace.admin",
-        "sldb.view",
-        "sldb.edit",
-        "sldb.admin",
-        "blog.view",
-        "blog.write",
-        "blog.settings.update",
-        "wardrobe.view",
-        "wardrobe.edit",
-        "rbac.manage",
-    ],
-    developer: [
-        "org.view",
-        "org.delete",
-        "dashboard.view",
-        "settings.view",
-        "apikey.manage",
-        "marketplace.view",
-        "marketplace.edit",
-        "marketplace.moderate",
-        "marketplace.admin",
-        "sldb.view",
-        "sldb.edit",
-        "sldb.admin",
-        "blog.view",
-        "blog.write",
-        "blog.settings.update",
-        "wardrobe.view",
-        "wardrobe.edit",
-        "rbac.manage",
-    ],
-    admin: [
-        "org.view",
-        "org.delete",
-        "dashboard.view",
-        "settings.view",
-        "apikey.manage",
-        "marketplace.view",
-        "marketplace.edit",
-        "marketplace.moderate",
-        "marketplace.admin",
-        "sldb.view",
-        "sldb.edit",
-        "sldb.admin",
-        "blog.view",
-        "blog.write",
-        "blog.settings.update",
-        "wardrobe.view",
-        "wardrobe.edit",
-        "rbac.manage",
-    ],
-    mod: ["marketplace.view", "marketplace.moderate"],
-    trusted: ["marketplace.view", "marketplace.edit"],
-    creator: ["sldb.view", "sldb.edit"],
-    blogger: ["blog.view", "blog.write"],
-    wardrobe: ["wardrobe.view", "wardrobe.edit"],
-    user: [
-        "dashboard.view",
-        "settings.view",
-        "apikey.manage",
-        "marketplace.view",
-        "blog.view",
-        "wardrobe.view",
-    ],
-};
+// Default grants per role are imported from @/server/auth/role-permissions (ROLE_GRANTS).
+// The seed endpoint writes them into the DB for orgs that want per-member overrides.
 
 export async function POST(req: NextRequest) {
     try {
@@ -156,9 +83,9 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Ensure permissions exist for all keys referenced in GRANTS
+        // Ensure permissions exist for all keys referenced in ROLE_GRANTS
         const permKeys = Array.from(
-            new Set(Object.values(GRANTS).flatMap((arr) => arr)),
+            new Set(Object.values(ROLE_GRANTS).flatMap((arr) => arr)),
         );
         if (permKeys.length > 0) {
             await db
@@ -176,7 +103,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Apply grants
-        for (const [slug, keys] of Object.entries(GRANTS)) {
+        for (const [slug, keys] of Object.entries(ROLE_GRANTS)) {
             const roleId = created[slug];
             if (!roleId) continue;
             for (const key of keys) {

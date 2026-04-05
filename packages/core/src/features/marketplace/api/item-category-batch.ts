@@ -6,6 +6,10 @@ import { mpItemCategories, mpItems } from "@/schemas/sl-schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { requirePermission } from "@/server/auth/guards";
 import { requireUserFromRequest } from "@/server/auth/session";
+import {
+    isConfiguredAdminId,
+    isPrivilegedMarketplaceRole,
+} from "@/server/auth/roles";
 
 // POST: { itemIds: string[] } -> { mappings: Array<{ itemId: string, categoryId: string }> }
 export async function POST(req: NextRequest) {
@@ -36,8 +40,13 @@ export async function POST(req: NextRequest) {
 // PATCH: { itemIds: string[], categoryIds: string[], mode?: "add" | "remove" | "replace" }
 export async function PATCH(req: NextRequest) {
   try {
-    await requirePermission("marketplace.moderate", req.headers as any);
     const user = await requireUserFromRequest(req);
+    if (
+      !isPrivilegedMarketplaceRole((user as any).role) &&
+      !isConfiguredAdminId((user as any).id)
+    ) {
+      await requirePermission("marketplace.moderate", req.headers as any);
+    }
     const body = await req.json();
 
     const itemIds = Array.isArray(body?.itemIds)
@@ -59,15 +68,24 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ updated: 0 });
     }
 
-    const ownedRows = await db
-      .select({ id: mpItems.id })
-      .from(mpItems)
-      .where(
-        and(
-          inArray(mpItems.id as any, itemIds as any) as any,
-          eq(mpItems.ownerUserId as any, user.id as any) as any,
-        ) as any,
-      );
+    const privileged =
+        isPrivilegedMarketplaceRole((user as any).role) ||
+        isConfiguredAdminId((user as any).id);
+
+    const ownedRows = privileged
+      ? await db
+          .select({ id: mpItems.id })
+          .from(mpItems)
+          .where(inArray(mpItems.id as any, itemIds as any) as any)
+      : await db
+          .select({ id: mpItems.id })
+          .from(mpItems)
+          .where(
+            and(
+              inArray(mpItems.id as any, itemIds as any) as any,
+              eq(mpItems.ownerUserId as any, user.id as any) as any,
+            ) as any,
+          );
     const ownedIds = ownedRows.map((row: any) => row.id);
     if (!ownedIds.length) {
       return NextResponse.json({ updated: 0 });

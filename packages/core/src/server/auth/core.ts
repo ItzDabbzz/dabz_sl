@@ -16,8 +16,7 @@ import {
     owner,
     admin as adminRole,
     member,
-    myCustomRole,
-} from "@/features/auth/permissions/access-control";
+} from "@/features/auth/permissions/admin-access";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { buildInvitationEmailHtml } from "@/features/emails/templates/invitation";
 import { buildResetPasswordEmailHtml } from "@/features/emails/templates/reset-password";
@@ -69,6 +68,8 @@ import {
     modAdminRole,
     trustedAdminRole,
     creatorAdminRole,
+    bloggerAdminRole,
+    wardrobeAdminRole,
     userAdminRole,
 } from "@/features/auth/permissions/admin-access";
 
@@ -143,7 +144,6 @@ export const auth = betterAuth({
                 owner,
                 admin: adminRole,
                 member,
-                myCustomRole,
             },
             teams: {
                 enabled: true,
@@ -207,6 +207,8 @@ export const auth = betterAuth({
                 mod: modAdminRole,
                 trusted: trustedAdminRole,
                 creator: creatorAdminRole,
+                blogger: bloggerAdminRole,
+                wardrobe: wardrobeAdminRole,
                 user: userAdminRole,
             },
             adminRoles: ["owner", "developer", "admin"],

@@ -15,10 +15,6 @@ import {
     owner,
     admin as adminRole,
     member,
-    myCustomRole,
-} from "@/features/auth/permissions/access-control";
-import { toast } from "sonner";
-import {
     adminAccessControl,
     ownerAdminRole,
     developerAdminRole,
@@ -28,6 +24,7 @@ import {
     creatorAdminRole,
     userAdminRole,
 } from "@/features/auth/permissions/admin-access";
+import { toast } from "sonner";
 
 export const client = createAuthClient({
     plugins: [
@@ -37,7 +34,6 @@ export const client = createAuthClient({
                 owner,
                 admin: adminRole,
                 member,
-                myCustomRole,
             },
             teams: {
                 enabled: true,

@@ -5,6 +5,7 @@ const MARKETPLACE_PRIVILEGED_ROLES = new Set([
     "admin",
     "mod",
     "moderator",
+    "trusted",
 ]);
 
 export function isPrivilegedMarketplaceRole(
