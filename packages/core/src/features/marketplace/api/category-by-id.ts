@@ -17,12 +17,16 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     if (!isPrivilegedMarketplaceRole((user as any).role) && !isConfiguredAdminId((user as any).id)) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
+    const privileged = isPrivilegedMarketplaceRole((user as any).role) || isConfiguredAdminId((user as any).id);
     const { id } = await ctx.params;
     const { primary, sub, sub2 } = await req.json();
+    const whereClause = privileged
+      ? eq(mpCategories.id as any, id as any) as any
+      : and(eq(mpCategories.id as any, id as any) as any, eq(mpCategories.ownerUserId as any, user.id as any) as any) as any;
     const [row] = await db
       .update(mpCategories)
       .set({ ...(primary ? { primary } : {}), ...(sub ? { sub } : {}), ...(sub2 ? { sub2 } : {}) })
-      .where(and(eq(mpCategories.id as any, id as any) as any, eq(mpCategories.ownerUserId as any, user.id as any) as any) as any)
+      .where(whereClause)
       .returning();
     revalidateTag("marketplace:stats", {});
     return NextResponse.json({ item: row });
@@ -37,13 +41,17 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
     if (!isPrivilegedMarketplaceRole((user as any).role) && !isConfiguredAdminId((user as any).id)) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
+    const privileged = isPrivilegedMarketplaceRole((user as any).role) || isConfiguredAdminId((user as any).id);
     const { id } = await ctx.params;
     // Remove mappings first
     await db.delete(mpItemCategories as any).where(eq(mpItemCategories.categoryId as any, id as any) as any);
-    // Then delete the category (scoped to owner)
+    // Then delete the category
+    const whereClause = privileged
+      ? eq(mpCategories.id as any, id as any) as any
+      : and(eq(mpCategories.id as any, id as any) as any, eq(mpCategories.ownerUserId as any, user.id as any) as any) as any;
     await db
       .delete(mpCategories as any)
-      .where(and(eq(mpCategories.id as any, id as any) as any, eq(mpCategories.ownerUserId as any, user.id as any) as any) as any);
+      .where(whereClause);
     revalidateTag("marketplace:stats", {});
     return NextResponse.json({ ok: true });
   } catch (e: any) {

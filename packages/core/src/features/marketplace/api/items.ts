@@ -16,6 +16,17 @@ import {
 import { revalidateTag } from "next/cache";
 import { requirePermission } from "@/server/auth/guards";
 import { requireUserFromRequest } from "@/server/auth/session";
+import {
+    isConfiguredAdminId,
+    isPrivilegedMarketplaceRole,
+} from "@/server/auth/roles";
+
+function isPrivileged(user: any): boolean {
+    return (
+        isPrivilegedMarketplaceRole((user as any).role) ||
+        isConfiguredAdminId((user as any).id)
+    );
+}
 
 function isMissingColumnError(error: unknown) {
     const candidate = error as { code?: string; cause?: { code?: string } };
@@ -106,7 +117,9 @@ export async function GET(req: NextRequest) {
                   .filter(Boolean)
             : [];
 
-        let where = and(eq(mpItems.ownerUserId as any, user.id as any) as any);
+        let where = isPrivileged(user)
+            ? undefined
+            : and(eq(mpItems.ownerUserId as any, user.id as any) as any);
 
         // Filter by specific ids (batch view)
         if (idList.length) {
@@ -450,15 +463,21 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
         if (ids.length) {
-            const ownedRows = await db
-                .select({ id: mpItems.id })
-                .from(mpItems)
-                .where(
-                    and(
-                        inArray(mpItems.id as any, ids as any) as any,
-                        eq(mpItems.ownerUserId as any, user.id as any) as any,
-                    ) as any,
-                );
+            const privileged = isPrivileged(user);
+            const ownedRows = privileged
+                ? await db
+                      .select({ id: mpItems.id })
+                      .from(mpItems)
+                      .where(inArray(mpItems.id as any, ids as any) as any)
+                : await db
+                      .select({ id: mpItems.id })
+                      .from(mpItems)
+                      .where(
+                          and(
+                              inArray(mpItems.id as any, ids as any) as any,
+                              eq(mpItems.ownerUserId as any, user.id as any) as any,
+                          ) as any,
+                      );
             const ownedIds = ownedRows.map((row: any) => row.id);
             if (!ownedIds.length) {
                 return NextResponse.json({ deleted: 0 });

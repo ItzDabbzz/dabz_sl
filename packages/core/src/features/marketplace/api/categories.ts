@@ -17,10 +17,13 @@ export async function GET(req: NextRequest) {
     if (!isPrivilegedMarketplaceRole((user as any).role) && !isConfiguredAdminId((user as any).id)) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
-    const rows = await db
-      .select()
-      .from(mpCategories)
-      .where(eq(mpCategories.ownerUserId as any, user.id as any) as any);
+    const privileged = isPrivilegedMarketplaceRole((user as any).role) || isConfiguredAdminId((user as any).id);
+    const rows = privileged
+      ? await db.select().from(mpCategories)
+      : await db
+          .select()
+          .from(mpCategories)
+          .where(eq(mpCategories.ownerUserId as any, user.id as any) as any);
     return NextResponse.json({ items: rows });
   } catch (e: any) {
     if (e?.message === "unauthorized")
