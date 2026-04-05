@@ -1,15 +1,15 @@
 import { createAuthClient } from "better-auth/react";
 import {
     organizationClient,
-    passkeyClient,
     twoFactorClient,
     adminClient,
     multiSessionClient,
     oneTapClient,
     oidcClient,
     genericOAuthClient,
-    apiKeyClient,
 } from "better-auth/client/plugins";
+import { passkeyClient } from "@better-auth/passkey/client";
+import { apiKeyClient } from "@better-auth/api-key/client";
 import {
     ac,
     owner,

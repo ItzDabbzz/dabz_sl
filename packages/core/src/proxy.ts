@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	const cookies = getSessionCookie(request);
 	if (!cookies) {
 		return NextResponse.redirect(new URL("/sign-in", request.url));
@@ -9,6 +9,6 @@ export async function middleware(request: NextRequest) {
 	return NextResponse.next();
 }
 
-export const config = {
+export const proxyConfig = {
 	matcher: ["/dashboard/:path*"],
 };

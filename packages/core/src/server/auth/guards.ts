@@ -35,7 +35,7 @@ export async function requirePermission(
         return { userId: user.id, organizationId: orgId ?? "__superadmin__" };
     }
 
-    if (!orgId) throw new Error("no_active_org");
+    if (!orgId) throw new Error("forbidden");
 
     const ok = await PermissionService.hasPermission(user.id, orgId, key);
     if (!ok) throw new Error("forbidden");

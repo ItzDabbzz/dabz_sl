@@ -368,7 +368,7 @@ export default function ClientExplorer() {
                                                     <Card key={it.id} className="group">
                                                         <CardContent className="p-3">
                                                             <div className="overflow-hidden rounded bg-muted aspect-video relative">
-                                                                {it.images?.[0] && <a href={it.url} target="_blank" rel="noopener noreferrer" className="block h-full w-full"><Image src={it.images[0]} alt={it.title} className="object-cover transition group-hover:scale-[1.02]" fill sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw" /></a>}
+                                                                {it.images?.[0] && <a href={it.url} target="_blank" rel="noopener noreferrer" className="relative block h-full w-full"><Image src={it.images[0]} alt={it.title} className="object-cover transition group-hover:scale-[1.02]" fill sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw" /></a>}
                                                             </div>
                                                             <div className="space-y-1 mt-2">
                                                                 <div className="flex items-start justify-between gap-3 min-w-0">

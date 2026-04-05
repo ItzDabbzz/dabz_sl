@@ -9,9 +9,7 @@ loadEnvConfig(path.resolve(__dirname, "..", ".."));
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
 const nextConfig: NextConfig = {
-	typescript: {
-		ignoreBuildErrors: true,
-	},
+	poweredByHeader: false,
 	images: {
 		remotePatterns: [
 			{ protocol: "https", hostname: "marketplace.secondlife.com" },
@@ -20,19 +18,23 @@ const nextConfig: NextConfig = {
 			{ protocol: "https", hostname: "*.cloudfront.net" },
 			{ protocol: "https", hostname: "*.imgur.com" },
 		],
+		qualities: [25, 50, 55, 70, 75],
 	},
-	transpilePackages: ["@dabzsl/shared"],
-	webpack: (config, { dev }) => {
-		if (dev) {
-			config.watchOptions = {
-				...(config.watchOptions as any),
-				ignored: [
-					"**/node_modules/**",
-				],
-			} as any;
-		}
-		return config;
-	},
+	// Externalize server-only packages that don't bundle well (e.g. large syntax
+	// highlighters with native/wasm internals).
+	serverExternalPackages: ["shiki"],
+	typedRoutes: false,
+	// Enable strict mode for React to help identify potential issues.
+	reactStrictMode: true,
+	// Tree-shake large icon/component packages for smaller client bundles.
+	experimental: {
+		optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],
+		// cssChunking: true,
+		// optimizeCss: true, -- disabled: Critters CSS inliner calls useContext internally
+		// during /_global-error prerendering where no provider exists, causing a null crash.
+		// optimizeServerReact: true,
+		turbopackSourceMaps: false,
+	}
 };
 
 export default withBundleAnalyzer(nextConfig);

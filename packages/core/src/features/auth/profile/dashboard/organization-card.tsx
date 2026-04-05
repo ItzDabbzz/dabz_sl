@@ -72,7 +72,7 @@ export function OrganizationCard(props: {
 	const session = data || props.session;
 
 	const currentMember = (optimisticOrg?.members ?? []).find(
-		(member) => member.userId === session?.user.id,
+		(member: any) => member.userId === session?.user.id,
 	);
 
 	return (
@@ -104,7 +104,7 @@ export function OrganizationCard(props: {
 							>
 								<p className="text-sm sm">Personal</p>
 							</DropdownMenuItem>
-							{organizations.data?.map((org) => (
+							{organizations.data?.map((org: any) => (
 								<DropdownMenuItem
 									className=" py-1"
 									key={org.id}
@@ -174,7 +174,7 @@ export function OrganizationCard(props: {
 						{optimisticOrg?.id && (
 							<p className="text-xs text-muted-foreground truncate">
 								Active team:{" "}
-								{optimisticOrg?.teams?.find((t) => t.id === activeTeamId)?.name || "None"}
+								{optimisticOrg?.teams?.find((t: any) => t.id === activeTeamId)?.name || "None"}
 							</p>
 						)}
 					</div>
@@ -187,7 +187,7 @@ export function OrganizationCard(props: {
 							Members{optimisticOrg?.members ? ` (${optimisticOrg.members.length})` : ""}
 						</p>
 						<div className="flex flex-col gap-2">
-							{(optimisticOrg?.members ?? []).map((member) => (
+							{(optimisticOrg?.members ?? []).map((member: any) => (
 								<div
 									key={member.id}
 									className="flex justify-between items-center rounded-md border p-2 sm:p-3"
@@ -251,7 +251,7 @@ export function OrganizationCard(props: {
 								<span className="inline-flex items-center gap-2"><Users size={16} /> Teams{optimisticOrg?.teams ? ` (${optimisticOrg.teams.length})` : ""}</span>
 							</p>
 							<div className="flex flex-col gap-2">
-								{(optimisticOrg?.teams || []).map((team) => (
+								{(optimisticOrg?.teams || []).map((team: any) => (
 									<div key={team.id} className="flex items-center justify-between rounded-md border p-2 sm:p-3">
 										<div className="flex items-center gap-2 min-w-0">
 											<p className="text-sm font-medium truncate">{team.name}</p>
@@ -278,11 +278,11 @@ export function OrganizationCard(props: {
 														teamId={team.id}
 														name={team.name}
 														onRenamed={(newName: string) => {
-															setOptimisticOrg((prev) =>
+															setOptimisticOrg((prev: any) =>
 																prev
 																	? {
 																		...prev,
-																		teams: (prev.teams || []).map((t) =>
+																		teams: (prev.teams || []).map((t: any) =>
 																			t.id === team.id ? { ...t, name: newName } : t,
 																		),
 																	}
@@ -301,11 +301,11 @@ export function OrganizationCard(props: {
 															error: (e) => e.error?.message || "Failed to remove team",
 														});
 														await p;
-														setOptimisticOrg((prev) =>
+														setOptimisticOrg((prev: any) =>
 															prev
 																? {
 																	...prev,
-																	teams: (prev.teams || []).filter((t) => t.id !== team.id),
+																	teams: (prev.teams || []).filter((t: any) => t.id !== team.id),
 																}
 															: prev,
 														);
@@ -339,13 +339,13 @@ export function OrganizationCard(props: {
 						{/* Invites */}
 						<div className="flex flex-col gap-3">
 							<p className="text-sm font-semibold text-foreground/90 border-b border-border pb-2">
-								Invites{optimisticOrg?.invitations ? ` (${(optimisticOrg.invitations.filter((i)=>i.status==="pending").length)})` : ""}
+								Invites{optimisticOrg?.invitations ? ` (${(optimisticOrg.invitations.filter((i: any)=>i.status==="pending").length)})` : ""}
 							</p>
 							<div className="flex flex-col gap-2">
 								<AnimatePresence>
 									{(optimisticOrg?.invitations ?? [])
-											.filter((invitation) => invitation.status === "pending")
-											.map((invitation) => (
+											.filter((invitation: any) => invitation.status === "pending")
+											.map((invitation: any) => (
 												<motion.div
 													key={invitation.id}
 													className="flex items-center justify-between rounded-md border p-2 sm:p-3"
@@ -378,18 +378,18 @@ export function OrganizationCard(props: {
 																		onSuccess: () => {
 																			toast.message("Invitation revoked successfully");
 																			setIsRevoking((prev) => prev.filter((id) => id !== invitation.id));
-																			setOptimisticOrg((prev) =>
+																			setOptimisticOrg((prev: any) =>
 																				prev
 																					? {
 																						...prev,
 																						invitations: prev.invitations.filter(
-																							(inv) => inv.id !== invitation.id,
+																							(inv: any) => inv.id !== invitation.id,
 																						),
 																					}
 																				: prev,
 																			);
 																	},
-																	onError: (ctx) => {
+																	onError: (ctx: any) => {
 																		toast.error(ctx.error.message);
 																		setIsRevoking((prev) => prev.filter((id) => id !== invitation.id));
 																	},
@@ -553,7 +553,7 @@ function CreateOrganizationDialog() {
 										toast.success("Organization created successfully");
 										setOpen(false);
 									},
-									onError: (error) => {
+									onError: (error: any) => {
 										toast.error(error.error.message);
 										setLoading(false);
 									},
@@ -625,7 +625,7 @@ function InviteMemberDialog({
 									<SelectValue placeholder="Select a team" />
 								</SelectTrigger>
 								<SelectContent>
-									{optimisticOrg?.teams?.map((t) => (
+									{optimisticOrg?.teams?.map((t: any) => (
 										<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
 									))}
 								</SelectContent>
@@ -644,7 +644,7 @@ function InviteMemberDialog({
 									teamId,
 									fetchOptions: {
 										throw: true,
-										onSuccess: (ctx) => {
+										onSuccess: (ctx: any) => {
 											if (optimisticOrg) {
 												setOptimisticOrg({
 													...optimisticOrg,
@@ -803,7 +803,7 @@ function TeamMembersDialog({ teamId, teamName }: { teamId: string; teamName: str
         for (const m of orgMembers) {
             userMap[m.user.id] = { id: m.user.id, name: m.user.name, image: m.user.image };
         }
-        const enriched = (tmData || []).map((tm) => ({
+		const enriched = (tmData || []).map((tm: any) => ({
             id: tm.id,
             user: userMap[tm.userId] || { id: tm.userId, name: "Unknown" },
         }));

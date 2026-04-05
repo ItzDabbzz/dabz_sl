@@ -244,6 +244,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             .filter(Boolean);
         return !!id && admins.includes(id);
     }, [session]);
+    const isMarketplacePrivileged = useMemo(
+        () =>
+            isSuperAdmin ||
+            new Set([
+                "owner",
+                "developer",
+                "dev",
+                "admin",
+                "mod",
+                "moderator",
+            ]).has(role),
+        [isSuperAdmin, role],
+    );
 
     // Sections, conditionally including Admin for staff
     const sections: ReadonlyArray<NavSection> = useMemo(() => {
@@ -267,8 +280,21 @@ export function AppShell({ children }: { children: ReactNode }) {
                 items: s.items.filter((i) => i.href !== "/dashboard/blog/settings" || blogSettingsAllowed),
             };
         }
+        const toolsIdx = base.findIndex((s) => s.id === "sl-tools");
+        if (toolsIdx >= 0 && !isMarketplacePrivileged) {
+            const s = base[toolsIdx];
+            const hidden = new Set([
+                "/dashboard/tools/marketplace/requests",
+                "/dashboard/tools/marketplace/categories",
+                "/dashboard/tools/marketplace-scrape",
+            ]);
+            base[toolsIdx] = {
+                ...s,
+                items: s.items.filter((i) => !hidden.has(i.href)),
+            };
+        }
         return base;
-    }, [isStaff, isSuperAdmin, blogSettingsAllowed]);
+    }, [isStaff, isSuperAdmin, isMarketplacePrivileged, blogSettingsAllowed]);
 
     // Flattened items for collapsed sidebar
     const flatItems: NavItem[] = useMemo(

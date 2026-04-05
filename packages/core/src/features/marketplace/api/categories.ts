@@ -6,10 +6,17 @@ import { mpCategories } from "@/schemas/sl-schema";
 import { and, eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { requireUserFromRequest } from "@/server/auth/session";
+import {
+  isConfiguredAdminId,
+  isPrivilegedMarketplaceRole,
+} from "@/server/auth/roles";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await requireUserFromRequest(req);
+    if (!isPrivilegedMarketplaceRole((user as any).role) && !isConfiguredAdminId((user as any).id)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
     const rows = await db
       .select()
       .from(mpCategories)
@@ -26,6 +33,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const user = await requireUserFromRequest(req);
+    if (!isPrivilegedMarketplaceRole((user as any).role) && !isConfiguredAdminId((user as any).id)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
     const { primary, sub = "All", sub2 = "All" } = await req.json();
     let row;
     try {
@@ -50,11 +60,13 @@ export async function POST(req: NextRequest) {
       row = existing[0];
     }
     // Invalidate marketplace stats cache
-    revalidateTag("marketplace:stats");
+    revalidateTag("marketplace:stats", {});
     return NextResponse.json({ item: row }, { status: 201 });
   } catch (e: any) {
     if (e?.message === "unauthorized")
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    if (e?.message === "forbidden")
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
     console.error(e);
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }

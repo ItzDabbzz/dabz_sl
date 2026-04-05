@@ -1,1 +1,3 @@
-export { dynamic, GET } from "@/features/marketplace/api/admin";
+export { GET } from "@/features/marketplace/api/admin";
+
+export const dynamic = "force-dynamic";

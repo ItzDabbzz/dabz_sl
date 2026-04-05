@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { webhooks } from "@/schemas/sl-schema";
@@ -10,6 +8,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const ctx = await getCreatorContextFromApiKey(req as any);
     requireScope(ctx, "sl.webhooks:write");
+    const { id } = await params;
 
     const body = await req.json();
     const { targetUrl, events, secret, active } = body || {};
@@ -22,7 +21,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         ...(secret !== undefined ? { secret } : {}),
         ...(active !== undefined ? { active } : {}),
       })
-  .where(eq(webhooks.id, (await params).id))
+  .where(eq(webhooks.id, id))
       .returning({ id: webhooks.id });
 
     if (!res.length) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -39,8 +38,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const ctx = await getCreatorContextFromApiKey(req as any);
     requireScope(ctx, "sl.webhooks:write");
+    const { id } = await params;
 
-  const res = await db.delete(webhooks).where(eq(webhooks.id, (await params).id)).returning({ id: webhooks.id });
+  const res = await db.delete(webhooks).where(eq(webhooks.id, id)).returning({ id: webhooks.id });
     if (!res.length) return NextResponse.json({ error: "not_found" }, { status: 404 });
     return NextResponse.json({ id: res[0].id }, { status: 200 });
   } catch (e: any) {

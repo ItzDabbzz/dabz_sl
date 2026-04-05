@@ -22,7 +22,6 @@ This file consolidates project-specific rules for this repo with canonical upstr
   - Global CSS: `app/globals.css`. Middleware: `packages/core/middleware.ts`.
   - DB: use `packages/core/lib/db.ts` (singleton Drizzle/Neon instance). Import tables from `packages/core/schemas/*`.
   - Validation: prefer `zod` + `zod-openapi` in `packages/core/schemas/*`.
-  - Transpile `@dabzsl/shared` via `next.config.ts`.
 - Scraper CLI: entrypoint `packages/scraper-cli/src/index.ts` → `src/scrape.ts`. Login persists to `out/auth.json`. Follow documented CLI flags.
 
 ## High-level assistant principles (combined / canonical)

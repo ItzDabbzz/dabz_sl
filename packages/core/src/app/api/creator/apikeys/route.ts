@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/server/auth/core";
 import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
 import { db } from "@/server/db/client";
-import { apiKey as apiKeyTable } from "@/schemas/auth-schema";
+import { apikey as apiKeyTable } from "@/schemas/auth-schema";
 import { auditLogs } from "@/schemas/sl-schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         const owned = await db
           .select({ id: apiKeyTable.id })
           .from(apiKeyTable)
-          .where(and(eq(apiKeyTable.id as any, auditKeyId as any), eq(apiKeyTable.userId as any, ctx.userId as any)))
+          .where(and(eq(apiKeyTable.id as any, auditKeyId as any), eq(apiKeyTable.referenceId as any, ctx.userId as any)))
           .limit(1);
         if (!owned?.length) return NextResponse.json({ error: "not_found" }, { status: 404 });
         const logs = await db
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     const owned = await db
       .select({ id: apiKeyTable.id })
       .from(apiKeyTable)
-      .where(and(eq(apiKeyTable.id as any, auditKeyId as any), eq(apiKeyTable.userId as any, (session as any).user.id as any)))
+      .where(and(eq(apiKeyTable.id as any, auditKeyId as any), eq(apiKeyTable.referenceId as any, (session as any).user.id as any)))
       .limit(1);
     if (!owned?.length) return NextResponse.json({ error: "not_found" }, { status: 404 });
     const logs = await db
@@ -311,7 +311,7 @@ export async function PATCH(req: NextRequest) {
       const res = await db
         .update(apiKeyTable)
         .set(updatePayload)
-        .where(and(eq(apiKeyTable.id as any, keyId as any), eq(apiKeyTable.userId as any, ctx.userId as any)));
+        .where(and(eq(apiKeyTable.id as any, keyId as any), eq(apiKeyTable.referenceId as any, ctx.userId as any)));
       try {
         await db.insert(auditLogs).values({
           actorType: "user",
@@ -331,7 +331,7 @@ export async function PATCH(req: NextRequest) {
     await db
       .update(apiKeyTable)
       .set(updatePayload)
-      .where(and(eq(apiKeyTable.id as any, keyId as any), eq(apiKeyTable.userId as any, (session as any).user.id as any)));
+      .where(and(eq(apiKeyTable.id as any, keyId as any), eq(apiKeyTable.referenceId as any, (session as any).user.id as any)));
     try {
       await db.insert(auditLogs).values({
         actorType: "user",

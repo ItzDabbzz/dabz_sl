@@ -9,12 +9,12 @@
     "build": "tsc"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "playwright": "^1.44.0"
+    "express": "^5.2.1",
+    "playwright": "^1.59.1"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.6",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.4.5"
+    "typescript": "^6.0.2"
   }
 }

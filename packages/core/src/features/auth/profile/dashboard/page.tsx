@@ -7,11 +7,12 @@ import { OrganizationCard } from "./organization-card";
 import APICard from "./api-card";
 
 export default async function Page() {
+  const requestHeaders = await headers();
   const [session, activeSessions, deviceSessions, organization] = await Promise.all([
-    auth.api.getSession({ headers: await headers() }),
-    auth.api.listSessions({ headers: await headers() }),
-    auth.api.listDeviceSessions({ headers: await headers() }),
-    auth.api.getFullOrganization({ headers: await headers() }),
+    auth.api.getSession({ headers: requestHeaders }),
+    auth.api.listSessions({ headers: requestHeaders }),
+    auth.api.listDeviceSessions({ headers: requestHeaders }),
+    auth.api.getFullOrganization({ headers: requestHeaders }),
   ]).catch((e) => {
     console.log(e);
     throw redirect("/sign-in");

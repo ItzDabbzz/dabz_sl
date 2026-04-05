@@ -56,7 +56,6 @@ Build and tooling
 
 - [ ] Remove `ignoreBuildErrors` once type issues are addressed to prevent shipping broken code.
 - [ ] Run bundle analyzer regularly; split oversized route chunks with dynamic imports.
-- [ ] Ensure `@dabzsl/shared` is tree-shakeable (set `"sideEffects": false` where appropriate).
 
 Quality gates
 

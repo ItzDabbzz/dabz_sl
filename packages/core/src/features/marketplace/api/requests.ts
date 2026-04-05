@@ -144,7 +144,7 @@ export async function PATCH(req: NextRequest) {
       if (updated) updatedRequests.push(updated);
     }
 
-    revalidateTag("marketplace:stats");
+    revalidateTag("marketplace:stats", {});
     return NextResponse.json({ updated: updatedRequests, items: createdItems });
   } catch (e: any) {
     if (e?.message === "unauthorized") return NextResponse.json({ error: "unauthorized" }, { status: 401 });

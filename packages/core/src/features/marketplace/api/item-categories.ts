@@ -67,7 +67,7 @@ export async function PUT(
       } catch {}
     }
 
-    revalidateTag("marketplace:stats");
+    revalidateTag("marketplace:stats", {});
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });

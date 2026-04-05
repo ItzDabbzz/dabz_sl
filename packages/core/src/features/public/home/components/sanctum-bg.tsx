@@ -28,9 +28,8 @@ export default function SanctumBg({
                 src="/8k_stars_milky_way.jpg"
                 alt=""
                 fill
-                sizes="100vw"
-                quality={55}
-                className="object-cover opacity-80 mix-blend-screen [filter:brightness(1.15)_contrast(1.1)]"
+                unoptimized
+                className="object-cover opacity-80 mix-blend-screen filter-[brightness(1.15)_contrast(1.1)]"
             />
 
             {/* Vignette */}
@@ -39,9 +38,9 @@ export default function SanctumBg({
             {/* Soft beams (stained glass feel) */}
             {mode === "cathedral" ? (
                 <>
-                    <div className="absolute inset-0 opacity-15 [mask-image:radial-gradient(60%_60%_at_50%_40%,#000_10%,transparent_70%)]">
-                        <div className="absolute -left-20 top-0 h-[140%] w-[40%] rotate-6 bg-gradient-to-b from-red-900/25 via-amber-200/10 to-transparent blur-3xl" />
-                        <div className="absolute right-0 top-10 h-[140%] w-[35%] -rotate-3 bg-gradient-to-b from-rose-700/20 via-purple-400/10 to-transparent blur-3xl" />
+                    <div className="absolute inset-0 opacity-15 mask-[radial-gradient(60%_60%_at_50%_40%,#000_10%,transparent_70%)]">
+                        <div className="absolute -left-20 top-0 h-[140%] w-[40%] rotate-6 bg-linear-to-b from-red-900/25 via-amber-200/10 to-transparent blur-3xl" />
+                        <div className="absolute right-0 top-10 h-[140%] w-[35%] -rotate-3 bg-linear-to-b from-rose-700/20 via-purple-400/10 to-transparent blur-3xl" />
                     </div>
 
                     {/* Slow moving fog */}
@@ -56,8 +55,8 @@ export default function SanctumBg({
                     alt=""
                     width={512}
                     height={512}
-                    quality={70}
-                    className="absolute right-[6%] top-[6%] h-40 w-40 lg:h-64 lg:w-64 rounded-full object-cover opacity-90 drop-shadow-[0_0_80px_rgba(193,30,55,0.45)] [filter:saturate(0.85)_brightness(0.9)_contrast(1.1)]"
+                    unoptimized
+                    className="absolute right-[6%] top-[6%] h-40 w-40 lg:h-64 lg:w-64 rounded-full object-cover opacity-90 drop-shadow-[0_0_80px_rgba(193,30,55,0.45)] filter-[saturate(0.85)_brightness(0.9)_contrast(1.1)]"
                 />
             ) : null}
 
@@ -83,7 +82,7 @@ export default function SanctumBg({
                             }
                         >
                             {/* Tail (fades behind) */}
-                            <div className="h-px w-40 bg-gradient-to-r from-transparent via-white/40 to-white blur-[0.5px] shadow-[0_0_12px_rgba(255,255,255,0.25)]" />
+                            <div className="h-px w-40 bg-linear-to-r from-transparent via-white/40 to-white blur-[0.5px] shadow-[0_0_12px_rgba(255,255,255,0.25)]" />
                             {/* Bright head */}
                             <div className="absolute right-0 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.85),0_0_22px_rgba(255,255,255,0.55)]" />
                         </div>
@@ -92,7 +91,7 @@ export default function SanctumBg({
             </div>
 
             {/* Fine grain */}
-            <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay [background-image:radial-gradient(1px_1px_at_20%_30%,rgba(255,255,255,0.35)_0,transparent_1px),radial-gradient(1px_1px_at_70%_60%,rgba(255,255,255,0.3)_0,transparent_1px),radial-gradient(1px_1px_at_40%_80%,rgba(255,255,255,0.25)_0,transparent_1px)] [background-size:8px_8px,10px_10px,12px_12px]" />
+            <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay bg-[radial-gradient(1px_1px_at_20%_30%,rgba(255,255,255,0.35)_0,transparent_1px),radial-gradient(1px_1px_at_70%_60%,rgba(255,255,255,0.3)_0,transparent_1px),radial-gradient(1px_1px_at_40%_80%,rgba(255,255,255,0.25)_0,transparent_1px)] bg-size-[8px_8px,10px_10px,12px_12px]" />
         </div>
     );
 }

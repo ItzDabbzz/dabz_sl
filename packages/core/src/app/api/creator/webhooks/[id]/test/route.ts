@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { webhooks } from "@/schemas/sl-schema";

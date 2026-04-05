@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
 
 import { NextResponse } from "next/server";
 
@@ -11,7 +11,4 @@ const presets = [
 
 export async function GET() {
   return NextResponse.json({ groups: presets });
-
-
-
 }

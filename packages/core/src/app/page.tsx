@@ -56,7 +56,7 @@ export default async function Home() {
     const lindex = live.lindex;
 
     return (
-        <div className="relative min-h-[100svh] w-full overflow-hidden bg-gradient-to-b from-background via-background to-background">
+        <div className="relative min-h-[100svh] w-full overflow-hidden bg-linear-to-b from-background via-background to-background">
             {/* Sanctum cathedral background */}
             <SanctumBg mode="cathedral" moon="blood" />
 

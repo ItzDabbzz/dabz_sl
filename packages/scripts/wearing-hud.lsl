@@ -1,4 +1,4 @@
-integer DEBUG = TRUE;
+integer DEBUG = FALSE;
 
 string API_URL = "https://sl.sanctumrp.net/api/sl/wearing";
 string VIEW_URL = "https://sl.sanctumrp.net/wearing";
@@ -37,6 +37,11 @@ integer MAX_CACHE_SIZE = 20;
 integer MAX_PENDING_REQUESTS = 5;
 float MIN_UPDATE_INTERVAL = 1.0;
 float gLastUpdateTime = 0.0;
+vector HUD_HIDDEN_OFFSET = <0.0, 0.0, -1.0>;
+vector gHudShownPos = ZERO_VECTOR;
+integer gHudPosCaptured = FALSE;
+integer CREATOR_WAIT_MAX_CYCLES = 8;
+integer gCreatorWaitCycles = 0;
 
 
 string json_escape(string s) {
@@ -52,6 +57,21 @@ string get_creator_name_cached(key creator) {
         return llList2String(gCreatorNameCache, idx + 1);
     }
     return "";
+}
+
+
+string get_agent_label(key agent) {
+    string displayName = llGetDisplayName(agent);
+    if (displayName != "") {
+        return displayName;
+    }
+
+    string legacyName = llKey2Name(agent);
+    if (legacyName != "") {
+        return legacyName;
+    }
+
+    return (string)agent;
 }
 
 
@@ -193,10 +213,14 @@ update_for(key agent) {
     }
     gLastUpdateTime = now;
 
+    gCreatorNameReqs = [];
+    gCreatorPending = 0;
+    gCreatorWaitCycles = 0;
+
     fetch_creator_names_for(agent);
 
     llSetLinkPrimitiveParamsFast(BUTTON_LINK, [PRIM_TEXT, "What They Wearin'\nLoading names...", <1,1,0>, 0.5]);
-    llSetTimerEvent(2.0); 
+    llSetTimerEvent(0.5); 
 }
 
 
@@ -233,7 +257,7 @@ show_menu() {
     }
 
     if (llGetListLength(filtered) == 0) {
-        llOwnerSay("No avatars found within " + (string)((integer)SCAN_RADIUS) + "m");
+        llOwnerSay("No avatars found within " + (string)((integer)SCAN_RADIUS) + "m.");
         return;
     }
 
@@ -246,18 +270,18 @@ show_menu() {
 
 set_media_url(string url) {
     if (url == "") {
-        llOwnerSay("ERROR: Empty URL");
+        llOwnerSay("Error: Media URL is empty.");
         return;
     }
     if (gResolvedFace == -1) {
         integer sides = llGetLinkNumberOfSides(HUD_LINK);
         if (sides == 0) {
-            llOwnerSay("ERROR: Cannot get number of sides");
+            llOwnerSay("Error: Unable to determine HUD media face count.");
             return;
         }
         gResolvedFace = MEDIA_FACE;
         if (gResolvedFace < 0 || gResolvedFace >= sides) {
-            llOwnerSay("WARNING: MEDIA_FACE out of bounds, using face 0");
+            llOwnerSay("Warning: Configured media face is out of range. Using face 0.");
             gResolvedFace = 0;
         }
     }
@@ -276,7 +300,7 @@ set_media_url(string url) {
     if (result == 0) {
         if (DEBUG) llOwnerSay("Media URL set: " + url);
     } else {
-        llOwnerSay("ERROR: Media failed (code: " + (string)result + ")");
+        llOwnerSay("Error: Failed to configure media (code " + (string)result + ").");
     }
 }
 
@@ -289,15 +313,33 @@ set_hud_visible(integer visible) {
     if (gResolvedFace == -1) {
         integer sides = llGetLinkNumberOfSides(HUD_LINK);
         if (sides == 0) {
-            llOwnerSay("ERROR: Cannot get number of sides for visibility");
+            llOwnerSay("Error: Unable to determine HUD media face for visibility update.");
             return;
         }
         gResolvedFace = MEDIA_FACE;
         if (gResolvedFace < 0 || gResolvedFace >= sides) {
-            llOwnerSay("WARNING: MEDIA_FACE out of bounds, using face 0");
+            llOwnerSay("Warning: Configured media face is out of range. Using face 0.");
             gResolvedFace = 0;
         }
     }
+
+    if (!gHudPosCaptured) {
+        list posInfo = llGetLinkPrimitiveParams(HUD_LINK, [PRIM_POS_LOCAL]);
+        if (llGetListLength(posInfo) > 0) {
+            gHudShownPos = llList2Vector(posInfo, 0);
+            gHudPosCaptured = TRUE;
+        }
+    }
+
+    vector targetPos = gHudShownPos;
+    if (visible == 0) {
+        targetPos = gHudShownPos + HUD_HIDDEN_OFFSET;
+    }
+
+    llSetLinkPrimitiveParamsFast(HUD_LINK, [
+        PRIM_POS_LOCAL, targetPos,
+        PRIM_TEXT, "", <1,1,1>, 0.0
+    ]);
 
     llSetLinkAlpha(HUD_LINK, alpha, gResolvedFace);
 }
@@ -374,16 +416,19 @@ string json_item(string name, key creator, integer point) {
     json += ",\"pointName\":\"" + json_escape(get_attach_point_name(point)) + "\"";
 
     string creatorName = get_creator_name_cached(creator);
-    if (creatorName != "") {
-        json += ",\"creatorName\":\"" + json_escape(creatorName) + "\"";
+    string creatorLabel = creatorName;
+    if (creatorLabel == "") {
+        creatorLabel = (string)creator;
+    }
 
-        
+    json += ",\"creatorName\":\"" + json_escape(creatorLabel) + "\"";
+
+    string profile = "secondlife:///app/agent/" + (string)creator + "/about";
+    json += ",\"profileUrl\":\"" + json_escape(profile) + "\"";
+
+    if (creatorName != "") {
         string mp = "https://marketplace.secondlife.com/en-US/products/search?utf8=%E2%9C%93&search%5Bkeywords%5D=" + llEscapeURL(creatorName) + "&search%5Bcategory_id%5D=&search%5Bmaturity_level%5D=GMA";
         json += ",\"mpSearch\":\"" + json_escape(mp) + "\"";
-
-        
-        string profile = "secondlife:///app/agent/" + (string)creator + "/about";
-        json += ",\"profileUrl\":\"" + json_escape(profile) + "\"";
     }
 
     json += "}";
@@ -422,9 +467,10 @@ list collect_items_for(key agent) {
 
 default {
     state_entry() {
-        llOwnerSay("What They Wearin' HUD V2 ready!");
-        llOwnerSay("Touch: Open menu | Hold 1s: Toggle visibility");
+        llOwnerSay("What They Wearin' HUD is ready.");
+        llOwnerSay("Tap to scan. Press and hold for 1 second to toggle HUD visibility.");
         set_media_url(VIEW_URL);
+        llSetLinkPrimitiveParamsFast(HUD_LINK, [PRIM_TEXT, "", <1,1,1>, 0.0]);
         set_hud_visible(0); 
         llSetLinkPrimitiveParamsFast(BUTTON_LINK, [PRIM_TEXT, "What They Wearin'\nTouch to scan", <1,1,1>, 0.5]);
     }
@@ -446,10 +492,10 @@ default {
                 integer currentAlpha = (integer)llList2Float(llGetLinkPrimitiveParams(HUD_LINK, [PRIM_COLOR, gResolvedFace]), 1);
                 if (currentAlpha > 0) {
                     set_hud_visible(0);
-                    llOwnerSay("Media prim hidden");
+                    llOwnerSay("HUD media hidden.");
                 } else {
                     set_hud_visible(1);
-                    llOwnerSay("Media prim shown");
+                    llOwnerSay("HUD media shown.");
                 }
             } else {
                 
@@ -465,7 +511,7 @@ default {
         if (idx + 1 < llGetListLength(gLabelKeyPairs)) {
             key agent = (key)llList2String(gLabelKeyPairs, idx + 1);
             gTarget = agent;
-            llOwnerSay("Selected: " + msg);
+            llOwnerSay("Selected avatar: " + get_agent_label(agent));
             set_hud_visible(0); 
             update_for(agent);
         }
@@ -478,6 +524,11 @@ default {
             store_creator_name(creator, data);
             gCreatorNameReqs = llDeleteSubList(gCreatorNameReqs, idx, idx + 1);
             gCreatorPending--;
+            if (gCreatorPending < 0) gCreatorPending = 0;
+
+            if (gTarget != NULL_KEY) {
+                fetch_creator_names_for(gTarget);
+            }
             if (DEBUG) llOwnerSay("DEBUG: Cached creator name: " + data);
 
             
@@ -515,7 +566,8 @@ default {
                     integer end = llSubStringIndex(llGetSubString(body, start, -1), "\"");
                     if (end != -1) {
                         gSessionId = llGetSubString(body, start, start + end - 1);
-                        llOwnerSay("SUCCESS: Session ID: " + gSessionId);
+                        llOwnerSay("Session created: " + gSessionId);
+                        llOwnerSay("Share link: " + VIEW_URL + "?session=" + gSessionId);
                     }
                 }
             }
@@ -528,12 +580,11 @@ default {
 
             process_next_item();
         } else if (status == 307 || status == 301 || status == 302) {
-            llOwnerSay("ERROR: Server returned redirect (status " + (string)status + ")");
-            llOwnerSay("ERROR: This usually means the API URL is incorrect.");
-            llOwnerSay("ERROR: Check if sanctumrp.net redirects to another domain.");
+            llOwnerSay("Error: API returned a redirect (status " + (string)status + ").");
+            llOwnerSay("Please verify API_URL uses the final destination URL (no redirect).");
             llSetLinkPrimitiveParamsFast(BUTTON_LINK, [PRIM_TEXT, "What They Wearin'\nURL redirect error", <1,0,0>, 0.5]);
         } else {
-            llOwnerSay("ERROR: API returned status " + (string)status);
+            llOwnerSay("Error: API request failed with status " + (string)status + ".");
             llSetLinkPrimitiveParamsFast(BUTTON_LINK, [PRIM_TEXT, "What They Wearin'\nError sending data", <1,0,0>, 0.5]);
         }
     }
@@ -543,9 +594,13 @@ default {
 
         if (gTarget == NULL_KEY) return;
 
-        
-        gCreatorNameReqs = [];
-        gCreatorPending = 0;
+        fetch_creator_names_for(gTarget);
+
+        if (gCreatorPending > 0 && gCreatorWaitCycles < CREATOR_WAIT_MAX_CYCLES) {
+            gCreatorWaitCycles++;
+            llSetTimerEvent(0.5);
+            return;
+        }
 
         
         list items = collect_items_for(gTarget);

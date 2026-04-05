@@ -198,7 +198,7 @@ function SignInBox() {
 					await signIn.passkey({
 						fetchOptions: {
 							onSuccess(_context) {
-								router.push(getCallbackURL(params));
+								router.push(getCallbackURL(params) as never);
 							},
 							onError(context) {
 								toast.error(context.error.message);

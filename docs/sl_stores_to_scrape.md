@@ -12,4 +12,4 @@
 - BAD UNICORN - https://marketplace.secondlife.com/en-US/stores/125109
 - RAMA.SALON - https://marketplace.secondlife.com/en-US/stores/190386
 - Cult - https://marketplace.secondlife.com/en-US/stores/199625
-- 
+- Dynasty - Full Perm - https://marketplace.secondlife.com/stores/229687

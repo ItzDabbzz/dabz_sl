@@ -30,7 +30,7 @@ export default function InvitationPage() {
 			.acceptInvitation({
 				invitationId: params.id,
 			})
-			.then((res) => {
+			.then((res: any) => {
 				if (res.error) {
 					setError(res.error.message || "An error occurred");
 				} else {
@@ -45,7 +45,7 @@ export default function InvitationPage() {
 			.rejectInvitation({
 				invitationId: params.id,
 			})
-			.then((res) => {
+			.then((res: any) => {
 				if (res.error) {
 					setError(res.error.message || "An error occurred");
 				} else {
@@ -76,7 +76,7 @@ export default function InvitationPage() {
 					id: params.id,
 				},
 			})
-			.then((res) => {
+			.then((res: any) => {
 				if (res.error) {
 					setError(res.error.message || "An error occurred");
 				} else {

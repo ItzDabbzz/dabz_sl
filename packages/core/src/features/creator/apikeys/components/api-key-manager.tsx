@@ -52,7 +52,7 @@ export function ApiKeyManager() {
       setLoading(true)
       const response = await client.apiKey.list()
       if (response.data) {
-        setApiKeys(response.data)
+        setApiKeys((response.data as any).apiKeys ?? (response.data as any))
       }
     } catch (error) {
       toast.error("Failed to load API keys")

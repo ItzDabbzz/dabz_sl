@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
+import { Redis } from "@upstash/redis";
 
 // CORS headers for Second Life
 const corsHeaders = {
@@ -28,18 +29,19 @@ interface WearingSession {
 	};
 }
 
-// In-memory session storage (upgrade to Redis for production)
-const sessions = new Map<string, WearingSession>();
+const SESSION_TTL_SECONDS = 6 * 60 * 60; // 6 hours
 
-// Clean up expired sessions every 30 minutes
-setInterval(() => {
-	const now = Date.now();
-	for (const [sessionId, session] of sessions.entries()) {
-		if (session.expiresAt < now) {
-			sessions.delete(sessionId);
-		}
-	}
-}, 30 * 60 * 1000);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getRedis(): any {
+	return new Redis({
+		url: process.env.sl_KV_REST_API_URL!,
+		token: process.env.sl_KV_REST_API_TOKEN!,
+	});
+}
+
+function sessionKey(id: string) {
+	return `wearing:session:${id}`;
+}
 
 // OPTIONS: Handle CORS preflight
 export async function OPTIONS() {
@@ -48,13 +50,8 @@ export async function OPTIONS() {
 
 // POST: Create or update a wearing session
 export async function POST(req: NextRequest) {
-	console.log("[Wearing API] POST request received");
-	console.log("[Wearing API] URL:", req.url);
-	console.log("[Wearing API] Headers:", Object.fromEntries(req.headers.entries()));
-
 	try {
 		const body = await req.json();
-		console.log("[Wearing API] Body:", body);
 		const { sessionId, item, complete, metadata } = body;
 
 		// Validate item structure
@@ -65,33 +62,42 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
+		const redis = getRedis();
 		const now = Date.now();
-		const expiresAt = now + 6 * 60 * 60 * 1000; // 6 hours
-
-		let sid = sessionId;
+		let sid: string = sessionId;
 		let session: WearingSession;
 
-		if (sid && sessions.has(sid)) {
-			// Add to existing session
-			session = sessions.get(sid)!;
-			session.items.push(item);
-			session.expiresAt = expiresAt; // Extend expiry
-
-			// Update metadata if provided (usually on final complete request)
-			if (metadata) {
-				session.metadata = metadata;
+		if (sid) {
+			const rawExisting = await redis.get(sessionKey(sid)) as string | null;
+			const existing: WearingSession | null = rawExisting
+				? (typeof rawExisting === "string" ? JSON.parse(rawExisting) : rawExisting) as WearingSession
+				: null;
+			if (existing) {
+				session = existing;
+				session.items.push(item);
+				session.expiresAt = now + SESSION_TTL_SECONDS * 1000;
+				if (metadata) session.metadata = metadata;
+			} else {
+				// Session gone (expired or never existed) — start fresh
+				sid = nanoid(16);
+				session = {
+					items: [item],
+					createdAt: now,
+					expiresAt: now + SESSION_TTL_SECONDS * 1000,
+					metadata,
+				};
 			}
 		} else {
-			// Create new session
 			sid = nanoid(16);
 			session = {
 				items: [item],
 				createdAt: now,
-				expiresAt,
+				expiresAt: now + SESSION_TTL_SECONDS * 1000,
 				metadata,
 			};
-			sessions.set(sid, session);
 		}
+
+		await redis.set(sessionKey(sid), JSON.stringify(session), { ex: SESSION_TTL_SECONDS });
 
 		return NextResponse.json(
 			{
@@ -112,8 +118,7 @@ export async function POST(req: NextRequest) {
 
 // GET: Retrieve wearing session data
 export async function GET(req: NextRequest) {
-	const searchParams = req.nextUrl.searchParams;
-	const sessionId = searchParams.get("session");
+	const sessionId = req.nextUrl.searchParams.get("session");
 
 	if (!sessionId) {
 		return NextResponse.json(
@@ -122,20 +127,16 @@ export async function GET(req: NextRequest) {
 		);
 	}
 
-	const session = sessions.get(sessionId);
+	const redis = getRedis();
+	const raw = await redis.get(sessionKey(sessionId)) as string | null;
+	const session: WearingSession | null = raw
+		? (typeof raw === "string" ? JSON.parse(raw) : raw) as WearingSession
+		: null;
+
 	if (!session) {
 		return NextResponse.json(
 			{ error: "Session not found or expired" },
 			{ status: 404 }
-		);
-	}
-
-	// Check if expired
-	if (session.expiresAt < Date.now()) {
-		sessions.delete(sessionId);
-		return NextResponse.json(
-			{ error: "Session expired" },
-			{ status: 410 }
 		);
 	}
 
@@ -148,7 +149,4 @@ export async function GET(req: NextRequest) {
 		},
 		{ headers: corsHeaders }
 	);
-
-
-
 }

@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 import { z } from "zod";
 import { createDocument } from "zod-openapi";
@@ -275,14 +275,10 @@ async function getOpenApiDoc() {
   });
 }
 
-import { NextRequest } from "next/server";
-
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const openApiDoc = await getOpenApiDoc();
   return new Response(JSON.stringify(openApiDoc), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
-
-
 }

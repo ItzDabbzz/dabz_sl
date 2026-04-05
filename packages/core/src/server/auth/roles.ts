@@ -1,8 +1,10 @@
 const MARKETPLACE_PRIVILEGED_ROLES = new Set([
     "owner",
     "developer",
+    "dev",
     "admin",
     "mod",
+    "moderator",
 ]);
 
 export function isPrivilegedMarketplaceRole(

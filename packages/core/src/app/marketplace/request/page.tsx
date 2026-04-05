@@ -1,1 +1,3 @@
-export { default, dynamic } from "@/features/public/marketplace/request/page";
+export { default } from "@/features/public/marketplace/request/page";
+
+export const dynamic = "force-dynamic";

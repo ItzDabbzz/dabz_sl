@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 export type WorkInProgressProps = {
   title?: string;
   message?: string;
-  href?: string;
+  href?: React.ComponentProps<typeof Link>["href"];
   hrefText?: string;
   className?: string;
 };
@@ -32,12 +32,12 @@ export function WorkInProgressNotice({
       {/* Accent bar */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-amber-400 to-orange-500"
+        className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-linear-to-b from-amber-400 to-orange-500"
       />
       {/* Top hairline */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-amber-400/60 to-transparent"
       />
 
       <Wrench className="text-amber-600 dark:text-amber-400" />

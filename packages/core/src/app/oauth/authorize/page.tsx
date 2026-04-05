@@ -26,16 +26,16 @@ export default async function AuthorizePage({
 	searchParams,
 }: AuthorizePageProps) {
 	const { redirect_uri, scope, client_id, cancel_uri } = await searchParams;
+	const requestHeaders = await headers();
 	const session = await auth.api.getSession({
-		headers: await headers(),
+		headers: requestHeaders,
 	});
-	// @ts-expect-error
-	const clientDetails = await auth.api.getOAuthClient({
+	const clientDetails = await (auth.api as any).getOAuthClient?.({
 		params: {
 			id: client_id,
 		},
-		headers: await headers(),
-	});
+		headers: requestHeaders,
+	}) ?? { icon: null, name: client_id };
 
 	return (
 		<div className="container mx-auto py-10">

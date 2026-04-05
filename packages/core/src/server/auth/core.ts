@@ -9,7 +9,6 @@ import {
     oAuthProxy,
     openAPI,
     customSession,
-    apiKey,
     haveIBeenPwned,
 } from "better-auth/plugins";
 import {
@@ -19,12 +18,13 @@ import {
     member,
     myCustomRole,
 } from "@/features/auth/permissions/access-control";
-import { reactInvitationEmail } from "@/server/email/invitation";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { reactResetPasswordEmail } from "@/server/email/reset-password";
+import { buildInvitationEmailHtml } from "@/features/emails/templates/invitation";
+import { buildResetPasswordEmailHtml } from "@/features/emails/templates/reset-password";
 import { resend } from "@/server/email/resend";
 import { nextCookies } from "better-auth/next-js";
-import { passkey } from "better-auth/plugins/passkey";
+import { apiKey } from "@better-auth/api-key";
+import { passkey } from "@better-auth/passkey";
 import { db } from "@/server/db/client";
 import {
     user,
@@ -36,7 +36,7 @@ import {
     invitation,
     twoFactor as tfSchema,
     passkey as passSchema,
-    apiKey as apiKeySchema,
+    apikey as apiKeySchema,
     team,
     teamMember,
 } from "@/schemas/auth-schema";
@@ -115,7 +115,7 @@ export const auth = betterAuth({
                 from,
                 to: user.email,
                 subject: "Reset your password",
-                react: reactResetPasswordEmail({
+                html: buildResetPasswordEmailHtml({
                     username: user.email,
                     resetLink: url,
                 }),
@@ -151,22 +151,24 @@ export const auth = betterAuth({
                 allowRemovingAllTeams: false,
             },
             async sendInvitationEmail(data) {
+                const inviteLink =
+                    process.env.NODE_ENV === "development"
+                        ? `http://localhost:3000/accept-invitation/${data.id}`
+                        : `${
+                              process.env.BETTER_AUTH_URL ||
+                              "https://sanctumrp.net"
+                          }/accept-invitation/${data.id}`;
+
                 await resend.emails.send({
                     from,
                     to: data.email,
                     subject: "You've been invited to join an organization",
-                    react: reactInvitationEmail({
+                    html: buildInvitationEmailHtml({
                         username: data.email,
                         invitedByUsername: data.inviter.user.name,
                         invitedByEmail: data.inviter.user.email,
                         teamName: data.organization.name,
-                        inviteLink:
-                            process.env.NODE_ENV === "development"
-                                ? `http://localhost:3000/accept-invitation/${data.id}`
-                                : `${
-                                      process.env.BETTER_AUTH_URL ||
-                                      "https://sanctumrp.net"
-                                  }/accept-invitation/${data.id}`,
+                        inviteLink,
                     }),
                 });
             },

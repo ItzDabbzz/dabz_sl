@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/server/auth/core";
 import { db } from "@/server/db/client";

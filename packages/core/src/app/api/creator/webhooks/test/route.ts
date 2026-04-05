@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { NextRequest, NextResponse } from "next/server";
 import { getCreatorContextFromApiKey, requireScope } from "@/features/creator/api/auth";
 import { deliverWebhook } from "@/features/creator/webhooks/server/delivery";

@@ -62,7 +62,7 @@ export default function UserCard(props: {
 }) {
 	const router = useRouter();
 	const { data, isPending } = useSession();
-	const session = data || props.session;
+	const session = (data || props.session) as any;
 	const [isTerminating, setIsTerminating] = useState<string>();
 	const [isPendingTwoFa, setIsPendingTwoFa] = useState<boolean>(false);
 	const [twoFaPassword, setTwoFaPassword] = useState<string>("");
@@ -727,7 +727,7 @@ function AddPasskey() {
 			name: passkeyName,
 		});
 		if (res?.error) {
-			toast.error(res?.error.message);
+			toast.error(String(res?.error?.message ?? "Failed to add passkey"));
 		} else {
 			setIsOpen(false);
 			toast.success("Passkey added successfully. You can now use it to login.");
@@ -798,7 +798,7 @@ function ListPasskeys() {
 		});
 		setIsLoading(false);
 		if (res?.error) {
-			toast.error(res?.error.message);
+			toast.error(String(res?.error?.message ?? "Failed to add passkey"));
 		} else {
 			toast.success("Passkey added successfully. You can now use it to login.");
 		}

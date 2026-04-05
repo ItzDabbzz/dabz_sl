@@ -1,6 +1,7 @@
 import { db } from "@/server/db/client";
 import { blogPosts, blogPostCategories, blogCategories, blogPostRatings } from "@/schemas/blog";
 import { and, desc, eq, inArray, sql, or, ilike } from "drizzle-orm";
+import { Suspense } from "react";
 import Link from "next/link";
 import { CategorySidebar } from "@/features/public/blog/components/category-sidebar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,8 +11,8 @@ import { user } from "@/schemas/auth-schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Heart } from "lucide-react";
 
+// ISR: revalidate every 60 seconds; no force-static since searchParams are used for filtering
 export const revalidate = 60;
-export const dynamic = "force-static";
 
 const PAGE_SIZE = 10;
 
@@ -221,7 +222,9 @@ export default async function PublicBlogIndex({
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
         <aside className="lg:col-span-3 xl:col-span-3">
           <div className="sticky top-24 space-y-4">
-            <CategorySidebar categories={cats} />
+            <Suspense>
+              <CategorySidebar categories={cats} />
+            </Suspense>
             <Card>
               <CardContent className="p-4">
                 <div className="mb-2 text-sm font-medium text-muted-foreground">Recent posts</div>

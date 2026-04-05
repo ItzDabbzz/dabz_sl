@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
@@ -63,7 +63,5 @@ export async function GET(req: NextRequest) {
   } catch (e: any) {
     console.error(e);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
-
-
   }
 }

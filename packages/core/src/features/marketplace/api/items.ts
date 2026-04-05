@@ -349,7 +349,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Invalidate stats cache after import
-        revalidateTag("marketplace:stats");
+        revalidateTag("marketplace:stats", {});
 
         return NextResponse.json({ items: results }, { status: 201 });
     } catch (e: any) {
@@ -393,7 +393,7 @@ export async function PATCH(req: NextRequest) {
                 .set({ ...updates, updatedAt: now } as any)
                 .where(inArray(mpItems.id as any, uniqueIds as any) as any);
 
-            revalidateTag("marketplace:stats");
+            revalidateTag("marketplace:stats", {});
             return NextResponse.json({ updated: uniqueIds.length });
         }
 
@@ -402,7 +402,7 @@ export async function PATCH(req: NextRequest) {
             updatedAt: now,
         });
 
-        revalidateTag("marketplace:stats");
+        revalidateTag("marketplace:stats", {});
         return NextResponse.json({ item: row });
     } catch (e: any) {
         if (e?.message === "unauthorized")
@@ -473,7 +473,7 @@ export async function DELETE(req: NextRequest) {
                 .delete(mpItems)
                 .where(inArray(mpItems.id as any, ownedIds as any) as any);
 
-            revalidateTag("marketplace:stats");
+            revalidateTag("marketplace:stats", {});
             return NextResponse.json({ deleted: ownedIds.length });
         }
 
@@ -486,7 +486,7 @@ export async function DELETE(req: NextRequest) {
             .where(eq(mpItems.id as any, id as any) as any)
             .returning();
 
-        revalidateTag("marketplace:stats");
+        revalidateTag("marketplace:stats", {});
         return NextResponse.json({ item: row });
     } catch (e: any) {
         if (e?.message === "unauthorized")

@@ -1,14 +1,13 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/server/auth/core";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiKeysTable, type ApiKeyItem } from "./components/table";
 import WorkInProgressNotice from "@/components/shared/work-in-progress-notice";
 import { ActionsClient } from "./actions-client";
+import { fetchInternalApiJson } from "@/server/services/internal-api";
+import { getOptionalSession } from "@/server/auth/session";
 
 export default async function ApiKeysPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const hdrs = await headers();
-  const session = await auth.api.getSession({ headers: hdrs }).catch(() => null);
+  const session = await getOptionalSession();
   if (!session) return redirect("/sign-in");
 
   const sp = (await searchParams) || {};
@@ -18,10 +17,6 @@ export default async function ApiKeysPage({ searchParams }: { searchParams: Prom
   const sortKey = (typeof sp.sortKey === "string" ? sp.sortKey : "createdAt") as "name" | "createdAt" | "lastUsedAt";
   const sortDir = (typeof sp.sortDir === "string" ? sp.sortDir : "desc") as "asc" | "desc";
 
-  // Use our internal API route to leverage server-side filter/sort/pagination
-  const proto = hdrs.get("x-forwarded-proto") ?? "http";
-  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "localhost:3000";
-  const base = `${proto}://${host}`;
   const qs = new URLSearchParams();
   if (q) qs.set("q", q);
   qs.set("limit", String(limit));
@@ -29,11 +24,11 @@ export default async function ApiKeysPage({ searchParams }: { searchParams: Prom
   qs.set("sortKey", sortKey);
   qs.set("sortDir", sortDir);
 
-  const res = await fetch(`${base}/api/creator/apikeys?${qs.toString()}`, {
-    cache: "no-store",
-    headers: { cookie: hdrs.get("cookie") ?? "" },
-  });
-  const json = await res.json().catch(() => ({ items: [], page: { limit, offset, hasMore: false, total: 0 } }));
+  const json = await fetchInternalApiJson(
+    `/api/creator/apikeys?${qs.toString()}`,
+    { items: [], page: { limit, offset, hasMore: false, total: 0 } },
+    { cache: "no-store" },
+  );
   const list = Array.isArray(json?.items) ? json.items : [];
   const items: ApiKeyItem[] = list.map((x: any) => ({
     id: x.id,

@@ -14,9 +14,9 @@
     "scrape": "tsx src/index.ts"
   },
   "devDependencies": {
-    "@types/yargs": "^17.0.33",
-    "playwright": "^1.55.0",
-    "typescript": "5.9.2"
+    "@types/yargs": "^17.0.35",
+    "playwright": "^1.59.1",
+    "typescript": "6.0.2"
   },
   "dependencies": {
     "@types/cli-progress": "^3.11.6",

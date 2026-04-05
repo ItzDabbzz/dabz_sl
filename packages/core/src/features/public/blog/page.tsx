@@ -18,9 +18,10 @@ import { headers } from "next/headers";
 import { auth } from "@/server/auth/core";
 import { canViewCategory } from "@/features/auth/permissions/access-control";
 import WebBg from "@/components/web-bg";
+import { Suspense } from "react";
 
-export const revalidate = 60; // ISR for public list
-export const dynamic = "force-dynamic"; // personalized by session
+// force-dynamic because this page is personalized by session (headers())
+export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 10;
 
@@ -102,7 +103,9 @@ export default async function BlogIndex({
                 <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
                     <aside className="lg:col-span-3 xl:col-span-3">
                         <div className="sticky top-24 space-y-4">
-                            <CategorySidebar categories={cats} />
+                            <Suspense>
+                                <CategorySidebar categories={cats} />
+                            </Suspense>
                         </div>
                     </aside>
                     <main className="lg:col-span-9 xl:col-span-9 min-w-0">
@@ -300,7 +303,9 @@ export default async function BlogIndex({
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
                 <aside className="lg:col-span-3 xl:col-span-3">
                     <div className="sticky top-24 space-y-4">
-                        <CategorySidebar categories={cats} />
+                        <Suspense>
+                            <CategorySidebar categories={cats} />
+                        </Suspense>
 
                         <Card>
                             <CardContent className="p-4">
