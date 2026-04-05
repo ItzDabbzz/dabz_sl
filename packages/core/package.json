@@ -2,6 +2,7 @@
   "name": "@dabzsl/core",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@9.12.0",
   "scripts": {
     "dev": "dotenv -e ../../.env -- next dev -p 3000",
     "dev:secure": "dotenv -e ../../.env -- next dev --experimental-https -p 3000",
