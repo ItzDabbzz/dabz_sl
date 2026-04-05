@@ -38,6 +38,8 @@ export interface ButtonProps
 	extends React.ButtonHTMLAttributes<HTMLButtonElement>,
 		VariantProps<typeof buttonVariants> {
 	asChild?: boolean;
+	// Override popover to match @radix-ui/react-slot's SlotProps until it adds "hint"
+	popover?: "" | "auto" | "manual" | undefined;
 }
 
 const Button = ({
