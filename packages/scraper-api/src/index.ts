@@ -1,23 +1,13 @@
-import express from 'express';
-import { scrapeMarketplace } from './scrape';
+/**
+ * scraper-api server entry point.
+ *
+ * Run with:
+ *   node dist/index.js
+ *   PORT=3000 SCRAPER_API_KEY=secret node dist/index.js
+ */
 
-const app = express();
-app.use(express.json());
+import { app, PORT } from './app.js';
 
-app.post('/scrape', async (req, res) => {
-    const { url } = req.body;
-    if (!url || typeof url !== 'string') {
-        return res.status(400).json({ error: 'Missing or invalid url' });
-    }
-    try {
-        const data = await scrapeMarketplace(url);
-        res.json({ success: true, data });
-    } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Scraping failed' });
-    }
-});
-
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Scraper API listening on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`scraper-api listening on http://0.0.0.0:${PORT}`);
 });

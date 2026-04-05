@@ -1,0 +1,19 @@
+services:
+  scraper-api:
+    build:
+      context: ../..  # workspace root — Dockerfile copies from here
+      dockerfile: packages/scraper-api/Dockerfile
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      PORT: "${PORT:-3000}"
+      NODE_ENV: production
+      SCRAPER_API_KEY: "${SCRAPER_API_KEY}"
+      # Comma-separated extra origins beyond sanctumrp.net (optional):
+      # EXTRA_ORIGINS: "https://staging.sanctumrp.net"
+    restart: unless-stopped
+    # Playwright / Chromium needs a non-sandboxed environment in Docker.
+    # The --no-sandbox flag is set automatically by the Playwright base image,
+    # but cap_add covers edge-case Linux kernel hardening.
+    cap_add:
+      - SYS_ADMIN

@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import fs from "fs";
 import path from "path";
-import { resolveOut } from "./utils";
+import { resolveOut } from "./utils.js";
 
 (async () => {
   const storageFile = resolveOut(path.join("out", "auth.json"));

@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-import "./scrape";
+import "./scrape.js";
