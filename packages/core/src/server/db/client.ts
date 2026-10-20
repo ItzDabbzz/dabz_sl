@@ -13,6 +13,25 @@ import * as authSchema from "@/schemas/auth-schema";
  */
 const schema = { ...slSchema, ...authSchema };
 
+/**
+ * The table names, which are the delegate names.
+ *
+ * This has to be worked out up front. Asking better-drizzle for a delegate
+ * under a name it does not recognise makes it try to build one, and that
+ * fails — so the delegate client is only ever asked for a name on this
+ * list. The schema also holds relation objects, which are not tables.
+ */
+const tableNames = new Set(
+    Object.entries(schema)
+        .filter(
+            ([, value]) =>
+                value &&
+                typeof value === "object" &&
+                Symbol.for("drizzle:Name") in value,
+        )
+        .map(([name]) => name),
+);
+
 type RawDatabase = ReturnType<typeof drizzle<typeof schema>>;
 type BetterClient = ReturnType<typeof better<typeof schema>>;
 
@@ -48,19 +67,19 @@ function getDbInstance(): Database {
   const raw = drizzle(sql, { schema });
   const client = better(raw, { schema });
 
-  // The delegate wins where the two overlap, and raw Drizzle answers for
-  // everything else. A plain merge would not do: Drizzle's query builder
-  // methods live on the prototype, so they are not own properties and an
-  // object merge silently drops them.
-  cachedDb = new Proxy(client, {
+  // A delegate answers for the tables; raw Drizzle answers for everything
+  // else. The raw client is the target, so an unknown property is answered
+  // by Drizzle rather than by the delegate client, which would treat the
+  // name as a table it cannot build a delegate for.
+  cachedDb = new Proxy(raw, {
     get(target, property) {
-      if (property in target) {
-        const value = Reflect.get(target, property, target);
-        return typeof value === "function" ? value.bind(target) : value;
+      if (typeof property === "string" && tableNames.has(property)) {
+        const value = Reflect.get(client, property, client);
+        return typeof value === "function" ? value.bind(client) : value;
       }
 
-      const value = Reflect.get(raw, property, raw);
-      return typeof value === "function" ? value.bind(raw) : value;
+      const value = Reflect.get(target, property, target);
+      return typeof value === "function" ? value.bind(target) : value;
     },
   }) as unknown as Database;
 
