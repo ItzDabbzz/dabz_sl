@@ -49,8 +49,9 @@ export default function Scraper() {
     const parts: string[] = [
       "pnpm",
       "--filter",
-      "@dabz/scraper-cli",
-      "dev",
+      "@dabzsl/scraper-cli",
+      "scrape",
+      "--",
     ];
     if (headless === false) parts.push("--headless", "false");
     if (concurrency && concurrency !== 3) parts.push("--concurrency", String(concurrency));
