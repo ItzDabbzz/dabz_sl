@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 /**
  * Category type used by the marketplace explorer.
  */
-export type Category = { id: string; primary: string; sub: string };
+export type Category = { id: string; path: string[] };
 
 /**
  * Props for the CategoryPicker component.
@@ -208,7 +208,7 @@ export default function CategoryPicker({
                                 {categories.map((c) => (
                                     <CommandItem
                                         key={c.id}
-                                        value={`${c.primary} ${c.sub}`}
+                                        value={c.path?.join(" ") || c.id}
                                         onSelect={() => toggle(c.id)}
                                     >
                                         <Check
@@ -219,7 +219,9 @@ export default function CategoryPicker({
                                                     : "opacity-0",
                                             )}
                                         />
-                                        {c.primary} › {c.sub}
+                                        {c.path?.length
+                                            ? c.path.join(" › ")
+                                            : c.id}
                                     </CommandItem>
                                 ))}
                             </CommandGroup>

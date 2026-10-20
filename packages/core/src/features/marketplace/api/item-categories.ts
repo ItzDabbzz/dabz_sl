@@ -2,81 +2,106 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
-import { mpItemCategories, mpItems, mpCategories } from "@/schemas/sl-schema";
+import { mpCategories, mpItemCategories } from "@/schemas/sl-schema";
 import { eq } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
 import { requireUserFromRequest } from "@/server/auth/session";
 import {
-    isConfiguredAdminId,
-    isPrivilegedMarketplaceRole,
+  isConfiguredAdminId,
+  isPrivilegedMarketplaceRole,
 } from "@/server/auth/roles";
+import { normalizePath } from "@/features/marketplace/shared/category-path";
 
 // Fetch existing categories for an item
 export async function GET(
   req: NextRequest,
-  ctx: { params: Promise<{ id: string }> }
+  ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requireUserFromRequest(req);
     const { id } = await ctx.params;
+    const user = await requireUserFromRequest(req);
     const privileged =
-        isPrivilegedMarketplaceRole((user as any).role) ||
-        isConfiguredAdminId((user as any).id);
+      isPrivilegedMarketplaceRole((user as any).role) ||
+      isConfiguredAdminId((user as any).id);
 
-    // Ensure item exists; privileged users may access any item
-    const [item] = await db
-      .select({ id: mpItems.id, ownerUserId: mpItems.ownerUserId })
-      .from(mpItems)
-      .where(eq(mpItems.id as any, id as any) as any);
-    if (!item || (!privileged && (item as any).ownerUserId !== (user as any).id)) {
-      return NextResponse.json({ error: "not_found" }, { status: 404 });
+    if (!privileged) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
     const rows = await db
       .select({
         id: mpCategories.id,
-        primary: mpCategories.primary,
-        sub: mpCategories.sub,
+        path: mpCategories.path,
       })
       .from(mpItemCategories)
       .innerJoin(
         mpCategories,
-        eq(mpItemCategories.categoryId as any, mpCategories.id as any) as any
+        eq(mpItemCategories.categoryId as any, mpCategories.id as any) as any,
       )
       .where(eq(mpItemCategories.itemId as any, id as any) as any);
 
-    return NextResponse.json({ items: rows });
+    return NextResponse.json({
+      items: rows.map((row) => ({
+        id: row.id,
+        path: normalizePath(row.path as unknown as string[]),
+      })),
+    });
   } catch (e: any) {
-    if (e?.message === "unauthorized") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    if (e?.message === "unauthorized")
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    if (e?.message === "forbidden")
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    console.error(e);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }
 
-// Bulk replace categories for an item
+// Replace an item's categories with the given set
 export async function PUT(
   req: NextRequest,
-  ctx: { params: Promise<{ id: string }> }
+  ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireUserFromRequest(req);
     const { id } = await ctx.params;
+    const user = await requireUserFromRequest(req);
+    const privileged =
+      isPrivilegedMarketplaceRole((user as any).role) ||
+      isConfiguredAdminId((user as any).id);
+
+    if (!privileged) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+
     const body = await req.json();
-    const categoryIds: string[] = Array.isArray(body?.categoryIds) ? body.categoryIds : [];
+    const categoryIds: string[] = Array.isArray(body?.categoryIds)
+      ? body.categoryIds
+      : [];
 
-    await db.delete(mpItemCategories as any).where(eq(mpItemCategories.itemId as any, id as any) as any);
+    // Replace the set: delete what is not wanted, add what is.
+    await db
+      .delete(mpItemCategories as any)
+      .where(eq(mpItemCategories.itemId as any, id as any) as any);
 
-    for (const cid of categoryIds) {
+    for (const categoryId of categoryIds) {
       try {
         await db
           .insert(mpItemCategories)
-          .values({ itemId: id as any, categoryId: cid as any })
+          .values({
+            itemId: id as any,
+            categoryId: categoryId as any,
+          })
           .onConflictDoNothing();
-      } catch {}
+      } catch {
+        /* duplicate link */
+      }
     }
 
-    revalidateTag("marketplace:stats", {});
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    if (e?.message === "unauthorized")
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    if (e?.message === "forbidden")
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    console.error(e);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }

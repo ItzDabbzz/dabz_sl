@@ -18,5 +18,5 @@ export type Item = {
     ratingCount?: number | null;
 };
 
-export type Category = { id: string; primary: string; sub: string };
+export type Category = { id: string; path: string[] };
 export type Page = { limit: number; offset: number; total: number };

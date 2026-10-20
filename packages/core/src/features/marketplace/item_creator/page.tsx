@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Category = { id: string; primary: string; sub: string };
+type Category = { id: string; path: string[] };
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
@@ -56,7 +56,7 @@ export default function Page() {
 
   const labelFor = (id: string) => {
     const c = catById[id];
-    return c ? `${c.primary} › ${c.sub}` : id;
+    return c?.path?.length ? c.path.join(" › ") : id;
   };
 
   const onToggleCat = (id: string) => {
@@ -73,7 +73,7 @@ export default function Page() {
     const permissions = (permCopy || permModify || permTransfer) ? { copy: permCopy || null, modify: permModify || null, transfer: permTransfer || null } : null;
 
     const assignEntry = selectedCats.length
-      ? [{ url, categories: selectedCats.map((cid) => ({ primary: catById[cid]?.primary || "Misc", sub: catById[cid]?.sub || "All" })) }]
+      ? [{ url, categories: selectedCats.map((cid) => ({ path: catById[cid]?.path ?? ["Misc"] })) }]
       : [];
 
     const body = {
@@ -194,9 +194,9 @@ export default function Page() {
                     <CommandEmpty>No results.</CommandEmpty>
                     <CommandGroup heading="Categories">
                       {categories.map((c) => (
-                        <CommandItem key={c.id} value={`${c.primary} ${c.sub}`} onSelect={() => onToggleCat(c.id)}>
+                        <CommandItem key={c.id} value={c.path?.join(" ") || c.id} onSelect={() => onToggleCat(c.id)}>
                           <Check className={cn("mr-2 h-4 w-4", selectedCats.includes(c.id) ? "opacity-100" : "opacity-0")} />
-                          {c.primary} › {c.sub}
+                          {c.path?.length ? c.path.join(" › ") : c.id}
                         </CommandItem>
                       ))}
                     </CommandGroup>

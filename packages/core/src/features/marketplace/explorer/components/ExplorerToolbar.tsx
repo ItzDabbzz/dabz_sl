@@ -26,7 +26,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type Category = { id: string; primary: string; sub: string };
+export type Category = { id: string; path: string[] };
 
 /**
  * Options the toolbar allows the user to control.
@@ -89,18 +89,30 @@ export default function ExplorerToolbar({
         return () => window.removeEventListener("keydown", onKey);
     }, []);
 
-    const primaries = useMemo(
-        () => Array.from(new Set(categories.map((c) => c.primary))).sort(),
-        [categories],
-    );
-    const subsFor = (p: string) =>
-        categories
-            .filter((c) => c.primary === p)
-            .map((c) => ({ id: c.id, sub: c.sub }));
+    /**
+     * The categories, grouped by their root segment.
+     *
+     * The tree is deeper than two levels, so the picker lists full paths
+     * under their root instead of hard-coding primary/sub columns.
+     */
+    const groups = useMemo(() => {
+        const map = new Map<string, Category[]>();
+        for (const c of categories) {
+            const root = c.path?.[0] ?? "Uncategorised";
+            const list = map.get(root) ?? [];
+            list.push(c);
+            map.set(root, list);
+        }
+        return Array.from(map.entries()).sort(([a], [b]) =>
+            a.localeCompare(b),
+        );
+    }, [categories]);
     const selectedCategoryLabel = useMemo(() => {
         if (!state.categoryId) return "All Categories";
         const cat = categories.find((c) => c.id === state.categoryId);
-        return cat ? `${cat.primary} › ${cat.sub}` : "All Categories";
+        return cat?.path?.length
+            ? cat.path.join(" › ")
+            : "All Categories";
     }, [state.categoryId, categories]);
 
     return (
@@ -156,15 +168,15 @@ export default function ExplorerToolbar({
                                         All Categories
                                     </CommandItem>
                                 </CommandGroup>
-                                {primaries.map((p) => (
-                                    <CommandGroup key={p} heading={p}>
-                                        {subsFor(p).map((s) => (
+                                {groups.map(([root, items]) => (
+                                    <CommandGroup key={root} heading={root}>
+                                        {items.map((c) => (
                                             <CommandItem
-                                                key={s.id}
-                                                value={`${p} ${s.sub}`}
+                                                key={c.id}
+                                                value={c.path.join(" ")}
                                                 onSelect={() => {
                                                     onChange({
-                                                        categoryId: s.id,
+                                                        categoryId: c.id,
                                                     });
                                                     setCatOpen(false);
                                                 }}
@@ -173,12 +185,13 @@ export default function ExplorerToolbar({
                                                     className={cn(
                                                         "mr-2 h-4 w-4",
                                                         state.categoryId ===
-                                                            s.id
+                                                            c.id
                                                             ? "opacity-100"
                                                             : "opacity-0",
                                                     )}
                                                 />
-                                                {s.sub}
+                                                {c.path.slice(1).join(" › ") ||
+                                                    c.path[0]}
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>

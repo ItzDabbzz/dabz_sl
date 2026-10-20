@@ -176,6 +176,20 @@
       "when": 1775369411611,
       "tag": "0024_same_cargill",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793000000000,
+      "tag": "0025_marketplace_category_deep_levels",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793000600000,
+      "tag": "0026_marketplace_category_path_model",
+      "breakpoints": true
     }
   ]
 }

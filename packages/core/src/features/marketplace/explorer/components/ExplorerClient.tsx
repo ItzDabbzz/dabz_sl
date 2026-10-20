@@ -72,7 +72,7 @@ export default function ExplorerClient() {
 
     const labelFor = (id: string) => {
         const c = catById[id];
-        return c ? `${c.primary} › ${c.sub}` : id;
+        return c?.path?.length ? c.path.join(" › ") : id;
     };
 
     // Fetch helpers

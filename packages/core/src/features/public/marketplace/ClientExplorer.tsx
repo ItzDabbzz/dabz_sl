@@ -48,18 +48,88 @@ type Item = {
     isNsfw?: boolean | null;
 };
 
-type Category = { id: string; primary: string; sub: string; sub2?: string };
+type Category = { id: string; path: string[] };
 type ItemsResp = { items: Item[]; total: number; limit: number; offset: number };
 type CatsResp = { items: Category[] };
 interface AuthorEntry { name: string; link?: string | null; itemCount: number }
+
+/** A node in the category tree. */
+interface CatNode {
+    name: string;
+    path: string[];
+    id?: string;
+    children: Map<string, CatNode>;
+}
+
+/**
+ * The category tree, rendered recursively.
+ *
+ * The tree is deeper than three levels, so this walks the node structure
+ * rather than hard-coding primary/sub/sub2.
+ */
+function CategoryTree({
+    node,
+    selected,
+    onSelect,
+    depth = 0,
+}: {
+    node: CatNode;
+    selected: string[];
+    onSelect: (path: string[]) => void;
+    depth?: number;
+}) {
+    const children = Array.from(node.children.values()).sort((a, b) =>
+        a.name.localeCompare(b.name),
+    );
+    if (!children.length) return null;
+
+    return (
+        <div className="space-y-1 mb-1">
+            {children.map((child) => {
+                const isSelected =
+                    selected.length === child.path.length &&
+                    selected.join("") === child.path.join("");
+                const isOpen =
+                    selected.length > child.path.length &&
+                    child.path.join("") === selected.slice(0, child.path.length).join("");
+                return (
+                    <div key={child.path.join("")}>
+                        <Button
+                            size={depth === 0 ? "default" : "sm"}
+                            variant={isSelected ? "secondary" : "ghost"}
+                            className="w-full justify-start"
+                            onClick={() => onSelect(child.path)}
+                        >
+                            <span className="truncate">{child.name}</span>
+                        </Button>
+                        {isOpen && child.children.size > 0 && (
+                            <div className="pl-2 space-y-1">
+                                <CategoryTree
+                                    node={child}
+                                    selected={selected}
+                                    onSelect={onSelect}
+                                    depth={depth + 1}
+                                />
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
 
 export default function ClientExplorer() {
     const [q, setQ] = useState("");
     const [sort, setSort] = useState<"most" | "least" | "priceAsc" | "priceDesc">("most");
     const [cats, setCats] = useState<Category[]>([]);
-    const [primary, setPrimary] = useState("");
-    const [sub, setSub] = useState("");
-    const [sub2, setSub2] = useState("");
+    /**
+     * The selected category path.
+     *
+     * The tree is deeper than three levels, so the selection is a path rather
+     * than a primary/sub/sub2 triple.
+     */
+    const [catPath, setCatPath] = useState<string[]>([]);
     const [author, setAuthor] = useState("");
     const [activeTab, setActiveTab] = useState<"categories" | "authors">("categories");
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
@@ -87,15 +157,51 @@ export default function ClientExplorer() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const primaryOptions = useMemo(() => Array.from(new Set(cats.map(c => c.primary))).sort((a, b) => a.localeCompare(b)), [cats]);
-    const subOptions = useMemo(() => cats.filter(c => (primary ? c.primary === primary : true)).map(c => c.sub).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a.localeCompare(b)), [cats, primary]);
-    const sub2Options = useMemo(() => { if (!primary || !sub) return [] as string[]; return cats.filter(c => c.primary === primary && c.sub === sub).map(c => c.sub2 || "All").filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a.localeCompare(b)); }, [cats, primary, sub]);
+    /**
+     * The category tree, built from the flat list of paths.
+     *
+     * Built generically over depth, so the tree renders however deep the
+     * data actually goes.
+     */
+    const catTree = useMemo(() => {
+        type Node = {
+            name: string;
+            path: string[];
+            id?: string;
+            children: Map<string, Node>;
+        };
+        const root: Node = { name: "", path: [], children: new Map() };
+        for (const c of cats) {
+            const path = c.path ?? [];
+            if (!path.length) continue;
+            let node = root;
+            path.forEach((segment, index) => {
+                let child = node.children.get(segment);
+                if (!child) {
+                    child = {
+                        name: segment,
+                        path: [...node.path, segment],
+                        children: new Map(),
+                    };
+                    node.children.set(segment, child);
+                }
+                if (index === path.length - 1) child.id = c.id;
+                node = child;
+            });
+        }
+        return root;
+    }, [cats]);
 
     useEffect(() => {
-        if (!primary) { setSelectedCategoryId(undefined); setSub(""); setSub2(""); return; }
-        const match = cats.find(c => c.primary === primary && c.sub === (sub || "All") && (c.sub2 || "All") === (sub2 || "All"));
+        if (!catPath.length) {
+            setSelectedCategoryId(undefined);
+            return;
+        }
+        const match = cats.find(
+            (c) => (c.path ?? []).join("") === catPath.join(""),
+        );
         setSelectedCategoryId(match?.id);
-    }, [primary, sub, sub2, cats]);
+    }, [catPath, cats]);
 
     useEffect(() => { (async () => { try { const r = await fetch("/api/public/marketplace/categories"); const d: CatsResp = await r.json(); setCats(d.items || []); } catch {} })(); }, []);
     useEffect(() => { try { setFavorites(new Set(JSON.parse(localStorage.getItem("mp_favorites") || "[]"))); } catch {} try { setCompare(new Set(JSON.parse(localStorage.getItem("mp_compare") || "[]"))); } catch {} try { const r = JSON.parse(localStorage.getItem("mp_recent_searches") || "[]"); setRecent(Array.isArray(r) ? r.slice(0, 8) : []); } catch {}; }, []);
@@ -110,17 +216,13 @@ export default function ClientExplorer() {
         const nq = qp.get("q") || "";
         const ns = (qp.get("sort") as any) || "most";
         const nl = parseInt(qp.get("limit") || "24", 10);
-        const np = qp.get("primary") || "";
-        const nsub = qp.get("sub") || "";
-        const nsub2 = qp.get("sub2") || "";
+        const np = qp.get("cat") || "";
         const nauthor = qp.get("author") || "";
         const nShowNsfw = qp.get("showNsfw") === "true";
         setQ(nq);
         setSort(["most", "least", "priceAsc", "priceDesc"].includes(ns) ? (ns as any) : "most");
         if (!Number.isNaN(nl)) setLimit(nl);
-        setPrimary(np);
-        setSub(nsub);
-        setSub2(nsub2);
+        setCatPath(np ? np.split("|").filter(Boolean) : []);
         setAuthor(nauthor);
         setShowNsfw(nShowNsfw);
     }, [cats, searchParams]);
@@ -130,13 +232,11 @@ export default function ClientExplorer() {
         if (q.trim()) qp.set("q", q.trim());
         if (sort !== "most") qp.set("sort", sort);
         if (limit !== 24) qp.set("limit", String(limit));
-        if (primary) qp.set("primary", primary);
-        if (sub) qp.set("sub", sub);
-        if (sub2) qp.set("sub2", sub2);
+        if (catPath.length) qp.set("cat", catPath.join("|"));
         if (author) qp.set("author", author);
         if (showNsfw) qp.set("showNsfw", "true");
         router.replace(`${pathname}?${qp.toString()}` as any, { scroll: false });
-    }, [q, sort, limit, primary, sub, sub2, author, showNsfw, router, pathname]);
+    }, [q, sort, limit, catPath, author, showNsfw, router, pathname]);
 
     // Fetch authors (distinct creators) when authors tab active or author search changes (debounced)
     useEffect(() => {
@@ -214,11 +314,11 @@ export default function ClientExplorer() {
                             <div className="flex items-center gap-2 justify-center"><span className="text-xs text-muted-foreground">Show NSFW</span><Switch checked={showNsfw} onCheckedChange={setShowNsfw} /></div>
                             <div className="flex items-center gap-2 justify-center"><span className="text-xs text-muted-foreground">View</span><div className="flex rounded-md border p-1"><Button variant={view === "grid" ? "secondary" : "ghost"} size="sm" onClick={() => setView("grid")}> <LayoutGrid className="h-4 w-4" /> </Button><Button variant={view === "list" ? "secondary" : "ghost"} size="sm" onClick={() => setView("list")}> <ListIcon className="h-4 w-4" /> </Button></div></div>
                             <div className="flex items-center gap-2 justify-center"><span className="text-xs text-muted-foreground">Scroll</span><Select value={scrollMode} onValueChange={(v: any) => setScrollMode(v)}><SelectTrigger className="w-32"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pages">Pages</SelectItem><SelectItem value="infinite">Infinite</SelectItem></SelectContent></Select></div>
-                            <div className="flex items-center gap-2 justify-center"><Button variant="outline" size="sm" onClick={() => { setQ(""); setPrimary(""); setSub(""); setSub2(""); setAuthor(""); setHasImageOnly(false); setShowNsfw(false); }}> <Trash2 className="h-4 w-4 mr-1" /> Reset </Button></div>
+                            <div className="flex items-center gap-2 justify-center"><Button variant="outline" size="sm" onClick={() => { setQ(""); setCatPath([]); setAuthor(""); setHasImageOnly(false); setShowNsfw(false); }}> <Trash2 className="h-4 w-4 mr-1" /> Reset </Button></div>
                             <div className="flex items-center gap-2 justify-center"><Button variant="outline" size="sm" onClick={() => router.push("/marketplace/request")}> <PlusCircle className="h-4 w-4 mr-1" /> Request item </Button></div>
                         </div>
                         {recent.length > 0 && <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">{recent.map(r => <Button key={r} size="sm" variant="ghost" className="h-7 px-2" onClick={() => setQ(r)}>{r}</Button>)}</div>}
-                        {(q || primary || sub || sub2 || author || hasImageOnly || showNsfw) && <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">{q && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setQ("")}>q: {q} <X className="ml-1 h-3 w-3" /></Button>}{primary && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => { setPrimary(""); setSub(""); setSub2(""); setAuthor(""); }}>primary: {primary} <X className="ml-1 h-3 w-3" /></Button>}{sub && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setSub("")}>sub: {sub} <X className="ml-1 h-3 w-3" /></Button>}{sub2 && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setSub2("")}>sub2: {sub2} <X className="ml-1 h-3 w-3" /></Button>}{author && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setAuthor("")}>author: {author} <X className="ml-1 h-3 w-3" /></Button>}{hasImageOnly && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setHasImageOnly(false)}>has image <X className="ml-1 h-3 w-3" /></Button>}{showNsfw && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setShowNsfw(false)}>show nsfw <X className="ml-1 h-3 w-3" /></Button>}</div>}
+                        {(q || catPath.length || author || hasImageOnly || showNsfw) && <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">{q && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setQ("")}>q: {q} <X className="ml-1 h-3 w-3" /></Button>}{catPath.length > 0 && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => { setCatPath([]); setAuthor(""); }}>cat: {catPath.join(" › ")} <X className="ml-1 h-3 w-3" /></Button>}{author && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setAuthor("")}>author: {author} <X className="ml-1 h-3 w-3" /></Button>}{hasImageOnly && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setHasImageOnly(false)}>has image <X className="ml-1 h-3 w-3" /></Button>}{showNsfw && <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => setShowNsfw(false)}>show nsfw <X className="ml-1 h-3 w-3" /></Button>}</div>}
                         <div className="mt-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">{total ? (scrollMode === "pages" ? (<><Button variant="ghost" size="icon" aria-label="Previous page" disabled={page <= 0} onClick={() => { const next = page - 1; if (next >= 0) fetchItems({ reset: true, pageIndex: next }); }}><ChevronLeft className="h-4 w-4" /></Button><span>{new Intl.NumberFormat().format(total)} results • Page {page + 1} of {Math.max(1, Math.ceil(total / limit))}</span><Button variant="ghost" size="icon" aria-label="Next page" disabled={(page + 1) * limit >= total} onClick={() => { const next = page + 1; if (next * limit < total) fetchItems({ reset: true, pageIndex: next }); }}><ChevronRight className="h-4 w-4" /></Button></>) : (<span>{new Intl.NumberFormat().format(total)} results</span>)) : (<span>Type to search or use filters</span>)}</div>
                     </div>
                 </CardContent>
@@ -231,28 +331,12 @@ export default function ClientExplorer() {
                                 <Tabs value={activeTab} onValueChange={v => setActiveTab(v as any)}>
                                     <TabsList className="grid w-full grid-cols-2"><TabsTrigger value="categories">Categories</TabsTrigger><TabsTrigger value="authors">Authors</TabsTrigger></TabsList>
                                     <TabsContent value="categories" className="mt-3">
-                                        <Button variant={primary === "" ? "secondary" : "ghost"} className="w-full justify-start mb-2" onClick={() => { setPrimary(""); setSub(""); setSub2(""); }}>All categories</Button>
-                                        {primaryOptions.map(p => (
-                                            <div key={p} className="space-y-1 mb-1">
-                                                <Button variant={primary === p && !sub ? "secondary" : "ghost"} className="w-full justify-start" onClick={() => { setPrimary(p); setSub(""); setSub2(""); }}>{p}</Button>
-                                                {primary === p && (
-                                                    <div className="pl-2 space-y-1">
-                                                        {subOptions.map(s => (
-                                                            <div key={`${p}-${s}`}>
-                                                                <Button size="sm" variant={primary === p && sub === s && !sub2 ? "secondary" : "ghost"} className="w-full justify-start" onClick={() => { setSub(s); setSub2(""); }}>{s}</Button>
-                                                                {sub === s && sub2Options.length > 0 && (
-                                                                    <div className="pl-2 space-y-1">
-                                                                        {sub2Options.map(s2 => (
-                                                                            <Button key={`${p}-${s}-${s2}`} size="sm" variant={primary === p && sub === s && sub2 === s2 ? "secondary" : "ghost"} className="w-full justify-start" onClick={() => setSub2(s2)}>{s2}</Button>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                        <Button variant={catPath.length === 0 ? "secondary" : "ghost"} className="w-full justify-start mb-2" onClick={() => setCatPath([])}>All categories</Button>
+                                        <CategoryTree
+                                            node={catTree}
+                                            selected={catPath}
+                                            onSelect={setCatPath}
+                                        />
                                     </TabsContent>
                                     <TabsContent value="authors" className="mt-3 space-y-2">
                                         <Input placeholder="Search author…" value={author} onChange={e => setAuthor(e.target.value)} />

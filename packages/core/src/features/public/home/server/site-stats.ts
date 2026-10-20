@@ -194,14 +194,16 @@ export const getMarketplaceStats = unstable_cache(
 			const [{ value: totalCategories }] = (await db
 				.select({ value: count() })
 				.from(mpCategories)) as Array<{ value: number | null }>;
+			// The tree is stored as a path array, so the root level is the
+			// first segment and the second level is the second segment.
 			const [{ value: distinctPrimaries }] = (await db
 				.select({
-					value: sql<number>`count(distinct ${mpCategories.primary})`,
+					value: sql<number>`count(distinct ${mpCategories.path}[1])`,
 				})
 				.from(mpCategories)) as Array<{ value: number | null }>;
 			const [{ value: distinctSubs }] = (await db
 				.select({
-					value: sql<number>`count(distinct ${mpCategories.sub})`,
+					value: sql<number>`count(distinct ${mpCategories.path}[2])`,
 				})
 				.from(mpCategories)) as Array<{ value: number | null }>;
 			const [{ value: itemsWithCategories }] = (await db

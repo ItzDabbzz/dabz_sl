@@ -10,6 +10,7 @@ import {
   isConfiguredAdminId,
   isPrivilegedMarketplaceRole,
 } from "@/server/auth/roles";
+import { normalizePath } from "@/features/marketplace/shared/category-path";
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,7 +25,12 @@ export async function GET(req: NextRequest) {
           .select()
           .from(mpCategories)
           .where(eq(mpCategories.ownerUserId as any, user.id as any) as any);
-    return NextResponse.json({ items: rows });
+    return NextResponse.json({
+      items: rows.map((row) => ({
+        id: row.id,
+        path: normalizePath(row.path as unknown as string[]),
+      })),
+    });
   } catch (e: any) {
     if (e?.message === "unauthorized")
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -39,32 +45,42 @@ export async function POST(req: NextRequest) {
     if (!isPrivilegedMarketplaceRole((user as any).role) && !isConfiguredAdminId((user as any).id)) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
-    const { primary, sub = "All", sub2 = "All" } = await req.json();
-    let row;
-    try {
-      [row] = await db
-        .insert(mpCategories)
-        .values({ primary, sub, sub2, ownerUserId: user.id as any })
-        .onConflictDoNothing()
-        .returning();
-    } catch {}
+    const body = await req.json();
+    // A category is a path. It arrives as a `path` array.
+    const path: string[] = Array.isArray(body?.path) ? body.path : [];
+    const segments = normalizePath(path);
+    if (!segments.length) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
+
+    // Look the path up before inserting. The unique index is a backstop, but
+    // it spans nullable scope columns, so the lookup is what actually keeps
+    // the path unique.
+    const existing = await db
+      .select()
+      .from(mpCategories)
+      .where(
+        and(
+          eq(mpCategories.path as any, segments as any) as any,
+          eq(mpCategories.ownerUserId as any, user.id as any) as any,
+        ),
+      )
+      .limit(1);
+
+    let row = existing[0];
     if (!row) {
-      const existing = await db
-        .select()
-        .from(mpCategories)
-        .where(
-          and(
-            eq(mpCategories.primary as any, primary as any) as any,
-            eq(mpCategories.sub as any, sub as any) as any,
-            eq(mpCategories.sub2 as any, sub2 as any) as any,
-            eq(mpCategories.ownerUserId as any, user.id as any) as any
-          ) as any
-        );
-      row = existing[0];
+      const [created] = await db
+        .insert(mpCategories)
+        .values({ path: segments, ownerUserId: user.id as any } as any)
+        .returning();
+      row = created;
     }
     // Invalidate marketplace stats cache
     revalidateTag("marketplace:stats", {});
-    return NextResponse.json({ item: row }, { status: 201 });
+    return NextResponse.json(
+      { item: { id: row.id, path: normalizePath(row.path as unknown as string[]) } },
+      { status: 201 },
+    );
   } catch (e: any) {
     if (e?.message === "unauthorized")
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });

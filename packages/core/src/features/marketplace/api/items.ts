@@ -16,6 +16,10 @@ import {
 import { revalidateTag } from "next/cache";
 import { requirePermission } from "@/server/auth/guards";
 import { requireUserFromRequest } from "@/server/auth/session";
+import { resolveCategoryPath } from "./category-paths";
+import {
+    normalizePath,
+} from "@/features/marketplace/shared/category-path";
 import {
     isConfiguredAdminId,
     isPrivilegedMarketplaceRole,
@@ -276,32 +280,29 @@ export async function POST(req: NextRequest) {
         const items: any[] = Array.isArray(body?.items) ? body.items : [];
         const assign: Array<{
             url: string;
-            categories: Array<{ primary: string; sub?: string }>;
+            categories: Array<{ path?: string[] } & Record<string, string | undefined>>;
         }> = body?.assign || [];
 
-        // Upsert categories and map names to ids
+        // Resolve a category by its full path, creating it only if missing.
+        //
+        // The path is what identifies a category. The unique index cannot
+        // prevent duplicates (org_id and team_id are NULL here, and Postgres
+        // treats NULLs as distinct in a unique index), so the path is looked
+        // up before inserting — otherwise every import used to mint a
+        // brand-new row instead of reusing the tree that is already there.
         const catMap = new Map<string, string>();
-        const ensureCat = async (primary: string, sub = "All") => {
-            const [row] = await db
-                .insert(mpCategories)
-                .values({ primary, sub, ownerUserId: user.id as any })
-                .onConflictDoNothing()
-                .returning();
-            const key = `${primary}::${sub}`;
-            if (row?.id) catMap.set(key, row.id);
-            if (!row?.id) {
-                const existing = await db
-                    .select()
-                    .from(mpCategories)
-                    .where(
-                        eq(mpCategories.primary as any, primary as any) as any,
-                    );
-                const found = existing.find(
-                    (c: any) => c.sub === sub && c.ownerUserId === user.id,
-                );
-                if (found) catMap.set(key, found.id);
-            }
-            return catMap.get(key)!;
+        const ensureCat = async (
+            path: string[],
+        ): Promise<string | undefined> => {
+            const segments = normalizePath(path);
+            if (!segments.length) return undefined;
+            const key = segments.join("");
+            const cached = catMap.get(key);
+            if (cached) return cached;
+
+            const id = await resolveCategoryPath(segments, user.id);
+            if (id) catMap.set(key, id);
+            return id;
         };
 
         // Insert/update items
@@ -346,7 +347,10 @@ export async function POST(req: NextRequest) {
             const catSpec =
                 assign.find((a) => a.url === it.url)?.categories || [];
             for (const c of catSpec) {
-                const cid = await ensureCat(c.primary, c.sub || "All");
+                // A category arrives as a full path.
+                const path = Array.isArray(c.path) ? c.path : [];
+                const cid = await ensureCat(path);
+                if (!cid) continue;
                 try {
                     await db
                         .insert(mpItemCategories)

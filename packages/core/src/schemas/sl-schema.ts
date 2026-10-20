@@ -10,6 +10,7 @@ import {
   uniqueIndex,
   numeric,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // Master Objects (creator-defined templates)
 export const masterObjects = pgTable(
@@ -277,10 +278,15 @@ export const webhookDestinations = pgTable(
   })
 );
 
-// Marketplace Categories (primary/sub hierachy)
-// Extended: add third-level hierarchy field `sub2` (defaults to "All") so users can attach
-// subcategories to existing sub categories without breaking existing data. Existing rows
-// will get sub2 = 'All' via migration.
+// Marketplace Categories (hierarchical path)
+//
+// A category is a path of segments, stored as one `text[]` column:
+//   { "Apparel", "Women's", "Women's Footwear", "Women's Boots" }
+//
+// The path model (rather than one column per level) keeps the tree's depth
+// out of the schema. The marketplace's own tree is four levels deep, and a
+// category here can subdivide past that without a migration; moving or
+// renaming a node is a single-column rewrite instead of one per level.
 export const mpCategories = pgTable(
   "sl_mp_categories",
   {
@@ -290,17 +296,34 @@ export const mpCategories = pgTable(
     orgId: text("org_id"),
     teamId: text("team_id"),
 
-    primary: text("primary").notNull(),
-    sub: text("sub").default("All").notNull(),
-    sub2: text("sub2").default("All").notNull(),
+    /**
+     * The category path, root first.
+     *
+     * Empty segments are never stored, so the array length IS the depth.
+     */
+    path: text("path").array().notNull().default(sql`'{}'::text[]`),
 
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
     byScope: index("sl_mp_categories_scope_idx").on(t.orgId, t.teamId, t.ownerUserId),
-    // Updated uniqueness includes sub2.
-    uniq: uniqueIndex("sl_mp_categories_uniq").on(t.primary, t.sub, t.sub2, t.orgId, t.teamId, t.ownerUserId),
+    // Uniqueness spans the whole path.
+    //
+    // The live index is created with NULLS NOT DISTINCT (see migration 0026):
+    // org_id and team_id are NULL on these rows, and Postgres treats NULLs as
+    // distinct in a unique index, so without that flag the constraint would
+    // never fire and every import would duplicate the path. Drizzle's index
+    // builder cannot express the flag, so the schema records the columns
+    // only — the migration owns the exact definition. The application also
+    // resolves a path before inserting, so correctness does not depend on the
+    // index alone.
+    uniq: uniqueIndex("sl_mp_categories_uniq").on(
+      t.path,
+      t.orgId,
+      t.teamId,
+      t.ownerUserId,
+    ),
   })
 );
 
