@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { Cinzel_Decorative } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next"
 
 const cinzelDecorative = Cinzel_Decorative({
 	weight: ["400", "700", "900"],
@@ -31,6 +32,7 @@ export default function RootLayout({
 				<ThemeProvider attribute="class" defaultTheme="dark">
 					<div className="min-w-0">{children}</div>
 					<Toaster richColors closeButton />
+      				<Analytics />
 				</ThemeProvider>
 			</body>
 		</html>

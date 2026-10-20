@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useSession } from "@/features/auth/client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Analytics } from "@vercel/analytics/next"
 import {
     LayoutDashboard,
     Boxes,
@@ -458,6 +459,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <div className="p-6">{children}</div>
                 </ScrollArea>
             </main>
+            <Analytics />
         </div>
     );
 }
