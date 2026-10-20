@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Virtuoso } from "react-virtuoso";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { toast } from "sonner";
 import {
     CheckCheck,
@@ -75,6 +75,7 @@ export default function Importer() {
     const [query, setQuery] = useState("");
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const groupScrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -256,6 +257,20 @@ export default function Importer() {
             );
         });
     }, [groups, query]);
+
+    /**
+     * The group list, virtualised.
+     *
+     * A store of a few thousand items can produce hundreds of groups, and
+     * the scroll container owns its height so the list cannot collapse to
+     * nothing and hide every row.
+     */
+    const groupVirtualizer = useVirtualizer({
+        count: visibleGroups.length,
+        getScrollElement: () => groupScrollRef.current,
+        estimateSize: () => 76,
+        overscan: 10,
+    });
 
     const totalAssigned = useMemo(
         () =>
@@ -481,41 +496,84 @@ export default function Importer() {
                                 Nothing matches that search.
                             </p>
                         ) : (
-                            <Virtuoso
-                                data={visibleGroups}
-                                className="themed-scrollbar"
-                                // A scroller with no height of its own collapses
-                                // to nothing, so the height is set here rather
-                                // than left to the parent.
+                            <div
+                                ref={groupScrollRef}
+                                className="themed-scrollbar overflow-y-auto"
                                 style={{ height: "min(38rem, 60vh)" }}
-                                overscan={200}
-                                itemContent={(_index, group) => (
-                                    <PathGroupRow
-                                        marketplacePath={group.path}
-                                        items={group.items}
-                                        value={assignmentFor(group.path)}
-                                        onChange={(next) =>
-                                            setAssignment(group.path, next)
-                                        }
-                                        existing={existingPaths}
-                                        overrides={overrides}
-                                        onOverride={setOverride}
-                                        suggested={
-                                            Boolean(
-                                                suggestions.get(
-                                                    pathKey(group.path),
-                                                ),
-                                            ) &&
-                                            !assignments.some(
-                                                (a) =>
-                                                    pathKey(a.path) ===
-                                                        pathKey(group.path),
-                                            )
-                                        }
-                                        disabled={busy}
-                                    />
-                                )}
-                            />
+                            >
+                                <div
+                                    style={{
+                                        height: groupVirtualizer.getTotalSize(),
+                                        position: "relative",
+                                        width: "100%",
+                                    }}
+                                >
+                                    {groupVirtualizer
+                                        .getVirtualItems()
+                                        .map((virtualRow) => {
+                                            const group =
+                                                visibleGroups[
+                                                    virtualRow.index
+                                                ];
+                                            if (!group) return null;
+                                            return (
+                                                <div
+                                                    key={virtualRow.key}
+                                                    data-index={
+                                                        virtualRow.index
+                                                    }
+                                                    ref={
+                                                        groupVirtualizer.measureElement
+                                                    }
+                                                    className="absolute left-0 top-0 w-full"
+                                                    style={{
+                                                        transform: `translateY(${virtualRow.start}px)`,
+                                                    }}
+                                                >
+                                                    <PathGroupRow
+                                                        marketplacePath={
+                                                            group.path
+                                                        }
+                                                        items={group.items}
+                                                        value={assignmentFor(
+                                                            group.path,
+                                                        )}
+                                                        onChange={(next) =>
+                                                            setAssignment(
+                                                                group.path,
+                                                                next,
+                                                            )
+                                                        }
+                                                        existing={
+                                                            existingPaths
+                                                        }
+                                                        overrides={overrides}
+                                                        onOverride={setOverride}
+                                                        suggested={
+                                                            Boolean(
+                                                                suggestions.get(
+                                                                    pathKey(
+                                                                        group.path,
+                                                                    ),
+                                                                ),
+                                                            ) &&
+                                                            !assignments.some(
+                                                                (a) =>
+                                                                    pathKey(
+                                                                        a.path,
+                                                                    ) ===
+                                                                    pathKey(
+                                                                        group.path,
+                                                                    ),
+                                                            )
+                                                        }
+                                                        disabled={busy}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+                            </div>
                         )}
                     </CardContent>
 
