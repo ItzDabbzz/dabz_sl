@@ -99,6 +99,103 @@ Applies per-page Playwright settings: timeouts and optional asset blocking. Safe
 
 ---
 
+### `scrapeStore(store, opts?): Promise<StoreScrapeResult>`
+
+Scrapes an **entire store** in two phases:
+
+1. **Enumerate** — walk the store's paginated listing. One request covers 96
+   products, so a 2500-item store needs ~27 requests instead of 2500.
+2. **Detail** — visit each product page with a bounded worker pool.
+
+```ts
+import { scrapeStore } from '@dabzsl/scraper-api';
+
+const result = await scrapeStore('199625', {
+  concurrency: 2,
+  minDelayMs: 1000,
+  onItem: (item, done, total) => console.log(`${done}/${total} ${item.title}`),
+});
+
+console.log(result.items);      // full Item objects
+console.log(result.listing);    // cheap index rows
+console.log(result.failures);   // { url, error, status? }[]
+console.log(result.aborted);    // set if the marketplace started refusing requests
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `opts.concurrency` | `number` | `2` | Product pages fetched in parallel. |
+| `opts.minDelayMs` | `number` | `1000` | Minimum gap between **any two** requests, enforced globally across all workers. |
+| `opts.listingOnly` | `boolean` | `false` | Stop after enumeration; never visit a product page. |
+| `opts.maxPages` | `number` | all | Cap how many listing pages to enumerate. |
+| `opts.query` | `Record<string,string>` | — | Extra query params for the store URL (e.g. `search[sort]`). |
+| `opts.checkpointPath` | `string` | — | Path to the run's checkpoint file. The single source of truth for progress: it holds the enumerated listing, the completed table, the failures and the item in flight. |
+| `opts.reuseListing` | `boolean` | `false` | Reuse the listing already in the checkpoint instead of re-enumerating the store. |
+| `opts.listingPath` | `string` | — | Also write the enumerated listing to this path as plain JSON. |
+| `opts.onItem` | `(item, done, total) => void` | — | Called after each item is scraped. |
+| `opts.onEnumerated` | `(listing, total) => void` | — | Called when enumeration completes. |
+| `opts.onPage` | `(page, found, total) => void` | — | Called after each listing page is fetched. |
+| `opts.onAborted` | `(reason) => void` | — | Called when the marketplace starts refusing requests. |
+
+Plus everything from `ScrapeOptions` (`headless`, `storageStatePath`, `onStage`, `timeout`, `navTimeout`, `blockAssets`).
+
+### Rate limiting
+
+The marketplace is a shared, rate-limited origin and it answers `406` to
+clients that do not look like a browser. `scrapeStore` is deliberately
+conservative:
+
+- **One shared browser context** for the whole run — one session, one device
+  fingerprint, one client as far as the site is concerned.
+- **A global request pacer.** `minDelayMs` is enforced across *all* workers,
+  not per worker. Per-worker pacing would multiply the total rate by the
+  worker count.
+- **Hard abort on refusal.** `403`, `406`, `429` and `503` stop the run
+  immediately and set `result.aborted`. Continuing against a refusing origin
+  is what turns a throttle into a ban.
+- **Checkpointing.** With `checkpointPath`, a run that is interrupted resumes
+  where it stopped rather than starting over. The checkpoint is append-only
+  JSONL, written after every item at O(1) cost, so a crash loses at most the
+  item that was in flight. It also holds the enumerated listing, so a resumed
+  run does not re-request every listing page.
+
+The default 1 request/second keeps a 2000-item store to roughly 35 minutes.
+
+### `enumerateStore(page, storeId, opts?): Promise<{ listing, totalItems, pagesFetched }>`
+
+The enumeration half on its own, for callers that want to drive their own
+detail pass. `listing` rows carry `productId`, `url`, `title`, `price`,
+`brand`, `category` and `image`.
+
+### `parseStoreId(input)`, `parseStoreUrl(input)` and `buildStoreUrl(storeId, page?, opts?)`
+
+Helpers for turning a store URL or bare id into a store id, and for building
+listing URLs. `buildStoreUrl` caps `per_page` at 96 — the marketplace silently
+clamps anything higher and renders *fewer* cards per page, not more.
+
+`parseStoreUrl` returns the id **and** the `search[...]` filters carried in a
+store URL, so a pasted URL's page size, sort order and price bounds are not
+silently discarded.
+
+Demo items and limited-quantity items are always excluded — see
+`ALWAYS_FILTERS`. Neither is a real catalog entry: a demo is a free preview of
+another product, and a limited-quantity item cannot be bought again once its
+stock runs out.
+
+### Checkpoint helpers
+
+`readCheckpointFile(file)`, `pendingFrom(state)` and `describeCheckpoint(state)`
+read a run's checkpoint and render its state.
+
+`describeCheckpoint` returns the completed table, the uncompleted table, the
+failures, and the item that was in flight when the run stopped. The
+uncompleted table is derived — the listing minus the completed set — so it can
+never disagree with the rest of the file.
+
+---
+
 ## Types
 
 ### `Item`
@@ -219,6 +316,69 @@ Scrapes a single SL Marketplace product page.
 
 ---
 
+#### `POST /api/scrape/store`
+
+Scrapes every product in an SL Marketplace store.
+
+**Authentication:** `Authorization: Bearer <SCRAPER_API_KEY>` (required when `SCRAPER_API_KEY` is set)
+
+**Request body:**
+
+```json
+{
+  "store": "199625",
+  "listingOnly": false,
+  "maxPages": 10,
+  "concurrency": 2,
+  "minDelayMs": 1000,
+  "timeout": 4000,
+  "navTimeout": 10000,
+  "blockAssets": true
+}
+```
+
+| Field | Type | Required | Constraints |
+|-------|------|----------|-------------|
+| `store` | `string` | Yes | Store id or store URL |
+| `listingOnly` | `boolean` | No | Enumerate only; never visit product pages |
+| `maxPages` | `number` | No | 1–200 listing pages to enumerate |
+| `concurrency` | `number` | No | 1–4 product pages in parallel |
+| `minDelayMs` | `number` | No | 250–60000 ms between any two requests |
+| `timeout` | `number` | No | 5000–120000 ms |
+| `navTimeout` | `number` | No | 5000–120000 ms |
+| `blockAssets` | `boolean` | No | — |
+
+**Success response (200):**
+
+```json
+{
+  "ok": true,
+  "data": {
+    "storeId": "199625",
+    "totalItems": 4911,
+    "pagesFetched": 52,
+    "items": [ /* full Item objects */ ],
+    "listing": [ /* { productId, url, title, price, brand, category, image } */ ],
+    "failures": []
+  }
+}
+```
+
+**Error responses:**
+
+| Status | Body | Reason |
+|--------|------|--------|
+| `400` | `{ "ok": false, "error": { /* zod flatten */ } }` | Invalid request body |
+| `401` | `{ "ok": false, "error": "Unauthorized" }` | Missing or wrong API key |
+| `429` | `{ "ok": false, "error": "Marketplace responded 429 …", "data": { … } }` | The marketplace started refusing requests. The run stopped rather than pushing into a block — back off and retry later. |
+| `500` | `{ "ok": false, "error": "…" }` | Scrape failure |
+
+> A full-store scrape of a few thousand products takes tens of minutes at the
+> default pacing. Prefer `listingOnly: true` for a quick catalog, or drive the
+> scrape from the CLI, which checkpoints and can resume.
+
+---
+
 ## Running Locally
 
 ```bash
@@ -243,7 +403,7 @@ pnpm --filter @dabzsl/scraper-api start
 |----------|----------|---------|-------------|
 | `PORT` | No | `3000` | Port the server listens on |
 | `SCRAPER_API_KEY` | No | `""` | Bearer token for `POST /api/scrape`. If empty the server runs open (useful in dev). |
-| `EXTRA_ORIGINS` | No | `""` | Comma-separated additional CORS origins beyond `sanctumrp.net` |
+| `EXTRA_ORIGINS` | No | `""` | Comma-separated additional CORS origins beyond `sl.itzdabbzz.me` |
 | `NODE_ENV` | No | — | Set to `production` in Docker; controls whether localhost origins are added to CORS |
 
 ---
@@ -289,7 +449,7 @@ docker run -p 3000:3000 -e SCRAPER_API_KEY=secret scraper-api
 
 Security middleware layers applied in order:
 
-1. **CORS** — Only origins in `ALLOWED_ORIGINS` are permitted. Defaults: `sanctumrp.net`, `www.sanctumrp.net`, and localhost in non-production. Add staging/preview URLs via `EXTRA_ORIGINS`.
+1. **CORS** — Only origins in `ALLOWED_ORIGINS` are permitted. Defaults: `sl.itzdabbzz.me`, and localhost in non-production. Add staging/preview URLs via `EXTRA_ORIGINS`.
 2. **Rate limiter** — 20 requests per minute per IP. Returns `429` when exceeded.
 3. **API key auth** — `Authorization: Bearer <key>` checked on protected routes. No key configured → server is open (dev convenience).
 4. **Zod body validation** — Request body for `POST /api/scrape` is validated before reaching the scrape logic.

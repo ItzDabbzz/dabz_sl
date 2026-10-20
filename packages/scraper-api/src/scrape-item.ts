@@ -41,6 +41,26 @@ export async function scrapeItem(
   onStage('navigating');
   await page.goto(url, { waitUntil: 'domcontentloaded' });
 
+  return scrapeItemFromPage(page, url, onStage);
+}
+
+/**
+ * Scrape a product that is already loaded on `page`, without navigating.
+ *
+ * Split out of {@link scrapeItem} so callers that need to inspect the HTTP
+ * response status (e.g. to detect rate limiting or a bot-check page) can
+ * navigate themselves and then extract the listing.
+ *
+ * @param page    - A Playwright `Page` already showing the product page.
+ * @param url     - The product URL, recorded on the returned item.
+ * @param onStage - Optional callback fired at the start of each scrape phase.
+ */
+export async function scrapeItemFromPage(
+  page: Page,
+  url: string,
+  onStage: (stage: string) => void = () => {},
+): Promise<Item> {
+
   // ── Title & version ────────────────────────────────────────────────────────
   onStage('title');
   let title = '';
@@ -54,24 +74,39 @@ export async function scrapeItem(
           clone.querySelector('.version')?.remove();
           return (clone.textContent ?? '').trim();
         })) ?? '';
-      const vtext = (await page.locator('h1.title2 .version').first().innerText().catch(() => '')).trim();
-      if (vtext) version = vtext.replace(/^Version\s*/i, '').trim();
+      // Guard with a count check: a locator that matches nothing still waits
+      // out the full timeout before its `.catch()` fires, which is seconds of
+      // dead time per product across a full store run.
+      if (await page.locator('h1.title2 .version').count()) {
+        const vtext = (await page.locator('h1.title2 .version').first().innerText().catch(() => '')).trim();
+        if (vtext) version = vtext.replace(/^Version\s*/i, '').trim();
+      }
     }
   } catch { /* leave empty */ }
 
   if (!title) {
-    title = (
-      await page.locator('h1[itemprop="name"], h1.product-title, h1').first().textContent().catch(() => '') ?? ''
-    ).trim();
+    if (await page.locator('h1[itemprop="name"], h1.product-title, h1').count()) {
+      title = (
+        await page.locator('h1[itemprop="name"], h1.product-title, h1').first().textContent().catch(() => '') ?? ''
+      ).trim();
+    }
   }
   if (!version) {
-    const versionText = await page.locator('text=/Version:\\s*/i').first().textContent().catch(() => '');
-    if (versionText) {
-      version = versionText.match(/Version:\s*(.*)/i)?.[1]?.trim() ?? '';
-    } else {
-      const detailsText = await page.locator('.product-details, .details, table').first().innerText().catch(() => '');
-      const m = detailsText.match(/Version\s*:?\s*(.+)/i);
-      if (m) version = m[1].split('\n')[0].trim();
+    const versionLocator = page.locator('text=/Version:\\s*/i');
+    if (await versionLocator.count()) {
+      const versionText = await versionLocator.first().textContent().catch(() => '');
+      if (versionText) {
+        version = versionText.match(/Version:\s*(.*)/i)?.[1]?.trim() ?? '';
+      }
+    }
+    // Fallback: some listings only carry the version in the details block.
+    if (!version) {
+      const detailsLocator = page.locator('.product-details, .details, table');
+      if (await detailsLocator.count()) {
+        const detailsText = await detailsLocator.first().innerText().catch(() => '');
+        const m = detailsText.match(/Version\s*:?\s*(.+)/i);
+        if (m) version = m[1].split('\n')[0].trim();
+      }
     }
   }
 
@@ -108,12 +143,13 @@ export async function scrapeItem(
   // ── Price ──────────────────────────────────────────────────────────────────
   onStage('price');
   let price = '';
-  const priceRaw = (
-    await page.locator('.prices .price-ld, .linden-price, [itemprop="price"], .price').first().innerText().catch(() => '')
-  ).trim();
-  if (priceRaw) {
-    const m = priceRaw.match(/([\d,]+)/);
-    if (m) price = m[1].replace(/,/g, '');
+  const priceLocator = page.locator('.prices .price-ld, .linden-price, [itemprop="price"], .price');
+  if (await priceLocator.count()) {
+    const priceRaw = (await priceLocator.first().innerText().catch(() => '')).trim();
+    if (priceRaw) {
+      const m = priceRaw.match(/([\d,]+)/);
+      if (m) price = m[1].replace(/,/g, '');
+    }
   }
 
   // ── Creator / store ────────────────────────────────────────────────────────
@@ -121,8 +157,14 @@ export async function scrapeItem(
   let creator: Item['creator'] = { name: '', link: '' };
   let store = '';
   try {
-    const storeName = (await page.locator('#merchant-box .store-name').first().innerText().catch(() => '')).trim();
-    const storeHref = await page.locator('#merchant-box a[href*="/stores/"]').first().getAttribute('href').catch(() => null);
+    const storeNameLocator = page.locator('#merchant-box .store-name');
+    const storeHrefLocator = page.locator('#merchant-box a[href*="/stores/"]');
+    const storeName = (await storeNameLocator.count())
+      ? (await storeNameLocator.first().innerText().catch(() => '')).trim()
+      : '';
+    const storeHref = (await storeHrefLocator.count())
+      ? await storeHrefLocator.first().getAttribute('href').catch(() => null)
+      : null;
     if (storeName) creator.name = storeName;
     if (storeHref) {
       const abs = new URL(storeHref, page.url()).toString();
@@ -164,9 +206,19 @@ export async function scrapeItem(
     }
   } catch { /* fall through */ }
   if (!perms.copy && !perms.modify && !perms.transfer) {
-    const permsText = await page
-      .locator('text=Permissions, .permissions, .product-permissions').first().locator('..').innerText()
-      .catch(async () => page.locator('.permissions, .product-permissions').first().innerText().catch(() => ''));
+    // Count-guard both fallbacks: an unmatched locator waits out its full
+    // timeout before `.catch()` fires.
+    const permsTextLocator = page.locator('text=Permissions, .permissions, .product-permissions');
+    let permsText = '';
+    if (await permsTextLocator.count()) {
+      permsText = await permsTextLocator.first().locator('..').innerText().catch(() => '');
+    }
+    if (!permsText) {
+      const permsFallback = page.locator('.permissions, .product-permissions');
+      if (await permsFallback.count()) {
+        permsText = await permsFallback.first().innerText().catch(() => '');
+      }
+    }
     if (permsText) {
       perms.copy     = /copy/i.test(permsText)   ? (/no\s*copy/i.test(permsText)     ? 'No' : 'Yes') : '';
       perms.modify   = /modif/i.test(permsText)  ? (/no\s*modif/i.test(permsText)    ? 'No' : 'Yes') : '';
@@ -178,9 +230,21 @@ export async function scrapeItem(
   onStage('description');
   // SLM renders the description in the first .tab-body (Details tab, selected by
   // default). The legacy #product-description selector is kept as a fallback.
-  const description =
-    (await page.locator('.listing__details .tab-body.selected, .listing__details .tab-body:first-child').first().innerText().catch(() => '')).trim() ||
-    (await page.locator('#product-description, .product-description').first().innerText().catch(() => '')).trim();
+  // Each lookup is count-guarded so a missing selector does not burn a full
+  // locator timeout before its `.catch()` fires.
+  const descLocator = page.locator(
+    '.listing__details .tab-body.selected, .listing__details .tab-body:first-child',
+  );
+  let description = '';
+  if (await descLocator.count()) {
+    description = (await descLocator.first().innerText().catch(() => '')).trim();
+  }
+  if (!description) {
+    const legacyDesc = page.locator('#product-description, .product-description');
+    if (await legacyDesc.count()) {
+      description = (await legacyDesc.first().innerText().catch(() => '')).trim();
+    }
+  }
 
   // ── Features & contents ────────────────────────────────────────────────────
   onStage('features');
@@ -201,7 +265,11 @@ export async function scrapeItem(
   // ── Last updated ───────────────────────────────────────────────────────────
   onStage('updated');
   // p.update-block is a direct paragraph in the aside.
-  const updatedRaw = (await page.locator('p.update-block').first().innerText({ timeout: 3000 }).catch(() => '')).trim();
+  let updatedRaw = '';
+  const updateLocator = page.locator('p.update-block');
+  if (await updateLocator.count()) {
+    updatedRaw = (await updateLocator.first().innerText({ timeout: 3000 }).catch(() => '')).trim();
+  }
   const updatedOn = updatedRaw.replace(/^Item updated on:\s*/i, '').trim();
 
   // ── Metadata ───────────────────────────────────────────────────────────────
@@ -214,23 +282,33 @@ export async function scrapeItem(
   );
 
   // Avatar username of the seller ("Sold by: Cult Ghoul").
-  const soldByRaw = await page.locator('.section__merchant .body3').innerText({ timeout: 3000 }).catch(() => '');
+  let soldByRaw = '';
+  const soldByLocator = page.locator('.section__merchant .body3');
+  if (await soldByLocator.count()) {
+    soldByRaw = await soldByLocator.first().innerText({ timeout: 3000 }).catch(() => '');
+  }
   const soldBy = soldByRaw.match(/Sold by:\s*(.+)/i)?.[1]?.trim() ?? '';
 
   // Demo listing link.
-  const demoHref = await page
-    .locator('a[href*="/p/"][href*="demo" i], a.demo-link')
-    .first().getAttribute('href').catch(() => null);
+  const demoLocator = page.locator('a[href*="/p/"][href*="demo" i], a.demo-link');
+  const demoHref = (await demoLocator.count())
+    ? await demoLocator.first().getAttribute('href').catch(() => null)
+    : null;
   const demoUrl = demoHref ? new URL(demoHref, page.url()).toString() : '';
 
   // In-world SLurl.
-  const inWorldHref = await page
-    .locator('a[href*="maps.secondlife.com"]')
-    .first().getAttribute('href').catch(() => null);
+  const inWorldLocator = page.locator('a[href*="maps.secondlife.com"]');
+  const inWorldHref = (await inWorldLocator.count())
+    ? await inWorldLocator.first().getAttribute('href').catch(() => null)
+    : null;
   const inWorldUrl = inWorldHref ?? '';
 
   // Mesh type from the details sidebar.
-  const detailsText = await page.locator('.section__details').innerText({ timeout: 3000 }).catch(() => '');
+  let detailsText = '';
+  const detailsLocator = page.locator('.section__details');
+  if (await detailsLocator.count()) {
+    detailsText = await detailsLocator.first().innerText({ timeout: 3000 }).catch(() => '');
+  }
   const meshInfo = detailsText.match(/Mesh:\s*(.+)/i)?.[1]?.split('\n')[0].trim() ?? '';
 
   return {

@@ -9,8 +9,8 @@ services:
       PORT: "${PORT:-3000}"
       NODE_ENV: production
       SCRAPER_API_KEY: "${SCRAPER_API_KEY}"
-      # Comma-separated extra origins beyond sanctumrp.net (optional):
-      # EXTRA_ORIGINS: "https://staging.sanctumrp.net"
+      # Comma-separated extra origins beyond sl.itzdabbzz.me (optional):
+      # EXTRA_ORIGINS: "https://staging.itzdabbzz.me"
     restart: unless-stopped
     # Playwright / Chromium needs a non-sandboxed environment in Docker.
     # The --no-sandbox flag is set automatically by the Playwright base image,

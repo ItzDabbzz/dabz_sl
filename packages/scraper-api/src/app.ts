@@ -13,6 +13,7 @@ import express, { type Application, type Request, type Response, type NextFuncti
 import { rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
 import { scrapeUrl } from './lib.js';
+import { scrapeStore } from './scrape-store.js';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -23,8 +24,7 @@ const API_KEY = process.env['SCRAPER_API_KEY'] ?? '';
 
 /** Origins allowed to call this API. Add staging/preview URLs as needed. */
 const ALLOWED_ORIGINS: string[] = [
-  'https://sanctumrp.net',
-  'https://www.sanctumrp.net',
+  'https://sl.itzdabbzz.me',
   ...(process.env['EXTRA_ORIGINS'] ? process.env['EXTRA_ORIGINS'].split(',') : []),
 ];
 
@@ -122,6 +122,58 @@ app.post('/api/scrape', apiKeyAuth, async (req: Request, res: Response): Promise
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[scrape] failed for ${url}: ${message}`);
+    res.status(500).json({ ok: false, error: message });
+  }
+});
+
+/** Scrape every product in an SL Marketplace store. */
+const storeBodySchema = z.object({
+  store: z.string().min(1).describe('Store id or store URL, e.g. 199625'),
+  /** Enumerate the listing only; do not visit product pages. */
+  listingOnly: z.boolean().optional(),
+  /** Cap the number of listing pages to enumerate. */
+  maxPages: z.number().int().min(1).max(200).optional(),
+  /** Product pages fetched in parallel. */
+  concurrency: z.number().int().min(1).max(4).optional(),
+  /** Minimum milliseconds between any two requests. */
+  minDelayMs: z.number().int().min(250).max(60_000).optional(),
+  timeout: z.number().int().min(5_000).max(120_000).optional(),
+  navTimeout: z.number().int().min(5_000).max(120_000).optional(),
+  blockAssets: z.boolean().optional(),
+});
+
+app.post('/api/scrape/store', apiKeyAuth, async (req: Request, res: Response): Promise<void> => {
+  const parsed = storeBodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ ok: false, error: parsed.error.flatten() });
+    return;
+  }
+
+  const { store, listingOnly, maxPages, concurrency, minDelayMs, timeout, navTimeout, blockAssets } =
+    parsed.data;
+
+  try {
+    const result = await scrapeStore(store, {
+      listingOnly,
+      maxPages,
+      concurrency,
+      minDelayMs,
+      timeout,
+      navTimeout,
+      blockAssets,
+    });
+
+    // A throttled origin is not a server fault — report it as 429 so callers
+    // can back off rather than retrying into a block.
+    if (result.aborted) {
+      res.status(429).json({ ok: false, error: result.aborted, data: result });
+      return;
+    }
+
+    res.json({ ok: true, data: result });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[scrape/store] failed for ${store}: ${message}`);
     res.status(500).json({ ok: false, error: message });
   }
 });

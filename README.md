@@ -72,7 +72,27 @@ pnpm --filter @dabzsl/scraper-cli scrape -- --input urls.txt --xlsx
 
 # Scrape a single URL
 pnpm --filter @dabzsl/scraper-cli scrape -- --url https://marketplace.secondlife.com/p/item-name/12345
+
+# Scrape a whole store — pass the store URL and it is detected automatically
+pnpm --filter @dabzsl/scraper-cli scrape -- --url https://marketplace.secondlife.com/stores/199625
 ```
+
+A store URL is a listing page rather than a product page, so the scraper
+routes it to the store scraper automatically: it enumerates the store listing
+(one request per 96 products) and then visits each product page at a globally
+paced rate. Product URLs and store URLs can be mixed in one run.
+
+To scrape a store with store-specific options (preview only, resume, page
+caps), use the dedicated command:
+
+```bash
+pnpm --filter @dabzsl/scraper-cli scrape-store -- --store 199625 --listing-only
+```
+
+Store scraping enumerates the store listing first (one request per 96 products)
+and then visits each product page at a globally paced rate, so it stays well
+inside the marketplace's limits. It checkpoints as it goes and can resume an
+interrupted run.
 
 See [`packages/scraper-cli/README.md`](packages/scraper-cli/README.md) for all CLI flags and output options.
 

@@ -10,6 +10,7 @@ Local CLI tool for bulk-scraping Second Life Marketplace product pages and expor
 - [Getting Started](#getting-started)
 - [Authentication](#authentication)
 - [Basic Usage](#basic-usage)
+- [Scraping an Entire Store](#scraping-an-entire-store)
 - [CLI Flags Reference](#cli-flags-reference)
 - [Input Sources](#input-sources)
 - [Output Options](#output-options)
@@ -91,6 +92,145 @@ pnpm --filter @dabzsl/scraper-cli scrape -- \
 pnpm --filter @dabzsl/scraper-cli scrape -- \
   --file ./test-page.html
 ```
+
+### Scrape a store
+
+A store URL is detected automatically and routed to the store scraper — no
+separate command needed:
+
+```bash
+pnpm --filter @dabzsl/scraper-cli scrape -- \
+  --url https://marketplace.secondlife.com/stores/199625
+```
+
+Store URLs and product URLs can be mixed in one run. The store's products are
+written to the same output file as any product URLs.
+
+Two extra flags control store scraping when it runs through `scrape`:
+
+| Flag | Default | Description |
+|---|---|---|
+| `--store-delay` | `1000` | Minimum milliseconds between any two requests while scraping a store. |
+| `--store-concurrency` | `2` | Product pages fetched in parallel while scraping a store. |
+
+For store-only options (preview only, resume, page caps) use the dedicated
+`scrape-store` command — see [Scraping an Entire Store](#scraping-an-entire-store).
+
+---
+
+## Scraping an Entire Store
+
+A store can hold thousands of products. Scraping them one URL at a time is
+slow and hammers the marketplace, so `scrape-store` works in two phases:
+
+1. **Enumerate** — walk the store's paginated listing. One request covers 96
+   products, so a 2500-item store needs ~27 requests instead of 2500.
+2. **Detail** — visit each product page with a bounded worker pool.
+
+```bash
+# Preview the catalog without touching a single product page (cheap: ~27 requests)
+pnpm --filter @dabzsl/scraper-cli scrape-store -- \
+  --store 199625 \
+  --listing-only
+
+# Scrape the whole store
+pnpm --filter @dabzsl/scraper-cli scrape-store -- \
+  --store 199625
+```
+
+The store can be given as an id (`199625`) or a full store URL.
+
+### Staying safe (not getting banned)
+
+The marketplace is a shared, rate-limited origin and it answers `406` to
+clients that do not look like a browser. The store scraper is deliberately
+conservative:
+
+| Control | Default | What it does |
+|---|---|---|
+| `--delay` | `1000` ms | Minimum gap between **any two** requests, enforced globally across all workers. |
+| `--concurrency` | `2` | Product pages fetched in parallel. |
+| Shared context | always | One session and device fingerprint for the whole run. |
+| Hard abort | always | `403`/`406`/`429`/`503` stops the run immediately instead of retrying into a block. |
+| Checkpoint | always | Progress is saved so an interrupted run resumes instead of restarting. |
+
+The default 1 request/second keeps a 2000-item store to roughly 35 minutes.
+Raising `--delay` is the safest way to slow it down further.
+
+### Output files
+
+A store run writes **two** files, and only two:
+
+| File | Contents |
+|---|---|
+| `out/store-<id>.items.jsonl` | **The final output.** One scraped item per line, with every field in [Scraped Data Fields](#scraped-data-fields). Written as items are scraped, so an interrupted run keeps everything it had already fetched. |
+| `out/store-<id>.checkpoint.jsonl` | **All persistence.** The enumerated listing, the completed table, the failures, and the item that was in flight when the run stopped. |
+
+The checkpoint is the single source of truth for progress. The completed and
+uncompleted tables are *derived* from it — the listing minus the completed
+set — so they can never disagree with each other.
+
+It is append-only, which is what makes the whole thing crash-safe:
+
+- Every write is one O(1) append, so the checkpoint is written after **every**
+  item rather than in batches. A crash loses at most the item in flight.
+- The listing is written the moment enumeration finishes, before any product
+  page is visited. A resumed run reuses it instead of re-requesting every
+  listing page.
+- A half-written final line (a crash mid-append) is detected and discarded on
+  read. A truncated file is never trusted as complete.
+
+`--json <path>` additionally writes the aggregate JSON array if you want one
+file you can hand to another tool. `--xlsx` writes a spreadsheet.
+
+### Resuming an interrupted run
+
+```bash
+pnpm --filter @dabzsl/scraper-cli scrape-store -- \
+  --store 199625 \
+  --resume
+```
+
+Already-scraped products are skipped and the saved listing is reused, so the
+store is not re-enumerated. A fresh run (without `--resume`) clears the
+checkpoint and starts over.
+
+### Checking where a run got to
+
+```bash
+pnpm --filter @dabzsl/scraper-cli scrape-store -- \
+  --store 199625 \
+  --status
+```
+
+Prints the totals, the completed table, the not-yet-handled table, the
+failures, and the item that was in flight when the run stopped. No network
+access — it reads the checkpoint only.
+
+### Store flags
+
+| Flag | Default | Description |
+|---|---|---|
+| `--store`, `-s` | — | Store id or store URL. Required. |
+| `--listing-only` | `false` | Only enumerate the listing; never visit a product page. |
+| `--max-pages` | all | Cap how many listing pages to enumerate (useful for a dry run). |
+| `--concurrency`, `-c` | `2` | Product pages fetched in parallel. |
+| `--delay` | `1000` | Minimum milliseconds between any two requests. |
+| `--resume` | `false` | Resume from the existing checkpoint. |
+| `--status` | `false` | Show the run's state and exit. |
+| `--json` | — | Also write the aggregate JSON array. |
+| `--xlsx` | `false` | Also write an XLSX file. |
+| `--name` | `store-<id>` | Base filename for the output. |
+
+### What gets filtered out
+
+Demo items and limited-quantity items are **always** excluded, whether you
+pass a bare store id or a full store URL. A demo is a free preview of another
+product and a limited-quantity item cannot be bought again once its stock runs
+out, so neither is a real catalog entry.
+
+Any other `search[...]` filters in a store URL are carried over — page size,
+sort order, price bounds, and so on.
 
 ---
 
@@ -287,7 +427,12 @@ Run from `packages/scraper-cli/` or prefix with `pnpm --filter @dabzsl/scraper-c
 |--------|-------------|
 | `dev` | Run with `tsx` (no build step) |
 | `scrape` | Alias for `dev` — run the scraper |
+| `scrape-store` | Scrape an entire store (see [Scraping an Entire Store](#scraping-an-entire-store)) |
 | `login` | Open a browser to save a session to `out/auth.json` |
 | `build` | Compile TypeScript to `dist/` |
 | `typecheck` | `tsc --noEmit` |
 | `start` | Run compiled `dist/index.js` |
+
+> **Note:** the script is named `scrape-store`, not `store` — `pnpm store` is a
+> built-in pnpm command that manages the content-addressable store, and it
+> shadows a script with that name.

@@ -16,8 +16,40 @@
  * ```
  */
 
-export type { Item, Permissions, PageOptions, ScrapeOptions } from './types.js';
+export type {
+  Item,
+  Permissions,
+  PageOptions,
+  ScrapeOptions,
+  StoreListingItem,
+  StoreScrapeOptions,
+  StoreScrapeResult,
+  StoreScrapeFailure,
+} from './types.js';
 export { scrapeItem, configurePage } from './scrape-item.js';
+export {
+  scrapeStore,
+  enumerateStore,
+  parseStoreId,
+  parseStoreUrl,
+  buildStoreUrl,
+  ALWAYS_FILTERS,
+  ThrottledError,
+  MAX_PER_PAGE,
+} from './scrape-store.js';
+
+export {
+  CheckpointWriter,
+  readCheckpointFile,
+  pendingFrom,
+  describeCheckpoint,
+  emptyCheckpoint,
+} from './checkpoint.js';
+export type {
+  CheckpointRecord,
+  CheckpointState,
+  CheckpointSummary,
+} from './checkpoint.js';
 
 import { chromium } from 'playwright';
 import { scrapeItem, configurePage } from './scrape-item.js';
