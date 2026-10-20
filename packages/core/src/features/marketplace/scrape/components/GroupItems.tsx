@@ -51,7 +51,10 @@ export default function GroupItems({
     return (
         <Virtuoso
             data={items}
-            className="themed-scrollbar max-h-[24rem]"
+            className="themed-scrollbar"
+            // A scroller with no height of its own collapses to nothing, so
+            // the height is set here rather than left to the parent.
+            style={{ height: "min(24rem, 50vh)" }}
             overscan={60}
             itemContent={(_index, item) => {
                 const url = item.url ?? "";

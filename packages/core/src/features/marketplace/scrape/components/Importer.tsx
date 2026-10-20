@@ -483,7 +483,11 @@ export default function Importer() {
                         ) : (
                             <Virtuoso
                                 data={visibleGroups}
-                                className="themed-scrollbar max-h-[38rem]"
+                                className="themed-scrollbar"
+                                // A scroller with no height of its own collapses
+                                // to nothing, so the height is set here rather
+                                // than left to the parent.
+                                style={{ height: "min(38rem, 60vh)" }}
                                 overscan={200}
                                 itemContent={(_index, group) => (
                                     <PathGroupRow
