@@ -10,6 +10,7 @@
     "build": "dotenv -e ../../.env -- next build --webpack",
     "start": "dotenv -e ../../.env -- next start -p 3000",
     "lint": "eslint .",
+    "test": "node --experimental-strip-types --test \"test/**/*.test.mjs\"",
     "db:generate": "dotenv -e ../../.env -- drizzle-kit generate",
     "db:migrate": "dotenv -e ../../.env -- drizzle-kit migrate",
     "db:push": "dotenv -e ../../.env -- drizzle-kit push",

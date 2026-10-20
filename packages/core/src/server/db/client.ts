@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { better } from "better-drizzle";
 import * as slSchema from "@/schemas/sl-schema";
 import * as authSchema from "@/schemas/auth-schema";
+import { withReadableDialectName } from "./dialect-name";
 
 /**
  * Every table in one object.
@@ -64,7 +65,7 @@ function getDbInstance(): Database {
   }
 
   const sql = neon(getDatabaseUrl());
-  const raw = drizzle(sql, { schema });
+  const raw = withReadableDialectName(drizzle(sql, { schema }));
   const client = better(raw, { schema });
 
   // A delegate answers for the tables; raw Drizzle answers for everything
