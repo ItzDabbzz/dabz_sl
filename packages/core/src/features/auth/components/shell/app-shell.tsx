@@ -8,6 +8,7 @@ import { useSession } from "@/features/auth/client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import {
     LayoutDashboard,
     Boxes,
@@ -460,6 +461,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </ScrollArea>
             </main>
             <Analytics />
+            <SpeedInsights />
         </div>
     );
 }
