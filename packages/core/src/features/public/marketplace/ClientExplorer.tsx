@@ -89,9 +89,14 @@ function CategoryTree({
                 const isSelected =
                     selected.length === child.path.length &&
                     selected.join("") === child.path.join("");
+                // A node is open when it is selected itself, or when the
+                // selection sits deeper inside it - selecting a root has to
+                // reveal its children.
                 const isOpen =
-                    selected.length > child.path.length &&
-                    child.path.join("") === selected.slice(0, child.path.length).join("");
+                    isSelected ||
+                    (selected.length > child.path.length &&
+                        child.path.join("") ===
+                            selected.slice(0, child.path.length).join(""));
                 return (
                     <div key={child.path.join("")}>
                         <Button

@@ -26,6 +26,7 @@ import {
     pathKey,
     pathLabel,
     suggestCategory,
+    normalizePath,
 } from "../lib/category-matching";
 import type { ScrapedItem } from "../lib/types";
 
@@ -43,12 +44,8 @@ interface Loaded {
 /** A category path as stored by the API. */
 interface StoredCategory {
     id: string;
-    primary: string;
-    sub?: string | null;
-    sub2?: string | null;
-    sub3?: string | null;
-    sub4?: string | null;
-    sub5?: string | null;
+    /** The full path from the root. */
+    path: string[];
 }
 
 /** The assignment for one marketplace path. */
@@ -65,6 +62,16 @@ export default function Importer() {
     const [categories, setCategories] = useState<StoredCategory[]>([]);
     const [loaded, setLoaded] = useState<Loaded | null>(null);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
+    /**
+     * Per-item category overrides, keyed by item URL.
+     *
+     * An item without an entry follows its group, so the group decision
+     * still does the work. An entry means one item was filed somewhere
+     * else, and it is kept out of the group's count.
+     */
+    const [overrides, setOverrides] = useState<Record<string, string[][]>>(
+        {},
+    );
     const [query, setQuery] = useState("");
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -92,22 +99,9 @@ export default function Importer() {
     /** Every category path that already exists. */
     const existingPaths = useMemo<string[][]>(
         () =>
-            categories.map((c) =>
-                [
-                    c.primary,
-                    c.sub,
-                    c.sub2,
-                    c.sub3,
-                    c.sub4,
-                    c.sub5,
-                ]
-                    .filter(
-                        (level): level is string =>
-                            typeof level === "string" &&
-                            level !== "All" &&
-                            level.trim().length > 0,
-                    ),
-            ),
+            categories
+                .map((c) => normalizePath(c.path ?? []))
+                .filter((p) => p.length > 0),
         [categories],
     );
 
@@ -121,6 +115,7 @@ export default function Importer() {
                 if (!parsed.items.length) {
                     setLoaded(null);
                     setAssignments([]);
+                    setOverrides({});
                     setError(
                         parsed.kind === "empty"
                             ? "That file is empty."
@@ -155,6 +150,8 @@ export default function Importer() {
                     duplicates,
                     missingUrl,
                 });
+                setAssignments([]);
+                setOverrides({});
                 setQuery("");
             } catch (e) {
                 setLoaded(null);
@@ -169,6 +166,7 @@ export default function Importer() {
     const onClear = useCallback(() => {
         setLoaded(null);
         setAssignments([]);
+        setOverrides({});
         setError(null);
     }, []);
 
@@ -213,6 +211,19 @@ export default function Importer() {
             setAssignments((old) => {
                 const next = old.filter((a) => pathKey(a.path) !== key);
                 return [...next, { path, value, suggested: false }];
+            });
+        },
+        [],
+    );
+
+    /** File one item somewhere other than its group, or put it back. */
+    const setOverride = useCallback(
+        (url: string, value: string[][] | null) => {
+            setOverrides((old) => {
+                const next = { ...old };
+                if (value === null) delete next[url];
+                else next[url] = value;
+                return next;
             });
         },
         [],
@@ -266,14 +277,26 @@ export default function Importer() {
         setBusy(true);
         setError(null);
         try {
-            // Every item gets the categories of the group it belongs to.
+            // Every item gets the categories of the group it belongs to,
+            // unless it was moved somewhere else on its own.
             const byUrl = new Map<string, string[][]>();
             for (const group of groups) {
                 const value = assignmentFor(group.path);
                 if (!value.length) continue;
                 for (const item of group.items) {
-                    if (item.url) byUrl.set(item.url, value);
+                    if (!item.url) continue;
+                    const override = overrides[item.url];
+                    if (override) {
+                        byUrl.set(item.url, override);
+                        continue;
+                    }
+                    byUrl.set(item.url, value);
                 }
+            }
+            // An item that was moved but whose group has no category still
+            // needs its own assignment.
+            for (const [url, value] of Object.entries(overrides)) {
+                if (value.length) byUrl.set(url, value);
             }
 
             const res = await fetch("/api/tools/marketplace/items", {
@@ -374,6 +397,13 @@ export default function Importer() {
                                     categor{groups.length === 1 ? "y" : "ies"} ·{" "}
                                     {totalAssigned.toLocaleString()} item
                                     {totalAssigned === 1 ? "" : "s"} categorised
+                                    {Object.keys(overrides).length > 0 && (
+                                        <>
+                                            {" · "}
+                                            {Object.keys(overrides).length} moved
+                                            individually
+                                        </>
+                                    )}
                                     {unmatched.length > 0 && (
                                         <>
                                             {" · "}
@@ -458,13 +488,14 @@ export default function Importer() {
                                 itemContent={(_index, group) => (
                                     <PathGroupRow
                                         marketplacePath={group.path}
-                                        count={group.items.length}
-                                        sample={group.items}
+                                        items={group.items}
                                         value={assignmentFor(group.path)}
                                         onChange={(next) =>
                                             setAssignment(group.path, next)
                                         }
                                         existing={existingPaths}
+                                        overrides={overrides}
+                                        onOverride={setOverride}
                                         suggested={
                                             Boolean(
                                                 suggestions.get(
