@@ -1,6 +1,6 @@
 // Renders "What They Wearin'" data from a session or base64 JSON
-// New mode: https://sanctumrp.net/wearing?session=SESSION_ID
-// Legacy mode: https://sanctumrp.net/wearing?data=BASE64(JSON)
+// New mode: https://sl.itzdabbzz.me/wearing?session=SESSION_ID
+// Legacy mode: https://sl.itzdabbzz.me/wearing?data=BASE64(JSON)
 
 "use client";
 

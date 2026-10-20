@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.sanctumrp.net/sitemap.xml
+Sitemap: https://sl.itzdabbzz.me/sitemap.xml

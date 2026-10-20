@@ -1,13 +1,5 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
 
 const eslintConfig = [
   // Global linter options
@@ -17,7 +9,8 @@ const eslintConfig = [
       reportUnusedDisableDirectives: "off",
     },
   },
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   {
     ignores: [
       "node_modules/**",
@@ -36,6 +29,15 @@ const eslintConfig = [
       "@next/next/no-img-element": "off",
       // Exhaustive deps often noisy for controlled effects/memos in this app; rely on reviews
       "react-hooks/exhaustive-deps": "off",
+      // React Compiler lint rules (eslint-plugin-react-hooks v6) — the codebase
+      // predates them and uses the classic effects/data-fetch patterns they flag.
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/set-state-in-render": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/component-hook-factories": "off",
+      "react-hooks/preserve-manual-memoization": "off",
       // Existing relaxed settings
       "react/no-unescaped-entities": "off",
       "@typescript-eslint/ban-ts-comment": "off",

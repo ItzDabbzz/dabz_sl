@@ -47,7 +47,7 @@ const baseURL: string | undefined =
     process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
 
 // Build trusted origins from baseURL to avoid hard-coding domains
-const defaultTrusted = ["exp://", "https://www.sanctumrp.net", "https://sl.sanctumrp.net", "http://localhost:3000"] as string[];
+const defaultTrusted = ["exp://", "https://sl.itzdabbzz.me", "http://localhost:3000"] as string[];
 const computedTrusted = [...defaultTrusted];
 try {
     if (baseURL) {
@@ -156,7 +156,7 @@ export const auth = betterAuth({
                         ? `http://localhost:3000/accept-invitation/${data.id}`
                         : `${
                               process.env.BETTER_AUTH_URL ||
-                              "https://sanctumrp.net"
+                              "https://sl.itzdabbzz.me"
                           }/accept-invitation/${data.id}`;
 
                 await resend.emails.send({

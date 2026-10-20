@@ -66,3 +66,7 @@ sl_stores_to_scrape.md
 # Turborepo
 .turbo
 .playwright-mcp/
+
+# Ad-hoc dev scripts (scratch probes, one-off experiments)
+scripts/*.local.mts
+scripts/*.local.ts

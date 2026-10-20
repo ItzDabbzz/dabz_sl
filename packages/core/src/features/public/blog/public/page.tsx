@@ -17,7 +17,7 @@ export const revalidate = 60;
 const PAGE_SIZE = 10;
 
 export const metadata = {
-  title: "Public Blog | sanctumrp.net",
+  title: "Public Blog | sl.itzdabbzz.me",
   description: "Public posts, guides, and updates.",
 };
 

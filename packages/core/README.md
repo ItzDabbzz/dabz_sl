@@ -157,7 +157,7 @@ All variables are loaded from `../../.env` relative to `packages/core`.
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | Neon PostgreSQL connection string |
 | `BETTER_AUTH_SECRET` | Yes | Secret used to sign sessions and tokens |
-| `BETTER_AUTH_URL` | Yes | Canonical base URL of the app (e.g. `https://sanctumrp.net`) |
+| `BETTER_AUTH_URL` | Yes | Canonical base URL of the app (e.g. `https://sl.itzdabbzz.me`) |
 | `RESEND_API_KEY` | Yes | Resend API key for transactional email |
 | `NEXT_PUBLIC_APP_URL` | Yes | Public-facing base URL (used in client-side code) |
 | `SCRAPER_API_URL` | No | Base URL of the deployed `scraper-api` HTTP server |

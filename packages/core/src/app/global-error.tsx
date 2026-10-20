@@ -39,6 +39,7 @@ export default function GlobalError({
                         </p>
                         <div className="ge-actions">
                             <button onClick={() => reset()}>Reload</button>
+                            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- global-error renders outside the root layout, so next/link is unavailable */}
                             <a href="/">Home</a>
                         </div>
                     </div>

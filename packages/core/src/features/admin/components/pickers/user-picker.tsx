@@ -49,6 +49,7 @@ export function UserPicker({
 }) {
     const { data: currentUser } = useSession();
     const me = currentUser?.user;
+    const meImage = (me as any)?.image ?? null;
 
     const [query, setQuery] = useState("");
     const [selected, setSelected] = useState<Array<{
@@ -65,11 +66,11 @@ export function UserPicker({
                 id: me.id,
                 name: me.name ?? null,
                 email: me.email ?? null,
-                image: (me as any).image ?? null,
+                image: meImage,
             });
         }
         return list;
-    }, [options, includeSelf, me?.id, me?.name, me?.email, (me as any)?.image]);
+    }, [options, includeSelf, me?.id, me?.name, me?.email, meImage]);
 
     const filtered = useMemo(() => {
         const q = query.toLowerCase();
