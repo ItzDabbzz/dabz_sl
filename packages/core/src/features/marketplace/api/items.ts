@@ -283,6 +283,11 @@ export async function POST(req: NextRequest) {
             categories: Array<{ path?: string[] } & Record<string, string | undefined>>;
         }> = body?.assign || [];
 
+        // The assign list is indexed by URL: a batch of items and the assign
+        // list are the same size, so looking each one up in turn is
+        // quadratic.
+        const assignByUrl = new Map(assign.map((a) => [a.url, a.categories]));
+
         // Resolve a category by its full path, creating it only if missing.
         //
         // The path is what identifies a category. The unique index cannot
@@ -343,9 +348,10 @@ export async function POST(req: NextRequest) {
             }
             if (!row) continue;
 
-            // Attach categories
-            const catSpec =
-                assign.find((a) => a.url === it.url)?.categories || [];
+            // Attach categories. The assign list is indexed rather than
+            // scanned: a batch of items and the assign list are the same
+            // size, so looking each one up in turn is quadratic.
+            const catSpec = assignByUrl.get(it.url) || [];
             for (const c of catSpec) {
                 // A category arrives as a full path.
                 const path = Array.isArray(c.path) ? c.path : [];

@@ -74,6 +74,8 @@ export default function Importer() {
     );
     const [query, setQuery] = useState("");
     const [busy, setBusy] = useState(false);
+    /** How many items have been imported so far, while a run is going. */
+    const [imported, setImported] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const groupScrollRef = useRef<HTMLDivElement>(null);
 
@@ -153,6 +155,7 @@ export default function Importer() {
                 });
                 setAssignments([]);
                 setOverrides({});
+                setImported(0);
                 setQuery("");
             } catch (e) {
                 setLoaded(null);
@@ -168,6 +171,7 @@ export default function Importer() {
         setLoaded(null);
         setAssignments([]);
         setOverrides({});
+        setImported(0);
         setError(null);
     }, []);
 
@@ -314,30 +318,63 @@ export default function Importer() {
                 if (value.length) byUrl.set(url, value);
             }
 
-            const res = await fetch("/api/tools/marketplace/items", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                    items: loaded.items,
-                    assign: Array.from(byUrl.entries()).map(
-                        ([url, paths]) => ({
-                            url,
-                            categories: paths.map((p) => ({ path: p })),
-                        }),
-                    ),
+            const assign = Array.from(byUrl.entries()).map(
+                ([url, paths]) => ({
+                    url,
+                    categories: paths.map((p) => ({ path: p })),
                 }),
-            });
-            if (!res.ok) throw new Error("Import failed");
-            const data = await res.json();
-            const count = Array.isArray(data.items) ? data.items.length : 0;
-            toast.success(`Imported ${count} item${count === 1 ? "" : "s"}`);
+            );
+
+            // A store can hold thousands of items, and sending the whole
+            // file in one request goes over the platform's body limit — the
+            // server rejects it before the function even runs. It goes in
+            // batches instead, so each request is small enough to be
+            // accepted and finishes well inside the function's time.
+            const BATCH = 200;
+            const ids: string[] = [];
+            let count = 0;
+
+            for (let i = 0; i < loaded.items.length; i += BATCH) {
+                const batch = loaded.items.slice(i, i + BATCH);
+                const batchUrls = new Set(
+                    batch.map((it) => it.url).filter(Boolean),
+                );
+                const batchAssign = assign.filter((a) =>
+                    batchUrls.has(a.url),
+                );
+
+                const res = await fetch("/api/tools/marketplace/items", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        items: batch,
+                        assign: batchAssign,
+                    }),
+                });
+                if (!res.ok) {
+                    throw new Error(
+                        res.status === 413
+                            ? "The batch was too large for the server."
+                            : `Import failed (${res.status})`,
+                    );
+                }
+                const data = await res.json();
+                if (Array.isArray(data.items)) {
+                    count += data.items.length;
+                    ids.push(
+                        ...data.items.map((x: any) => x.id).filter(Boolean),
+                    );
+                }
+                setImported(count);
+            }
+
+            toast.success(
+                `Imported ${count} item${count === 1 ? "" : "s"}`,
+            );
             setLoaded(null);
             setAssignments([]);
             if (typeof window !== "undefined") {
-                const ids: string[] = Array.isArray(data.items)
-                    ? data.items.map((x: any) => x.id).filter(Boolean)
-                    : [];
                 try {
                     sessionStorage.setItem(
                         "mp:lastImportedIds",
@@ -447,7 +484,10 @@ export default function Importer() {
                                     {busy ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Importing…
+                                            Importing{" "}
+                                            {imported.toLocaleString()} of{" "}
+                                            {loaded.items.length.toLocaleString()}
+                                            …
                                         </>
                                     ) : (
                                         <>
