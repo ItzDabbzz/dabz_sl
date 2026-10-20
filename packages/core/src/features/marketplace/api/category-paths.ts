@@ -57,18 +57,18 @@ export async function resolveCategoryPath(
  * Every category path that exists for a user, as path arrays.
  *
  * Used to build the picker and to match imported paths against the tree.
+ *
+ * This is a better-drizzle delegate: the table's own queries, typed, without
+ * the query builder. The path column is a text array, so the lookup for one
+ * specific path stays on the raw client below.
  */
 export async function listCategoryPaths(
     ownerUserId: string | null,
 ): Promise<CategoryPath[]> {
-    const rows = await db
-        .select({ path: mpCategories.path })
-        .from(mpCategories)
-        .where(
-            ownerUserId
-                ? eq(mpCategories.ownerUserId as any, ownerUserId as any) as any
-                : undefined,
-        );
+    const rows = await db.mpCategories.findMany({
+        ...(ownerUserId ? { where: { ownerUserId } } : {}),
+        select: { path: true },
+    });
 
     return rows.map((row) => normalizePath(row.path as unknown as string[]));
 }
@@ -79,14 +79,10 @@ export async function listCategoryPaths(
  * The id is needed alongside the path so a caller can act on a specific row.
  */
 export async function listCategoryRows(ownerUserId: string | null) {
-    const rows = await db
-        .select({ id: mpCategories.id, path: mpCategories.path })
-        .from(mpCategories)
-        .where(
-            ownerUserId
-                ? eq(mpCategories.ownerUserId as any, ownerUserId as any) as any
-                : undefined,
-        );
+    const rows = await db.mpCategories.findMany({
+        ...(ownerUserId ? { where: { ownerUserId } } : {}),
+        select: { id: true, path: true },
+    });
 
     return rows.map((row) => ({
         id: row.id,
