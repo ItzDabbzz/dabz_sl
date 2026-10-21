@@ -216,7 +216,6 @@ export const auth = betterAuth({
         }),
         multiSession(),
         oAuthProxy(),
-        nextCookies(),
         apiKey(),
         oneTap(),
         haveIBeenPwned(),
@@ -229,6 +228,12 @@ export const auth = betterAuth({
                 },
             };
         }),
+        /**
+         * The cookie integration has to come last. It forwards the
+         * Set-Cookie headers that the plugins above set, and a plugin
+         * that runs after it has its cookies dropped.
+         */
+        nextCookies(),
     ],
     trustedOrigins: computedTrusted,
     advanced: {
