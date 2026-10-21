@@ -8,21 +8,29 @@ import {
   rbacPermissions,
   rbacRolePermissions,
   rbacRoles,
+  rbacUserRoles,
 } from "@/schemas/rbac";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
+import { DashboardPage } from "@/features/dashboard/components/page";
+import { user } from "@/schemas/auth-schema";
 
+/**
+ * The role, if the admin may see it.
+ *
+ * A platform role belongs to the site, so anyone who may manage
+ * permissions may see it. An organization role belongs to a team, and only
+ * to the team the admin is acting as.
+ */
 async function fetchRole(organizationId: string, roleId: string) {
   const [role] = await db
     .select()
     .from(rbacRoles)
-    .where(
-      and(
-        eq(rbacRoles.id as any, roleId as any) as any,
-        eq(rbacRoles.organizationId as any, organizationId as any) as any,
-      ) as any,
-    )
+    .where(eq(rbacRoles.id as any, roleId as any) as any)
     .limit(1);
 
+  if (!role) return undefined;
+  if (role.organizationId === null) return role;
+  if (role.organizationId !== organizationId) return undefined;
   return role;
 }
 
@@ -54,6 +62,20 @@ async function fetchMembers(organizationId: string, roleId: string) {
     .orderBy(asc(rbacMemberRoles.createdAt));
 }
 
+/** The users holding a platform role. */
+async function fetchPlatformUsers(roleId: string) {
+  return db
+    .select({
+      userId: rbacUserRoles.userId,
+      name: user.name,
+      email: user.email,
+    })
+    .from(rbacUserRoles)
+    .leftJoin(user, eq(user.id, rbacUserRoles.userId))
+    .where(eq(rbacUserRoles.roleId as any, roleId as any) as any)
+    .orderBy(asc(user.name));
+}
+
 export default async function RoleDetailsPage({
   params,
 }: {
@@ -70,13 +92,23 @@ export default async function RoleDetailsPage({
     fetchMembers(organizationId, roleId),
   ]);
   if (!role) notFound();
+  // A platform role is held by users; an organization role by its members.
+  const isPlatform = role.organizationId === null;
+  const platformUsers = isPlatform ? await fetchPlatformUsers(roleId) : [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{role.name}</h1>
+    <DashboardPage
+      title={role.name}
+      crumbs={[
+        { label: "Console", href: "/dashboard" },
+        { label: "Admin" },
+        { label: "Roles", href: "/dashboard/admin/permissions/roles" },
+        { label: role.name },
+      ]}
+      actions={
         <Link href="/dashboard/admin/permissions/roles" className="text-sm underline">Back to Roles</Link>
-      </div>
+      }
+    >
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded border p-4 space-y-3">
@@ -118,27 +150,58 @@ export default async function RoleDetailsPage({
         </div>
 
         <div className="rounded border p-4 space-y-3">
-          <div className="font-semibold">Members</div>
-          <div className="text-xs text-muted-foreground">Members assigned to this role.</div>
-          <form action={`/api/admin/rbac/roles/${roleId}/members`} method="POST" className="grid gap-2 md:max-w-md">
-            <input className="rounded border bg-background px-3 py-2" name="memberId" placeholder="Member ID" />
-            <button className="rounded bg-primary px-3 py-2 text-sm text-primary-foreground" type="submit">Add member</button>
-          </form>
-          <div className="space-y-2">
-            {members.map((m) => (
-              <div key={m.memberId} className="flex items-center justify-between rounded border px-3 py-2">
-                <div className="text-sm">{m.memberId}</div>
-                <form action={`/api/admin/rbac/roles/${roleId}/members`} method="POST" className="flex items-center gap-2" suppressHydrationWarning>
-                  <input type="hidden" name="_method" value="DELETE" />
-                  <input type="hidden" name="memberId" value={m.memberId} />
-                  <button formMethod="DELETE" className="text-xs underline text-red-500">Remove</button>
-                </form>
-              </div>
-            ))}
-            {members.length === 0 && <div className="text-sm text-muted-foreground">No members yet.</div>}
+          <div className="font-semibold">{isPlatform ? "Users" : "Members"}</div>
+          <div className="text-xs text-muted-foreground">
+            {isPlatform
+              ? "The users who hold this role. A staff role belongs to the site, so it is held by people rather than by the members of a team."
+              : "Members assigned to this role."}
           </div>
+          {isPlatform ? (
+            <>
+              <form action={`/api/admin/rbac/roles/${roleId}/users`} method="POST" className="grid gap-2 md:max-w-md">
+                <input className="rounded border bg-background px-3 py-2" name="userId" placeholder="User ID" />
+                <button className="rounded bg-primary px-3 py-2 text-sm text-primary-foreground" type="submit">Add user</button>
+              </form>
+              <div className="space-y-2">
+                {platformUsers.map((u) => (
+                  <div key={u.userId} className="flex items-center justify-between rounded border px-3 py-2">
+                    <div className="text-sm">
+                      {u.name ?? "Unknown"}
+                      {u.email ? <span className="ml-2 text-xs text-muted-foreground">{u.email}</span> : null}
+                    </div>
+                    <form action={`/api/admin/rbac/roles/${roleId}/users`} method="POST" className="flex items-center gap-2" suppressHydrationWarning>
+                      <input type="hidden" name="_method" value="DELETE" />
+                      <input type="hidden" name="userId" value={u.userId} />
+                      <button formMethod="DELETE" className="text-xs underline text-red-500">Remove</button>
+                    </form>
+                  </div>
+                ))}
+                {platformUsers.length === 0 && <div className="text-sm text-muted-foreground">Nobody holds this role yet.</div>}
+              </div>
+            </>
+          ) : (
+            <>
+              <form action={`/api/admin/rbac/roles/${roleId}/members`} method="POST" className="grid gap-2 md:max-w-md">
+                <input className="rounded border bg-background px-3 py-2" name="memberId" placeholder="Member ID" />
+                <button className="rounded bg-primary px-3 py-2 text-sm text-primary-foreground" type="submit">Add member</button>
+              </form>
+              <div className="space-y-2">
+                {members.map((m) => (
+                  <div key={m.memberId} className="flex items-center justify-between rounded border px-3 py-2">
+                    <div className="text-sm">{m.memberId}</div>
+                    <form action={`/api/admin/rbac/roles/${roleId}/members`} method="POST" className="flex items-center gap-2" suppressHydrationWarning>
+                      <input type="hidden" name="_method" value="DELETE" />
+                      <input type="hidden" name="memberId" value={m.memberId} />
+                      <button formMethod="DELETE" className="text-xs underline text-red-500">Remove</button>
+                    </form>
+                  </div>
+                ))}
+                {members.length === 0 && <div className="text-sm text-muted-foreground">No members yet.</div>}
+              </div>
+            </>
+          )}
         </div>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

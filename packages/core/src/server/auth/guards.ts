@@ -1,5 +1,42 @@
 import { auth } from "@/server/auth/core";
 import { PermissionService } from "@/server/auth/permission-service";
+import { isStaffUser } from "@/server/auth/roles";
+import { requireUserFromRequest } from "@/server/auth/session";
+
+type HeaderCarrier = {
+    headers: Headers;
+};
+
+/**
+ * Require a staff user.
+ *
+ * This is the gate for the parts of the site that only the people running
+ * it may touch. It asks the platform role and nothing else - an
+ * organization's own permissions never grant staff access, because a
+ * creator team is not staff.
+ */
+export async function requireStaff(input: HeaderCarrier) {
+    const user = await requireUserFromRequest(input);
+    if (!isStaffUser(user)) {
+        throw new Error("forbidden");
+    }
+    return user;
+}
+
+/**
+ * Whether the request comes from a staff user.
+ *
+ * Used by pages that render for everyone but only show staff controls to
+ * staff.
+ */
+export async function isStaffRequest(input: HeaderCarrier) {
+    try {
+        const user = await requireUserFromRequest(input);
+        return isStaffUser(user);
+    } catch {
+        return false;
+    }
+}
 
 function isSuperAdmin(userId: string | null | undefined): boolean {
     const admins = (process.env.BETTER_AUTH_ADMIN_IDS || "")
@@ -52,7 +89,12 @@ export async function requirePermission(
         return { userId: user.id, organizationId: orgId ?? "__role__" };
     }
 
-    // 3. Org-level RBAC DB check (custom per-member grants / overrides)
+    // 3. Platform RBAC (custom roles that belong to the site itself)
+    if (await PermissionService.hasPlatformPermission(user.id, key)) {
+        return { userId: user.id, organizationId: orgId ?? "__platform__" };
+    }
+
+    // 4. Org-level RBAC DB check (custom per-member grants / overrides)
     if (!orgId) throw new Error("forbidden");
     const ok = await PermissionService.hasPermission(user.id, orgId, key);
     if (!ok) throw new Error("forbidden");

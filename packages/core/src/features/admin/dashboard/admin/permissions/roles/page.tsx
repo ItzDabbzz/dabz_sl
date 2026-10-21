@@ -3,45 +3,87 @@ import { db } from "@/server/db/client";
 import { getActiveOrgId, requirePermission } from "@/server/auth/guards";
 import Link from "next/link";
 import { rbacRoles } from "@/schemas/rbac";
-import { and, asc, eq, ilike } from "drizzle-orm";
+import { and, asc, eq, ilike, isNull } from "drizzle-orm";
+import { DashboardPage } from "@/features/dashboard/components/page";
 
-async function fetchRoles(organizationId: string, q?: string) {
-  return db
-    .select()
-    .from(rbacRoles)
-    .where(
-      q
-        ? and(
-            eq(rbacRoles.organizationId as any, organizationId as any) as any,
-            ilike(rbacRoles.name as any, `%${q}%`) as any,
-          )
-        : (eq(rbacRoles.organizationId as any, organizationId as any) as any),
-    )
-    .orderBy(asc(rbacRoles.isSystem), asc(rbacRoles.name));
+/**
+ * The roles of one scope.
+ *
+ * A platform role belongs to the site; an organization role belongs to a
+ * creator team. They are listed apart, because they mean different things.
+ */
+async function fetchRoles(
+    scope: "platform" | "organization",
+    organizationId: string,
+    q?: string,
+) {
+    const scopeFilter =
+        scope === "platform"
+            ? isNull(rbacRoles.organizationId as any)
+            : eq(rbacRoles.organizationId as any, organizationId as any);
+    return db
+        .select()
+        .from(rbacRoles)
+        .where(
+            q
+                ? and(scopeFilter, ilike(rbacRoles.name as any, `%${q}%`) as any)
+                : scopeFilter,
+        )
+        .orderBy(asc(rbacRoles.isSystem), asc(rbacRoles.name));
 }
 
-export default async function RolesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default async function RolesPage({ searchParams }: { searchParams: Promise<{ q?: string; scope?: string }> }) {
   const requestHeaders = await headers();
   try { await requirePermission("rbac.manage", requestHeaders); } catch { return <div className="p-6 text-sm text-red-500">You do not have access.</div>; }
   const organizationId = (await getActiveOrgId(requestHeaders)) || "";
   const sp = await searchParams;
   const q = sp?.q || "";
-  const roles = await fetchRoles(organizationId, q);
+  const scope = sp?.scope === "platform" ? "platform" : "organization";
+  const roles = await fetchRoles(scope, organizationId, q);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Roles</h1>
+    <DashboardPage
+      title={scope === "platform" ? "Staff roles" : "Organization roles"}
+      description={
+        scope === "platform"
+          ? "Roles that belong to the site. Whoever holds one can do it across every organization."
+          : `Roles that belong to the organization you are acting as.`
+      }
+      crumbs={[
+        { label: "Console", href: "/dashboard" },
+        { label: "Admin" },
+        { label: "Permissions" },
+        { label: "Roles" },
+      ]}
+      actions={
         <Link href="/dashboard/admin/permissions" className="text-sm underline">Back</Link>
+      }
+    >
+      <div className="flex gap-2 text-sm">
+        <Link
+          href="/dashboard/admin/permissions/roles"
+          className={scope === "organization" ? "font-medium underline" : "underline-offset-4 hover:underline"}
+        >
+          Organization roles
+        </Link>
+        <span aria-hidden className="text-muted-foreground">/</span>
+        <Link
+          href="/dashboard/admin/permissions/roles?scope=platform"
+          className={scope === "platform" ? "font-medium underline" : "underline-offset-4 hover:underline"}
+        >
+          Staff roles
+        </Link>
       </div>
+
       <div className="space-y-2">
         <form className="flex gap-2">
+          <input type="hidden" name="scope" value={scope} />
           <input className="w-full rounded border bg-background px-3 py-2" name="q" defaultValue={q} placeholder="Search roles..." />
           <button className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground" type="submit">Search</button>
         </form>
       </div>
 
-      <form action="/api/admin/rbac/roles" method="POST" className="grid gap-2 md:max-w-xl rounded border p-4">
+      <form action={`/api/admin/rbac/roles?scope=${scope}`} method="POST" className="grid gap-2 md:max-w-xl rounded border p-4">
         <div className="font-semibold">Create role</div>
         <input className="rounded border bg-background px-3 py-2" name="name" placeholder="Name" />
         <input className="rounded border bg-background px-3 py-2" name="slug" placeholder="Slug (optional)" />
@@ -70,6 +112,6 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
         ))}
         {roles.length === 0 && <div className="p-6 text-sm text-muted-foreground">No roles found.</div>}
       </div>
-    </div>
+    </DashboardPage>
   );
 }

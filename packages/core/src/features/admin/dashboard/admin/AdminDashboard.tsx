@@ -20,6 +20,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { DashboardPage } from "@/features/dashboard/components/page";
 import { client, useSession } from "@/features/auth/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -45,7 +46,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import {
 	Popover,
@@ -401,135 +402,141 @@ export default function AdminDashboard() {
 	);
 
 	return (
-		<div className="container mx-auto p-4 space-y-8">
-			<Card>
-				<CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
-					<CardTitle className="text-2xl">Admin Dashboard</CardTitle>
-					<div className="flex items-center gap-2">
-						{isImpersonating && (
-							<Button
-								variant="destructive"
-								onClick={handleStopImpersonating}
-								disabled={isLoading === "stop-impersonating"}
-							>
-								{isLoading === "stop-impersonating" ? (
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								) : (
-									<UserMinus className="mr-2 h-4 w-4" />
-								)}
-								Stop Impersonating
-							</Button>
-						)}
-						<Dialog
-							open={isDialogOpen}
-							onOpenChange={setIsDialogOpen}
+		<DashboardPage
+			title="Admin Dashboard"
+			crumbs={[
+				{ label: "Console", href: "/dashboard" },
+				{ label: "Admin" },
+				{ label: "Dashboard" },
+			]}
+			actions={
+				<>
+					{isImpersonating && (
+						<Button
+							variant="destructive"
+							onClick={handleStopImpersonating}
+							disabled={isLoading === "stop-impersonating"}
 						>
-							<DialogTrigger asChild>
-								<Button>
-									<Plus className="mr-2 h-4 w-4" /> Create
-									User
-								</Button>
-							</DialogTrigger>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>Create New User</DialogTitle>
-								</DialogHeader>
-								<form
-									onSubmit={handleCreateUser}
-									className="space-y-4"
-								>
-									<div>
-										<Label htmlFor="email">Email</Label>
-										<Input
-											id="email"
-											type="email"
-											value={newUser.email}
-											onChange={(e) =>
-												setNewUser({
-													...newUser,
-													email: e.target.value,
-												})
-											}
-											required
-										/>
-									</div>
-									<div>
-										<Label htmlFor="password">
-											Password
-										</Label>
-										<Input
-											id="password"
-											type="password"
-											value={newUser.password}
-											onChange={(e) =>
-												setNewUser({
-													...newUser,
-													password: e.target.value,
-												})
-											}
-											required
-										/>
-									</div>
-									<div>
-										<Label htmlFor="name">Name</Label>
-										<Input
-											id="name"
-											value={newUser.name}
-											onChange={(e) =>
-												setNewUser({
-													...newUser,
-													name: e.target.value,
-												})
-											}
-											required
-										/>
-									</div>
-									<div>
-										<Label htmlFor="role">Role</Label>
-										<Select
-											value={newUser.role}
-											onValueChange={(
-												value: "admin" | "user",
-											) =>
-												setNewUser({
-													...newUser,
-													role: value as any,
-												})
-											}
-										>
-											<SelectTrigger>
-												<SelectValue placeholder="Select role" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="admin">
-													Admin
-												</SelectItem>
-												<SelectItem value="user">
-													User
-												</SelectItem>
-											</SelectContent>
-										</Select>
-									</div>
-									<Button
-										type="submit"
-										className="w-full"
-										disabled={isLoading === "create"}
+							{isLoading === "stop-impersonating" ? (
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							) : (
+								<UserMinus className="mr-2 h-4 w-4" />
+							)}
+							Stop Impersonating
+						</Button>
+					)}
+					<Dialog
+						open={isDialogOpen}
+						onOpenChange={setIsDialogOpen}
+					>
+						<DialogTrigger asChild>
+							<Button>
+								<Plus className="mr-2 h-4 w-4" /> Create
+								User
+							</Button>
+						</DialogTrigger>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Create New User</DialogTitle>
+							</DialogHeader>
+							<form
+								onSubmit={handleCreateUser}
+								className="space-y-4"
+							>
+								<div>
+									<Label htmlFor="email">Email</Label>
+									<Input
+										id="email"
+										type="email"
+										value={newUser.email}
+										onChange={(e) =>
+											setNewUser({
+												...newUser,
+												email: e.target.value,
+											})
+										}
+										required
+									/>
+								</div>
+								<div>
+									<Label htmlFor="password">
+										Password
+									</Label>
+									<Input
+										id="password"
+										type="password"
+										value={newUser.password}
+										onChange={(e) =>
+											setNewUser({
+												...newUser,
+												password: e.target.value,
+											})
+										}
+										required
+									/>
+								</div>
+								<div>
+									<Label htmlFor="name">Name</Label>
+									<Input
+										id="name"
+										value={newUser.name}
+										onChange={(e) =>
+											setNewUser({
+												...newUser,
+												name: e.target.value,
+											})
+										}
+										required
+									/>
+								</div>
+								<div>
+									<Label htmlFor="role">Role</Label>
+									<Select
+										value={newUser.role}
+										onValueChange={(
+											value: "admin" | "user",
+										) =>
+											setNewUser({
+												...newUser,
+												role: value as any,
+											})
+										}
 									>
-										{isLoading === "create" ? (
-											<>
-												<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-												Creating...
-											</>
-										) : (
-											"Create User"
-										)}
-									</Button>
-								</form>
-							</DialogContent>
-						</Dialog>
-					</div>
-				</CardHeader>
-				<CardContent className="space-y-3">
+										<SelectTrigger>
+											<SelectValue placeholder="Select role" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="admin">
+												Admin
+											</SelectItem>
+											<SelectItem value="user">
+												User
+											</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+								<Button
+									type="submit"
+									className="w-full"
+									disabled={isLoading === "create"}
+								>
+									{isLoading === "create" ? (
+										<>
+											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+											Creating...
+										</>
+									) : (
+										"Create User"
+									)}
+								</Button>
+							</form>
+						</DialogContent>
+					</Dialog>
+				</>
+			}
+		>
+			<Card>
+				<CardContent className="space-y-3 p-6">
 					{/* Toolbar: search, sort, page size */}
 					<div className="flex flex-wrap items-center gap-2">
 						<Input
@@ -1175,6 +1182,6 @@ export default function AdminDashboard() {
 					</form>
 				</DialogContent>
 			</Dialog>
-		</div>
+		</DashboardPage>
 	);
 }

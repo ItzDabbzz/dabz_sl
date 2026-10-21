@@ -3,6 +3,7 @@ import { db } from "@/server/db/client";
 import { getActiveOrgId, requirePermission } from "@/server/auth/guards";
 import { rbacUserPermissionOverrides } from "@/schemas/rbac";
 import { and, asc, eq } from "drizzle-orm";
+import { DashboardPage } from "@/features/dashboard/components/page";
 
 async function fetchOverrides(organizationId: string, userId: string) {
   return db
@@ -30,10 +31,14 @@ export default async function OverridesPage({
   const overrides = userId ? await fetchOverrides(organizationId, userId) : [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">User Overrides</h1>
-      </div>
+    <DashboardPage
+      title="User Overrides"
+      crumbs={[
+        { label: "Console", href: "/dashboard" },
+        { label: "Admin" },
+        { label: "User Overrides" },
+      ]}
+    >
       <form className="flex gap-2">
         <input className="w-full rounded border bg-background px-3 py-2" name="userId" defaultValue={userId} placeholder="User ID" />
         <button className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground" type="submit">Load</button>
@@ -61,6 +66,6 @@ export default async function OverridesPage({
         </select>
         <button className="rounded bg-primary px-3 py-2 text-sm text-primary-foreground" type="submit">Add override</button>
       </form>
-    </div>
+    </DashboardPage>
   );
 }

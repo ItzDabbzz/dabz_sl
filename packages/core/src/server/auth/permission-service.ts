@@ -1,10 +1,11 @@
 import { db } from "@/server/db/client";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { member } from "@/schemas/auth-schema";
 import {
     rbacMemberRoles,
     rbacRolePermissions,
     rbacUserPermissionOverrides,
+    rbacUserRoles,
 } from "@/schemas/rbac";
 
 export interface PermissionSnapshot {
@@ -117,6 +118,72 @@ async function loadSnapshot(
 }
 
 export const PermissionService = {
+    /**
+     * Whether a user holds a permission at the platform level.
+     *
+     * A platform role belongs to the site rather than to a team, so it is
+     * held by the user directly. Organization permissions never grant a
+     * platform permission - a creator team is not staff.
+     */
+    async hasPlatformPermission(
+        userId: string,
+        key: string,
+    ): Promise<boolean> {
+        if (!userId) return false;
+        if (isSuperAdmin(userId)) return true;
+
+        const roleRows = await db
+            .select({ roleId: rbacUserRoles.roleId })
+            .from(rbacUserRoles)
+            .where(eq(rbacUserRoles.userId as any, userId as any) as any);
+        const roleIds = roleRows.map((r: any) => r.roleId);
+        if (!roleIds.length) return false;
+
+        const rpRows = await db
+            .select({
+                key: rbacRolePermissions.permissionKey,
+                effect: rbacRolePermissions.effect,
+            })
+            .from(rbacRolePermissions)
+            .where(
+                inArray(rbacRolePermissions.roleId as any, roleIds) as any,
+            );
+
+        const allows = new Set<string>();
+        const denies = new Set<string>();
+        for (const r of rpRows as any[]) {
+            if (r.effect === "deny") denies.add(r.key);
+            else if (r.effect === "allow") allows.add(r.key);
+        }
+
+        // Platform overrides: the ones with no organization.
+        const ovRows = await db
+            .select({
+                key: rbacUserPermissionOverrides.permissionKey,
+                effect: rbacUserPermissionOverrides.effect,
+            })
+            .from(rbacUserPermissionOverrides)
+            .where(
+                and(
+                    eq(
+                        rbacUserPermissionOverrides.userId as any,
+                        userId as any,
+                    ) as any,
+                    isNull(rbacUserPermissionOverrides.organizationId as any) as any,
+                ),
+            );
+        for (const r of ovRows as any[]) {
+            if (r.effect === "deny") {
+                denies.add(r.key);
+                allows.delete(r.key);
+            } else if (r.effect === "allow") {
+                if (!denies.has(r.key)) allows.add(r.key);
+            }
+        }
+
+        return denies.has(key) ? false : allows.has(key);
+    },
+
     async hasPermission(
         userId: string,
         orgId: string,
