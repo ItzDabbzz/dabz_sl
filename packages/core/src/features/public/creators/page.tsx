@@ -112,11 +112,14 @@ function CreatorCard({ creator }: { creator: DirectoryCreator }) {
                         {creator.productCount}{" "}
                         {creator.productCount === 1 ? "product" : "products"}
                     </span>
-                    <span className="inline-flex items-center gap-1">
+                    <Link
+                        href={`/blog?author=${encodeURIComponent(creator.slug)}`}
+                        className="inline-flex items-center gap-1 hover:underline"
+                    >
                         <Rss className="h-3.5 w-3.5" />
                         {creator.postCount}{" "}
                         {creator.postCount === 1 ? "post" : "posts"}
-                    </span>
+                    </Link>
                 </div>
 
                 {creator.locations ? (

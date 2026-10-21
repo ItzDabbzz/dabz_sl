@@ -2,6 +2,9 @@ import { db } from "@/server/db/client";
 import {
     resolveHandles,
     postPath,
+    listAuthors,
+    resolveAuthorByHandle,
+    AuthorRef,
 } from "@/features/creator/blog/server/handle";
 import {
     blogPosts,
@@ -42,6 +45,7 @@ export default async function BlogIndex({
         p?: string;
         q?: string;
         sort?: "latest" | "top";
+        author?: string;
     }>;
 }) {
     const params = await (searchParams as any);
@@ -49,6 +53,8 @@ export default async function BlogIndex({
     const page = Math.max(1, Number(params?.p || 1) || 1);
     const q = (params?.q || "").trim();
     const sort = (params?.sort as "latest" | "top" | undefined) || "latest";
+    /** The author being read, if one was chosen. */
+    const authorHandle = (params?.author || "").trim().toLowerCase();
 
     // Current viewer (for permissions)
     const ses = await auth.api
@@ -138,6 +144,32 @@ export default async function BlogIndex({
           )
         : undefined;
 
+    /**
+     * The authors, so a reader can pick one person instead of reading
+     * everybody's work, and the author that was chosen.
+     *
+     * This is the reader's own feed, so it counts every post the reader
+     * can see - not only the ones a visitor would.
+     */
+    const authors: AuthorRef[] = await listAuthors({
+        includeUnpublished: true,
+    }).catch(() => []);
+    const chosen = authorHandle
+        ? authors.find((a) => a.handle === authorHandle) ?? null
+        : null;
+    const authorCond = authorHandle
+        ? await (async () => {
+              const resolved = await resolveAuthorByHandle(authorHandle);
+              if (!resolved) return sql`false`;
+              return resolved.authorUserId
+                  ? eq(blogPosts.authorUserId, resolved.authorUserId)
+                  : eq(
+                        blogPosts.authorOrganizationId,
+                        resolved.authorOrganizationId as string,
+                    );
+          })()
+        : undefined;
+
     // Total count (distinct posts that belong to at least one visible category)
     const [{ count }] = await db
         .select({ count: sql<number>`count(distinct ${blogPosts.id})::int` })
@@ -151,6 +183,7 @@ export default async function BlogIndex({
                 eq(blogPosts.published, true),
                 inArray(blogPostCategories.categoryId, visibleCategoryIds),
                 searchCond ? searchCond : sql`true`,
+                authorCond ? authorCond : sql`true`,
             ),
         );
     const total = Number(count) || 0;
@@ -178,7 +211,8 @@ export default async function BlogIndex({
                     eq(blogPosts.published, true),
                     inArray(blogPostCategories.categoryId, visibleCategoryIds),
                     searchCond ? searchCond : sql`true`,
-                ),
+                    authorCond ? authorCond : sql`true`,
+                    ),
             )
             .groupBy(blogPosts.id)
             .orderBy(
@@ -202,7 +236,8 @@ export default async function BlogIndex({
                     eq(blogPosts.published, true),
                     inArray(blogPostCategories.categoryId, visibleCategoryIds),
                     searchCond ? searchCond : sql`true`,
-                ),
+                    authorCond ? authorCond : sql`true`,
+                    ),
             )
             .groupBy(blogPosts.id)
             .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.createdAt))
@@ -287,14 +322,26 @@ export default async function BlogIndex({
 
     // Helper to build hrefs preserving filters
     const makeHref = (p: number) => {
-        const sp = new URLSearchParams();
-        if (c && c.length) sp.set("c", c.join(","));
-        if (q) sp.set("q", q);
-        if (sort && sort !== "latest") sp.set("sort", sort);
-        if (p > 1) sp.set("p", String(p));
-        const qs = sp.toString();
-        return qs ? `/blog?${qs}` : "/blog";
-    };
+            const sp = new URLSearchParams();
+            if (c && c.length) sp.set("c", c.join(","));
+            if (q) sp.set("q", q);
+            if (sort && sort !== "latest") sp.set("sort", sort);
+            if (authorHandle) sp.set("author", authorHandle);
+            if (p > 1) sp.set("p", String(p));
+            const qs = sp.toString();
+            return qs ? `/blog?${qs}` : "/blog";
+        };
+
+        /** The same page with the author changed, keeping everything else. */
+        const authorHref = (handle: string | null) => {
+            const sp = new URLSearchParams();
+            if (c && c.length) sp.set("c", c.join(","));
+            if (q) sp.set("q", q);
+            if (sort && sort !== "latest") sp.set("sort", sort);
+            if (handle) sp.set("author", handle);
+            const qs = sp.toString();
+            return qs ? `/blog?${qs}` : "/blog";
+        };
 
     // Sidebar categories (visible only)
     const cats = visibleCats.map((x) => ({
@@ -315,6 +362,58 @@ export default async function BlogIndex({
                         <Suspense>
                             <CategorySidebar categories={cats} />
                         </Suspense>
+
+                        {authors.length ? (
+                            <Card>
+                                <CardContent className="p-4">
+                                    <div className="mb-2 flex items-center justify-between gap-2">
+                                        <div className="text-sm font-medium text-muted-foreground">
+                                            Creators
+                                        </div>
+                                        <Link
+                                            href="/creators"
+                                            className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                        >
+                                            All profiles
+                                        </Link>
+                                    </div>
+                                    <ul className="space-y-1 text-sm">
+                                        <li>
+                                            <Link
+                                                href={authorHref(null)}
+                                                className={
+                                                    authorHandle
+                                                        ? "text-muted-foreground hover:text-foreground hover:underline"
+                                                        : "font-medium hover:underline"
+                                                }
+                                            >
+                                                All creators
+                                            </Link>
+                                        </li>
+                                        {authors.map((author) => (
+                                            <li
+                                                key={author.handle}
+                                                className="flex items-center justify-between gap-2"
+                                            >
+                                                <Link
+                                                    href={authorHref(author.handle)}
+                                                    className={
+                                                        authorHandle === author.handle
+                                                            ? "font-medium hover:underline"
+                                                            : "text-muted-foreground hover:text-foreground hover:underline"
+                                                    }
+                                                >
+                                                    {author.name || author.handle}
+                                                </Link>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {author.postCount}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </CardContent>
+                            </Card>
+                        ) : null}
 
                         <Card>
                             <CardContent className="p-4">
@@ -347,10 +446,13 @@ export default async function BlogIndex({
                     <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight">
-                                Blog
+                                {chosen
+                                    ? `Posts by ${chosen.name || chosen.handle}`
+                                    : "Blog"}
                             </h1>
                             <p className="text-sm text-muted-foreground">
                                 {total} post{total === 1 ? "" : "s"}
+                                {chosen ? ` by ${chosen.name || chosen.handle}` : ""}
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -380,6 +482,13 @@ export default async function BlogIndex({
                                         value={sort}
                                     />
                                 ) : null}
+                                {authorHandle ? (
+                                    <input
+                                        type="hidden"
+                                        name="author"
+                                        value={authorHandle}
+                                    />
+                                ) : null}
                                 <button className="h-9 rounded bg-primary px-3 text-sm text-primary-foreground">
                                     Search
                                 </button>
@@ -405,6 +514,13 @@ export default async function BlogIndex({
                                 ) : null}
                                 {q ? (
                                     <input type="hidden" name="q" value={q} />
+                                ) : null}
+                                {authorHandle ? (
+                                    <input
+                                        type="hidden"
+                                        name="author"
+                                        value={authorHandle}
+                                    />
                                 ) : null}
                                 <button
                                     type="submit"
@@ -457,6 +573,20 @@ export default async function BlogIndex({
                                     .join("")
                                     .slice(0, 2)
                                     .toUpperCase();
+                                /**
+                                 * Where the author's name should lead: to
+                                 * their public page when they have one,
+                                 * and to their posts here when they do
+                                 * not - a page that does not exist is a
+                                 * dead end.
+                                 */
+                                const postHandle = handles.get(p.id) ?? "creator";
+                                const postAuthor = authors.find(
+                                    (a) => a.handle === postHandle,
+                                );
+                                const authorHrefForPost = postAuthor?.hasProfile
+                                    ? `/c/${postHandle}`
+                                    : authorHref(postHandle);
                                 const tags = catsMap.get(p.id) || [];
                                 const r = ratingMap.get(p.id) || {
                                     avg: 0,
@@ -508,11 +638,7 @@ export default async function BlogIndex({
                                                             </AvatarFallback>
                                                         </Avatar>
                                                         <Link
-                                                            href={`/c/${
-                                                                handles.get(
-                                                                    p.id,
-                                                                ) ?? "creator"
-                                                            }`}
+                                                            href={authorHrefForPost}
                                                             className="text-xs text-muted-foreground underline-offset-4 hover:underline"
                                                         >
                                                             {p.authorName ||

@@ -2,6 +2,9 @@ import { db } from "@/server/db/client";
 import {
     resolveHandles,
     postPath,
+    listAuthors,
+    resolveAuthorByHandle,
+    AuthorRef,
 } from "@/features/creator/blog/server/handle";
 import { blogPosts, blogPostCategories, blogCategories, blogPostRatings } from "@/schemas/blog";
 import { and, desc, eq, inArray, sql, or, ilike } from "drizzle-orm";
@@ -28,13 +31,15 @@ export const metadata = {
 export default async function PublicBlogIndex({
   searchParams,
 }: {
-  searchParams: Promise<{ c?: string; p?: string; q?: string; sort?: "latest" | "top" }>;
+  searchParams: Promise<{ c?: string; p?: string; q?: string; sort?: "latest" | "top"; author?: string }>;
 }) {
   const params = await (searchParams as any);
   const c = params?.c?.split(",").filter(Boolean) as string[] | undefined;
   const page = Math.max(1, Number(params?.p || 1) || 1);
   const q = (params?.q || "").trim();
   const sort = (params?.sort as "latest" | "top" | undefined) || "latest";
+  /** The author being read, if one was chosen. */
+  const authorHandle = (params?.author || "").trim().toLowerCase();
   let dataUnavailable = false;
   let allCats: Array<{ id: string; name: string; slug: string }> = [];
   let total = 0;
@@ -53,6 +58,13 @@ export default async function PublicBlogIndex({
   const ratingMap = new Map<string, { avg: number; count: number }>();
   // Each post is addressed by the creator who wrote it.
   let handles = new Map<string, string>();
+  /**
+   * The authors, so a visitor can read one person's work rather than
+   * everybody's, and the author that was chosen.
+   */
+  let authors: AuthorRef[] = [];
+  let chosen: AuthorRef | null = null;
+  let authorCond: ReturnType<typeof eq> | ReturnType<typeof sql> | undefined;
 
   try {
     allCats = await db
@@ -86,6 +98,27 @@ export default async function PublicBlogIndex({
 
     const searchCond = q ? or(ilike(blogPosts.title, `%${q}%`), ilike(blogPosts.excerpt, `%${q}%`)) : undefined;
 
+    /**
+     * The authors, so a visitor can read one person's work rather than
+     * everybody's, and the author that was chosen.
+     */
+    authors = await listAuthors().catch(() => []);
+    chosen = authorHandle
+        ? authors.find((a) => a.handle === authorHandle) ?? null
+        : null;
+    authorCond = authorHandle
+        ? await (async () => {
+              const resolved = await resolveAuthorByHandle(authorHandle);
+              if (!resolved) return sql`false`;
+              return resolved.authorUserId
+                  ? eq(blogPosts.authorUserId, resolved.authorUserId)
+                  : eq(
+                        blogPosts.authorOrganizationId,
+                        resolved.authorOrganizationId as string,
+                    );
+          })()
+        : undefined;
+
     const [{ count }] = await db
       .select({ count: sql<number>`count(distinct ${blogPosts.id})::int` })
       .from(blogPosts)
@@ -97,6 +130,7 @@ export default async function PublicBlogIndex({
           sql`(${blogCategories.visibility} ->> 'mode') = 'public'`,
           filteredPostIds ? inArray(blogPosts.id, filteredPostIds) : sql`true`,
           searchCond ? searchCond : sql`true`,
+          authorCond ? authorCond : sql`true`,
         ),
       );
     total = Number(count) || 0;
@@ -119,7 +153,8 @@ export default async function PublicBlogIndex({
             sql`(${blogCategories.visibility} ->> 'mode') = 'public'`,
             filteredPostIds ? inArray(blogPosts.id, filteredPostIds) : sql`true`,
             searchCond ? searchCond : sql`true`,
-          ),
+            authorCond ? authorCond : sql`true`,
+            ),
         )
         .groupBy(blogPosts.id)
         .orderBy(
@@ -142,7 +177,8 @@ export default async function PublicBlogIndex({
             sql`(${blogCategories.visibility} ->> 'mode') = 'public'`,
             filteredPostIds ? inArray(blogPosts.id, filteredPostIds) : sql`true`,
             searchCond ? searchCond : sql`true`,
-          ),
+            authorCond ? authorCond : sql`true`,
+            ),
         )
         .groupBy(blogPosts.id)
         .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.createdAt))
@@ -215,7 +251,19 @@ export default async function PublicBlogIndex({
     if (c && c.length) sp.set("c", c.join(","));
     if (q) sp.set("q", q);
     if (sort && sort !== "latest") sp.set("sort", sort);
+    if (authorHandle) sp.set("author", authorHandle);
     if (p > 1) sp.set("p", String(p));
+    const qs = sp.toString();
+    return qs ? `/blog/public?${qs}` : "/blog/public";
+  };
+
+  /** The same page with the author changed, keeping everything else. */
+  const authorHref = (handle: string | null) => {
+    const sp = new URLSearchParams();
+    if (c && c.length) sp.set("c", c.join(","));
+    if (q) sp.set("q", q);
+    if (sort && sort !== "latest") sp.set("sort", sort);
+    if (handle) sp.set("author", handle);
     const qs = sp.toString();
     return qs ? `/blog/public?${qs}` : "/blog/public";
   };
@@ -236,6 +284,54 @@ export default async function PublicBlogIndex({
             <Suspense>
               <CategorySidebar categories={cats} />
             </Suspense>
+            {authors.length ? (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Creators
+                    </div>
+                    <Link
+                      href="/creators"
+                      className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                    >
+                      All profiles
+                    </Link>
+                  </div>
+                  <ul className="space-y-1 text-sm">
+                    <li>
+                      <Link
+                        href={authorHref(null)}
+                        className={
+                          authorHandle
+                            ? "text-muted-foreground hover:text-foreground hover:underline"
+                            : "font-medium hover:underline"
+                        }
+                      >
+                        All creators
+                      </Link>
+                    </li>
+                    {authors.map((author) => (
+                      <li key={author.handle} className="flex items-center justify-between gap-2">
+                        <Link
+                          href={authorHref(author.handle)}
+                          className={
+                            authorHandle === author.handle
+                              ? "font-medium hover:underline"
+                              : "text-muted-foreground hover:text-foreground hover:underline"
+                          }
+                        >
+                          {author.name || author.handle}
+                        </Link>
+                        <span className="text-xs text-muted-foreground">
+                          {author.postCount}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ) : null}
             <Card>
               <CardContent className="p-4">
                 <div className="mb-2 text-sm font-medium text-muted-foreground">Recent posts</div>
@@ -263,14 +359,20 @@ export default async function PublicBlogIndex({
         <main className="lg:col-span-9 xl:col-span-9 min-w-0">
           <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Public Blog</h1>
-              <p className="text-sm text-muted-foreground">{total} post{total === 1 ? "" : "s"}</p>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {chosen ? `Posts by ${chosen.name || chosen.handle}` : "Public Blog"}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {total} post{total === 1 ? "" : "s"}
+                {chosen ? ` by ${chosen.name || chosen.handle}` : ""}
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <form action="/blog/public" className="flex items-center gap-2">
                 <input type="text" name="q" defaultValue={q} placeholder="Search posts..." className="h-9 w-48 rounded border bg-background px-3 text-sm" />
                 {c && c.length ? <input type="hidden" name="c" value={c.join(",")} /> : null}
                 {sort && sort !== "latest" ? <input type="hidden" name="sort" value={sort} /> : null}
+                {authorHandle ? <input type="hidden" name="author" value={authorHandle} /> : null}
                 <button className="h-9 rounded bg-primary px-3 text-sm text-primary-foreground">Search</button>
               </form>
               <form action="/blog/public" className="flex items-center gap-2">
@@ -280,9 +382,10 @@ export default async function PublicBlogIndex({
                 </select>
                 {c && c.length ? <input type="hidden" name="c" value={c.join(",")} /> : null}
                 {q ? <input type="hidden" name="q" value={q} /> : null}
+                {authorHandle ? <input type="hidden" name="author" value={authorHandle} /> : null}
                 <button type="submit" className="h-9 rounded border bg-background px-3 text-sm">Apply</button>
               </form>
-              {(q || (c && c.length) || (sort && sort !== "latest")) ? (
+              {(q || (c && c.length) || (sort && sort !== "latest") || authorHandle) ? (
                 <Link href="/blog/public" className="text-sm text-muted-foreground hover:underline">Clear filters</Link>
               ) : null}
               <Link href="/blog/rss" className="text-sm text-muted-foreground hover:underline">RSS</Link>
@@ -304,6 +407,16 @@ export default async function PublicBlogIndex({
                   .join("")
                   .slice(0, 2)
                   .toUpperCase();
+                /**
+                 * The author, and where their name should lead: to their
+                 * public page when they have one, and to their posts
+                 * here when they do not.
+                 */
+                const postHandle = handles.get(p.id) ?? "creator";
+                const postAuthor = authors.find((a) => a.handle === postHandle);
+                const authorHrefForPost = postAuthor?.hasProfile
+                  ? `/c/${postHandle}`
+                  : authorHref(postHandle);
                 const tags = catsMap.get(p.id) || [];
                 const r = ratingMap.get(p.id) || { avg: 0, count: 0 };
                 const rounded = Math.round(r.avg);
@@ -328,11 +441,16 @@ export default async function PublicBlogIndex({
                         </Link>
                         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
-                            <Avatar>
-                              <AvatarImage src={p.authorImage || undefined} alt={p.authorName || "Author"} />
-                              <AvatarFallback>{authorInit}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs text-muted-foreground">{p.authorName || "Unknown"}</span>
+                            <Link
+                              href={authorHrefForPost}
+                              className="flex items-center gap-2 hover:underline"
+                            >
+                              <Avatar>
+                                <AvatarImage src={p.authorImage || undefined} alt={p.authorName || "Author"} />
+                                <AvatarFallback>{authorInit}</AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs text-muted-foreground">{p.authorName || "Unknown"}</span>
+                            </Link>
                           </div>
                           <div className="flex items-center gap-1">
                             {Array.from({ length: 10 }).map((_, i) => (
