@@ -3,6 +3,7 @@ import { blogPosts, blogPostCategories, blogCategories } from "@/schemas/blog";
 import { desc } from "drizzle-orm";
 import { headers } from "next/headers";
 import { absoluteUrl } from "@/server/http/absolute-url";
+import { resolveHandles, postPath } from "@/features/creator/blog/server/handle";
 import { sql } from "drizzle-orm";
 
 function escapeXml(s: string) {
@@ -27,6 +28,8 @@ export async function GET() {
       excerpt: blogPosts.excerpt,
       publishedAt: blogPosts.publishedAt,
       createdAt: blogPosts.createdAt,
+      authorUserId: blogPosts.authorUserId,
+      authorOrganizationId: blogPosts.authorOrganizationId,
     })
     .from(blogPosts)
     .innerJoin(blogPostCategories, sql`${blogPostCategories.postId} = ${blogPosts.id}`)
@@ -39,6 +42,9 @@ export async function GET() {
     .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.createdAt))
     .limit(50);
 
+  // A post is addressed by the creator who wrote it.
+  const handles = await resolveHandles(posts);
+
   const channelTitle = "sl.itzdabbzz.me Blog";
   const channelLink = `${base}/blog`;
   const channelDesc = "Latest posts, guides, and updates.";
@@ -46,7 +52,7 @@ export async function GET() {
 
   const items = posts
     .map((p) => {
-      const link = `${base}/blog/${p.slug}`;
+      const link = `${base}${postPath(handles.get(p.id) ?? "creator", p.slug)}`;
       const pubDate = new Date(p.publishedAt || p.createdAt || Date.now()).toUTCString();
       return `\n    <item>
       <title>${escapeXml(p.title || "Untitled")}</title>

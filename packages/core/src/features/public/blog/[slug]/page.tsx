@@ -1,7 +1,11 @@
 import { db } from "@/server/db/client";
 import { blogPosts, blogPostCategories, blogCategories } from "@/schemas/blog";
 import { and, eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import {
+    resolveAuthorHandle,
+    postPath,
+} from "@/features/creator/blog/server/handle";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Markdown } from "@/components/shared/markdown";
@@ -46,9 +50,19 @@ function extractToc(md: string): TocItem[] {
 export default async function BlogPostPage({
     params,
 }: {
-    params: Promise<{ slug: string }>;
+    /**
+     * The address of a post.
+     *
+     * A post lives under the creator who wrote it - /blog/dabz/rlv-deep-dive
+     * - and the old flat address /blog/rlv-deep-dive redirects there.
+     */
+    params: Promise<{ path: string[] }>;
 }) {
-    const { slug } = await params;
+    const { path } = await params;
+    const parts = path ?? [];
+    const slug = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+    const routeHandle = parts.length > 1 ? parts[0] : undefined;
+    if (!slug) return notFound();
     const [row] = await db
         .select({
             post: blogPosts,
@@ -62,6 +76,16 @@ export default async function BlogPostPage({
 
     if (!row) return notFound();
     const post = row.post;
+
+    // A post is addressed by its author, so the URL says who is speaking.
+    const handle = await resolveAuthorHandle({
+        authorUserId: post.authorUserId,
+        authorOrganizationId: post.authorOrganizationId,
+        authorName: row.authorName,
+    });
+    if (routeHandle !== handle) {
+        permanentRedirect(postPath(handle, slug));
+    }
 
     const published = post.publishedAt
         ? new Date(post.publishedAt).toLocaleDateString(undefined, {
@@ -151,8 +175,13 @@ export default async function BlogPostPage({
                                         </Avatar>
                                         <div className="text-sm text-muted-foreground">
                                             <div className="font-medium text-foreground">
-                                                {row.authorName ||
-                                                    "Unknown Author"}
+                                                <Link
+                                                    href={`/c/${handle}`}
+                                                    className="underline-offset-4 hover:underline"
+                                                >
+                                                    {row.authorName ||
+                                                        "Unknown Author"}
+                                                </Link>
                                             </div>
                                             <div>
                                                 {published

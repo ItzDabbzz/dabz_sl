@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DashboardPage } from "@/features/dashboard/components/page";
 const MDEditor: any = dynamic(() => import("@uiw/react-md-editor").then((m: any) => m.default ?? m), { ssr: false });
 
 export default function EditBlogPost() {
@@ -50,7 +51,7 @@ export default function EditBlogPost() {
       body: JSON.stringify({ id, title: data.title, slug: data.slug, excerpt: data.excerpt, contentMd: content, categories, published: publish ?? data.published, sendAnnouncement: publish ? announce === "send" : false }),
     });
     if (!res.ok) alert("Failed to save");
-    else if (publish) router.push(`/blog/${data.slug}`);
+    else if (publish) router.push(data.path ?? `/blog/${data.slug}`);
   };
 
   const del = async () => {
@@ -64,13 +65,16 @@ export default function EditBlogPost() {
   if (!data) return <div className="p-6 text-sm text-red-500">Not found</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold">Edit Post</h1>
-          <p className="text-sm text-muted-foreground">{data.title}</p>
-        </div>
-        <div className="flex items-center gap-3">
+    <DashboardPage
+      title="Edit Post"
+      description={data.title}
+      crumbs={[
+        { label: "Console", href: "/dashboard" },
+        { label: "Blog" },
+        { label: "Edit Post" },
+      ]}
+      actions={
+        <>
           <div className="hidden sm:block">
             <Label className="text-xs text-muted-foreground">Announcement on publish</Label>
             <Select value={announce} onValueChange={(v: any) => setAnnounce(v)}>
@@ -86,9 +90,9 @@ export default function EditBlogPost() {
           <Button onClick={() => save(false)} variant="secondary">Save</Button>
           <Button onClick={() => save(true)}>Publish</Button>
           <Button onClick={del} variant="destructive">Delete</Button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2 overflow-hidden">
           <CardHeader>
@@ -147,6 +151,6 @@ export default function EditBlogPost() {
           </Card>
         </div>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

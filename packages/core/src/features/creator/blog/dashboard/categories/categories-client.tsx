@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { createCategory, updateCategory, deleteCategory } from "./actions";
 import { OrgTeamPicker } from "@/features/admin/components/pickers/org-team-picker";
 import { UserPicker } from "@/features/admin/components/pickers/user-picker";
+import { PageHeader } from "@/features/dashboard/components/page";
 import { cn } from "@/lib/utils";
 
 interface CategoryRecord {
@@ -57,16 +58,21 @@ export function CategoriesClient({ categories, count }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Categories</h1>
-          <p className="text-sm text-muted-foreground">{count} total · {filtered.length !== categories.length ? `${filtered.length} shown` : "all"}</p>
-        </div>
-        <div className="flex gap-2 items-center">
-          <Input placeholder="Search…" value={query} onChange={e=>setQuery(e.target.value)} className="h-8 w-56" />
-          <Button size="sm" onClick={()=>setShowCreate(s=>!s)} variant={showCreate?"secondary":"default"}>{showCreate?"Close" : "New"}</Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Categories"
+        description={`${count} total · ${filtered.length !== categories.length ? `${filtered.length} shown` : "all"}`}
+        crumbs={[
+          { label: "Console", href: "/dashboard" },
+          { label: "Blog" },
+          { label: "Categories" },
+        ]}
+        actions={
+          <>
+            <Input placeholder="Search…" value={query} onChange={e=>setQuery(e.target.value)} className="h-8 w-56" />
+            <Button size="sm" onClick={()=>setShowCreate(s=>!s)} variant={showCreate?"secondary":"default"}>{showCreate?"Close" : "New"}</Button>
+          </>
+        }
+      />
 
       {showCreate && (
         <Card className="border-primary/40">

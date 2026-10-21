@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { revalidatePath } from "next/cache";
 import { EmailTemplateEditor } from "@/features/creator/blog/components/email-template-editor";
+import { DashboardPage } from "@/features/dashboard/components/page";
 import { requirePermission } from "@/server/auth/guards";
 import { headers } from "next/headers";
 
@@ -98,8 +99,14 @@ export default async function BlogSettingsPage() {
         .from(blogPostRatings);
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-2xl font-bold">Blog Settings</h1>
+        <DashboardPage
+            title="Blog Settings"
+            crumbs={[
+                { label: "Console", href: "/dashboard" },
+                { label: "Blog" },
+                { label: "Settings" },
+            ]}
+        >
 
             <Card>
                 <CardHeader>
@@ -258,6 +265,6 @@ export default async function BlogSettingsPage() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </DashboardPage>
     );
 }

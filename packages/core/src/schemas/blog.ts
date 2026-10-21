@@ -42,7 +42,16 @@ export const blogPosts = pgTable(
         title: text("title").notNull(),
         excerpt: text("excerpt"),
         contentMd: text("content_md").notNull(), // store raw markdown to preserve whitespace
+        /**
+         * Who wrote the post.
+         *
+         * A post belongs to a person or to a team of creators. The author
+         * is what the public page is built from, so it is enforced on
+         * every write rather than left to whoever knows the id.
+         */
         authorUserId: text("author_user_id"),
+        /** The organization that owns the post, when it is a team blog. */
+        authorOrganizationId: text("author_organization_id"),
 
         published: boolean("published").default(false).notNull(),
         publishedAt: timestamp("published_at", { withTimezone: true }),

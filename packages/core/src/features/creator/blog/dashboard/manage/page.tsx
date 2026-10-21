@@ -3,6 +3,10 @@ import { db } from "@/server/db/client";
 import { blogPosts, blogPostCategories } from "@/schemas/blog";
 import { and, desc, eq, ilike, or, sql, inArray } from "drizzle-orm";
 import { getBlogEditorUser } from "@/features/creator/blog/server/access";
+import { resolveHandles, postPath } from "@/features/creator/blog/server/handle";
+import { getActiveOrgId } from "@/server/auth/guards";
+import { isStaffUser } from "@/features/auth/permissions/staff";
+import { headers } from "next/headers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +27,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { DashboardPage } from "@/features/dashboard/components/page";
 
 async function bulkAction(formData: FormData) {
     "use server";
@@ -84,25 +89,41 @@ export default async function ManageBlog({
         | "drafts";
     const q = (params?.q || "").trim();
 
+    // A creator sees their own posts, and the posts of the team they are
+    // acting as. Staff see everything.
+    const staff = isStaffUser(user);
+    const activeOrgId = await getActiveOrgId(await headers());
+    const ownerConditions = [eq(blogPosts.authorUserId, user.id)];
+    if (activeOrgId) {
+        ownerConditions.push(
+            eq(blogPosts.authorOrganizationId, activeOrgId) as any,
+        );
+    }
+    const ownership = staff ? undefined : (or(...ownerConditions) as any);
+
     // counts
     const [
         [{ count: total } = { count: 0 }],
         [{ count: published } = { count: 0 }],
         [{ count: drafts } = { count: 0 }],
     ] = (await Promise.all([
-        db.select({ count: sql<number>`count(*)::int` }).from(blogPosts),
         db
             .select({ count: sql<number>`count(*)::int` })
             .from(blogPosts)
-            .where(eq(blogPosts.published, true)),
+            .where(ownership),
         db
             .select({ count: sql<number>`count(*)::int` })
             .from(blogPosts)
-            .where(eq(blogPosts.published, false)),
+            .where(and(ownership, eq(blogPosts.published, true))),
+        db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(blogPosts)
+            .where(and(ownership, eq(blogPosts.published, false))),
     ])) as any;
 
     // filters
     const filters = [] as any[];
+    if (ownership) filters.push(ownership);
     if (status === "published") filters.push(eq(blogPosts.published, true));
     if (status === "drafts") filters.push(eq(blogPosts.published, false));
     if (q) {
@@ -125,20 +146,24 @@ export default async function ManageBlog({
         .orderBy(desc(blogPosts.createdAt))
         .limit(50);
 
+    // Each post is addressed by the creator who wrote it.
+    const handles = await resolveHandles(posts);
+
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between gap-2">
-                <div>
-                    <h1 className="text-2xl font-bold">Manage Posts</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Search, filter, and edit your posts.
-                    </p>
-                </div>
+        <DashboardPage
+            title="Manage Posts"
+            description="Search, filter, and edit your posts."
+            crumbs={[
+                { label: "Console", href: "/dashboard" },
+                { label: "Blog" },
+                { label: "Posts" },
+            ]}
+            actions={
                 <Button asChild>
                     <Link href="/dashboard/blog/new">New Post</Link>
                 </Button>
-            </div>
-
+            }
+        >
             {/* Bulk actions + table */}
             <Card>
                 <CardHeader className="pb-2">
@@ -271,7 +296,17 @@ export default async function ManageBlog({
                                                         <Link href={`/dashboard/blog/edit?id=${p.id}`}>Edit</Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem asChild>
-                                                        <Link href={`/blog/${p.slug}`} target="_blank">View</Link>
+                                                        <Link
+                                                            href={postPath(
+                                                                handles.get(
+                                                                    p.id,
+                                                                ) ?? "creator",
+                                                                p.slug,
+                                                            )}
+                                                            target="_blank"
+                                                        >
+                                                            View
+                                                        </Link>
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
@@ -290,6 +325,6 @@ export default async function ManageBlog({
                     </form>
                 </CardContent>
             </Card>
-        </div>
+        </DashboardPage>
     );
 }

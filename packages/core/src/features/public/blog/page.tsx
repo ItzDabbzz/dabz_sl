@@ -1,5 +1,9 @@
 import { db } from "@/server/db/client";
 import {
+    resolveHandles,
+    postPath,
+} from "@/features/creator/blog/server/handle";
+import {
     blogPosts,
     blogPostCategories,
     blogCategories,
@@ -218,6 +222,8 @@ export default async function BlogIndex({
                   excerpt: blogPosts.excerpt,
                   publishedAt: blogPosts.publishedAt,
                   createdAt: blogPosts.createdAt,
+                  authorUserId: blogPosts.authorUserId,
+                  authorOrganizationId: blogPosts.authorOrganizationId,
                   authorName: user.name,
                   authorImage: user.image,
               })
@@ -225,6 +231,9 @@ export default async function BlogIndex({
               .leftJoin(user, eq(user.id, blogPosts.authorUserId))
               .where(inArray(blogPosts.id, pageIds))
         : ([] as any[]);
+
+    // Each post is addressed by the creator who wrote it.
+    const handles = await resolveHandles(rows);
 
     const orderIndex = new Map(pageIds.map((id, i) => [id, i] as const));
     rows.sort((a, b) => orderIndex.get(a.id)! - orderIndex.get(b.id)!);
@@ -318,7 +327,11 @@ export default async function BlogIndex({
                                             <li key={rp.id}>
                                                 <Link
                                                     className="line-clamp-2 hover:underline"
-                                                    href={`/blog/${rp.slug}`}
+                                                    href={postPath(
+                                                        handles.get(rp.id) ??
+                                                            "creator",
+                                                        rp.slug,
+                                                    )}
                                                 >
                                                     {rp.title}
                                                 </Link>
@@ -455,7 +468,11 @@ export default async function BlogIndex({
                                         <Card className="transition-colors hover:bg-muted/40">
                                             <CardContent className="p-5">
                                                 <Link
-                                                    href={`/blog/${p.slug}`}
+                                                    href={postPath(
+                                                        handles.get(p.id) ??
+                                                            "creator",
+                                                        p.slug,
+                                                    )}
                                                     className="block"
                                                 >
                                                     <div className="flex items-start justify-between gap-4">
@@ -490,10 +507,17 @@ export default async function BlogIndex({
                                                                 {authorInit}
                                                             </AvatarFallback>
                                                         </Avatar>
-                                                        <span className="text-xs text-muted-foreground">
+                                                        <Link
+                                                            href={`/c/${
+                                                                handles.get(
+                                                                    p.id,
+                                                                ) ?? "creator"
+                                                            }`}
+                                                            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                                                        >
                                                             {p.authorName ||
                                                                 "Unknown"}
-                                                        </span>
+                                                        </Link>
                                                     </div>
 
                                                     {/* rating preview */}

@@ -10,11 +10,17 @@ import {
     blogSettings,
 } from "@/schemas/blog";
 import { getBlogEditorUser } from "@/features/creator/blog/server/access";
+import { canEditPost } from "@/features/creator/blog/server/ownership";
+import {
+    resolveAuthorHandle,
+    postPath,
+} from "@/features/creator/blog/server/handle";
 import { eq } from "drizzle-orm";
 import { resend } from "@/server/email/resend";
 import { absoluteUrl } from "@/server/http/absolute-url";
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/server/auth/guards";
+import { getActiveOrgId } from "@/server/auth/guards";
 
 export async function POST(req: NextRequest) {
     const user = await getBlogEditorUser();
@@ -35,6 +41,9 @@ export async function POST(req: NextRequest) {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)+/g, "");
+    // A post belongs to its author. When the author is acting as a team,
+    // the post belongs to that team instead.
+    const activeOrgId = await getActiveOrgId(req.headers as any);
     const [post] = await db
         .insert(blogPosts)
         .values({
@@ -43,6 +52,7 @@ export async function POST(req: NextRequest) {
             excerpt,
             contentMd,
             authorUserId: user.id,
+            authorOrganizationId: activeOrgId ?? null,
             published: !!published,
             publishedAt: published ? new Date() : null,
         })
@@ -70,16 +80,23 @@ export async function POST(req: NextRequest) {
                 .onConflictDoNothing();
         }
     }
+    // A post is addressed by the creator who wrote it.
+    const handle = await resolveAuthorHandle({
+        authorUserId: post.authorUserId,
+        authorOrganizationId: post.authorOrganizationId,
+    });
+    const path = postPath(handle, postSlug);
+
     if (published && sendAnnouncement) {
-        await trySendPublishAnnouncement(post.id, postSlug, title, excerpt);
+        await trySendPublishAnnouncement(post.id, postSlug, title, excerpt, path);
     }
     revalidatePath("/dashboard/blog/manage");
     revalidatePath("/blog");
     revalidatePath("/blog/public");
     revalidatePath("/blog/rss");
     revalidatePath("/sitemap.xml");
-    if (post.slug && post.published) revalidatePath(`/blog/${post.slug}`);
-    return Response.json({ id: post.id, slug: post.slug });
+    if (post.published) revalidatePath(path);
+    return Response.json({ id: post.id, slug: post.slug, handle, path });
 }
 
 export async function PUT(req: NextRequest) {
@@ -103,6 +120,11 @@ export async function PUT(req: NextRequest) {
         .from(blogPosts)
         .where(eq(blogPosts.id, id))
         .limit(1);
+    if (!prev) return new Response("not_found", { status: 404 });
+    // A post is the author's own, or the team's.
+    if (!(await canEditPost(user, prev))) {
+        return new Response("forbidden", { status: 403 });
+    }
     await db
         .update(blogPosts)
         .set({
@@ -145,11 +167,16 @@ export async function PUT(req: NextRequest) {
     if (sendAnnouncement && published && !prev?.published) {
         const effectiveSlug = slug || prev?.slug;
         const effectiveTitle = title || prev?.title;
+        const handle = await resolveAuthorHandle({
+            authorUserId: prev?.authorUserId,
+            authorOrganizationId: prev?.authorOrganizationId,
+        });
         await trySendPublishAnnouncement(
             id,
             effectiveSlug,
             effectiveTitle,
             excerpt || prev?.excerpt,
+            postPath(handle, effectiveSlug),
         );
     }
     revalidatePath("/dashboard/blog/manage");
@@ -157,10 +184,21 @@ export async function PUT(req: NextRequest) {
     revalidatePath("/blog/public");
     revalidatePath("/blog/rss");
     revalidatePath("/sitemap.xml");
-    if (prev?.slug) revalidatePath(`/blog/${prev.slug}`);
+    // A post is addressed by the creator who wrote it, so both the old
+    // address and the new one are cleared.
+    const handle = await resolveAuthorHandle({
+        authorUserId: prev?.authorUserId,
+        authorOrganizationId: prev?.authorOrganizationId,
+    });
+    if (prev?.slug) revalidatePath(postPath(handle, prev.slug));
     const newSlug = slug || prev?.slug;
-    if (newSlug) revalidatePath(`/blog/${newSlug}`);
-    return new Response("ok");
+    if (newSlug) revalidatePath(postPath(handle, newSlug));
+    return Response.json({
+        id,
+        slug: newSlug,
+        handle,
+        path: newSlug ? postPath(handle, newSlug) : null,
+    });
 }
 
 async function trySendPublishAnnouncement(
@@ -168,6 +206,7 @@ async function trySendPublishAnnouncement(
     slug: string,
     title?: string,
     excerpt?: string,
+    path?: string,
 ) {
     const [settings] = await db.select().from(blogSettings).limit(1);
     if (!settings?.enableEmailOnPublish) return;
@@ -178,7 +217,7 @@ async function trySendPublishAnnouncement(
         .limit(1);
     if (existing) return;
     const base = absoluteUrl(new Headers());
-    const url = `${base}/blog/${slug}`;
+    const url = `${base}${path ?? `/blog/${slug}`}`;
     const subject =
         settings.emailTemplateSubject || `New post: ${title ?? slug}`;
     const html =
@@ -216,6 +255,9 @@ export async function GET(req: NextRequest) {
         .where(eq(blogPosts.id, id))
         .limit(1);
     if (!post) return new Response("not_found", { status: 404 });
+    if (!(await canEditPost(user, post))) {
+        return new Response("forbidden", { status: 403 });
+    }
     const catRows = await db
         .select({ slug: blogCategories.slug })
         .from(blogPostCategories)
@@ -235,10 +277,14 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get("id");
     if (!id) return new Response("missing_id", { status: 400 });
     const [prev] = await db
-        .select({ slug: blogPosts.slug })
+        .select({ slug: blogPosts.slug, authorUserId: blogPosts.authorUserId, authorOrganizationId: blogPosts.authorOrganizationId })
         .from(blogPosts)
         .where(eq(blogPosts.id, id))
         .limit(1);
+    if (!prev) return new Response("not_found", { status: 404 });
+    if (!(await canEditPost(user, prev))) {
+        return new Response("forbidden", { status: 403 });
+    }
     await db
         .delete(blogPostCategories)
         .where(eq(blogPostCategories.postId, id));

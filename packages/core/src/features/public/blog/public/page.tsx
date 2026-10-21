@@ -1,4 +1,8 @@
 import { db } from "@/server/db/client";
+import {
+    resolveHandles,
+    postPath,
+} from "@/features/creator/blog/server/handle";
 import { blogPosts, blogPostCategories, blogCategories, blogPostRatings } from "@/schemas/blog";
 import { and, desc, eq, inArray, sql, or, ilike } from "drizzle-orm";
 import { Suspense } from "react";
@@ -47,6 +51,8 @@ export default async function PublicBlogIndex({
   }> = [];
   const catsMap = new Map<string, { name: string; slug: string }[]>();
   const ratingMap = new Map<string, { avg: number; count: number }>();
+  // Each post is addressed by the creator who wrote it.
+  let handles = new Map<string, string>();
 
   try {
     allCats = await db
@@ -154,6 +160,8 @@ export default async function PublicBlogIndex({
             excerpt: blogPosts.excerpt,
             publishedAt: blogPosts.publishedAt,
             createdAt: blogPosts.createdAt,
+            authorUserId: blogPosts.authorUserId,
+            authorOrganizationId: blogPosts.authorOrganizationId,
             authorName: user.name,
             authorImage: user.image,
           })
@@ -161,6 +169,9 @@ export default async function PublicBlogIndex({
           .leftJoin(user, eq(user.id, blogPosts.authorUserId))
           .where(inArray(blogPosts.id, pageIds))
       : [];
+
+    // Each post is addressed by the creator who wrote it.
+    handles = await resolveHandles(rows);
 
     const orderIndex = new Map(pageIds.map((id, index) => [id, index] as const));
     posts = rows.sort((a, b) => (orderIndex.get(a.id) ?? 0) - (orderIndex.get(b.id) ?? 0));
@@ -232,7 +243,13 @@ export default async function PublicBlogIndex({
                   <ul className="space-y-2 text-sm">
                     {recentPosts.map((rp) => (
                       <li key={rp.id}>
-                        <Link className="line-clamp-2 hover:underline" href={`/blog/${rp.slug}`}>
+                        <Link
+                            className="line-clamp-2 hover:underline"
+                            href={postPath(
+                                handles.get(rp.id) ?? "creator",
+                                rp.slug,
+                            )}
+                        >
                           {rp.title}
                         </Link>
                       </li>
@@ -294,7 +311,13 @@ export default async function PublicBlogIndex({
                   <li key={p.id}>
                     <Card className="transition-colors hover:bg-muted/40">
                       <CardContent className="p-5">
-                        <Link href={`/blog/${p.slug}`} className="block">
+                        <Link
+                            href={postPath(
+                                handles.get(p.id) ?? "creator",
+                                p.slug,
+                            )}
+                            className="block"
+                        >
                           <div className="flex items-start justify-between gap-4">
                             <h2 className="text-xl font-semibold">{p.title}</h2>
                             <time className="shrink-0 text-xs text-muted-foreground">{date}</time>

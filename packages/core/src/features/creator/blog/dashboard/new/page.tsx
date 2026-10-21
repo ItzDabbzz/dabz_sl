@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { DashboardPage } from "@/features/dashboard/components/page";
 
 const MDEditor: any = dynamic(() => import("@uiw/react-md-editor").then((m: any) => m.default ?? m), { ssr: false });
 
@@ -47,15 +48,18 @@ export default function NewBlogPost() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold">New Post</h1>
-          <p className="text-sm text-muted-foreground">Draft a new blog post using Markdown.</p>
-        </div>
+    <DashboardPage
+      title="New Post"
+      description="Draft a new blog post using Markdown."
+      crumbs={[
+        { label: "Console", href: "/dashboard" },
+        { label: "Blog" },
+        { label: "New Post" },
+      ]}
+      actions={
         <Button onClick={onSave} disabled={saving}>{saving ? "Saving…" : "Save Draft"}</Button>
-      </div>
-
+      }
+    >
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2 overflow-hidden">
           <CardHeader>
@@ -114,6 +118,6 @@ export default function NewBlogPost() {
           </Card>
         </div>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

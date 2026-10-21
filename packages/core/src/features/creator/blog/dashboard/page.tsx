@@ -2,10 +2,14 @@ import { getBlogEditorUser } from "@/features/creator/blog/server/access";
 import Link from "next/link";
 import { db } from "@/server/db/client";
 import { blogPosts } from "@/schemas/blog";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, or, and, sql } from "drizzle-orm";
+import { getActiveOrgId } from "@/server/auth/guards";
+import { isStaffUser } from "@/features/auth/permissions/staff";
+import { headers } from "next/headers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DashboardPage } from "@/features/dashboard/components/page";
 import {
     Table,
     TableBody,
@@ -27,42 +31,59 @@ export default async function DashboardBlog() {
         );
     }
 
+    // A creator sees their own posts, and the posts of the team they are
+    // acting as. Staff see everything.
+    const staff = isStaffUser(user);
+    const activeOrgId = await getActiveOrgId(await headers());
+    const ownerConditions = [eq(blogPosts.authorUserId, user.id)];
+    if (activeOrgId) {
+        ownerConditions.push(
+            eq(blogPosts.authorOrganizationId, activeOrgId) as any,
+        );
+    }
+    const ownership = staff ? undefined : (or(...ownerConditions) as any);
+
     const [
         [{ count: total } = { count: 0 }],
         [{ count: published } = { count: 0 }],
         [{ count: drafts } = { count: 0 }],
     ] = (await Promise.all([
-        db.select({ count: sql<number>`count(*)::int` }).from(blogPosts),
         db
             .select({ count: sql<number>`count(*)::int` })
             .from(blogPosts)
-            .where(eq(blogPosts.published, true)),
+            .where(ownership),
         db
             .select({ count: sql<number>`count(*)::int` })
             .from(blogPosts)
-            .where(eq(blogPosts.published, false)),
+            .where(and(ownership, eq(blogPosts.published, true))),
+        db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(blogPosts)
+            .where(and(ownership, eq(blogPosts.published, false))),
     ])) as any;
 
     const recent = await db
         .select()
         .from(blogPosts)
+        .where(ownership)
         .orderBy(desc(blogPosts.createdAt))
         .limit(5);
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold">Blog</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Create, edit, and publish posts.
-                    </p>
-                </div>
+        <DashboardPage
+            title="Blog"
+            description="Create, edit, and publish posts."
+            crumbs={[
+                { label: "Console", href: "/dashboard" },
+                { label: "Blog" },
+                { label: "Overview" },
+            ]}
+            actions={
                 <Button asChild>
                     <Link href="/dashboard/blog/new">New Post</Link>
                 </Button>
-            </div>
-
+            }
+        >
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Card>
                     <CardHeader className="pb-2">
@@ -165,6 +186,6 @@ export default async function DashboardBlog() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </DashboardPage>
     );
 }
