@@ -3,12 +3,61 @@ export const revalidate = 60;
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
-import { mpItems, mpItemCategories } from "@/schemas/sl-schema";
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { mpItems, mpItemCategories, mpCategories } from "@/schemas/sl-schema";
+import { and, asc, count, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
+import { normalizePath } from "@/features/marketplace/shared/category-path";
 
 function isMissingColumnError(error: unknown) {
   const candidate = error as { code?: string; cause?: { code?: string } };
   return candidate?.code === "42703" || candidate?.cause?.code === "42703";
+}
+
+type CategoryRow = { id: string; path: string[] };
+
+/**
+ * The category table, cached briefly.
+ *
+ * Items are tagged with the deepest category they belong to, so a parent
+ * category has almost no items of its own. Resolving a selection to its
+ * subtree needs the whole path of every category, which is a small table.
+ */
+let categoryCache: { rows: CategoryRow[]; at: number } | null = null;
+const CATEGORY_CACHE_MS = 60_000;
+
+async function loadCategories(): Promise<CategoryRow[]> {
+  if (categoryCache && Date.now() - categoryCache.at < CATEGORY_CACHE_MS) {
+    return categoryCache.rows;
+  }
+  const rows = await db
+    .select({ id: mpCategories.id, path: mpCategories.path })
+    .from(mpCategories);
+  const normalized = rows.map((row) => ({
+    id: row.id as string,
+    path: normalizePath(row.path as unknown as string[]),
+  }));
+  categoryCache = { rows: normalized, at: Date.now() };
+  return normalized;
+}
+
+/**
+ * The ids of a category and everything beneath it.
+ *
+ * A category is a path, so "beneath" means the path starts with the
+ * selected path. Selecting a parent must show the items of its whole
+ * subtree, otherwise the parent looks empty.
+ */
+async function resolveSubtreeIds(categoryId: string): Promise<string[]> {
+  const categories = await loadCategories();
+  const selected = categories.find((c) => c.id === categoryId);
+  if (!selected) return [categoryId];
+  const prefix = selected.path;
+  return categories
+    .filter(
+      (c) =>
+        c.path.length >= prefix.length &&
+        prefix.every((segment, i) => c.path[i] === segment),
+    )
+    .map((c) => c.id);
 }
 
 export async function GET(req: NextRequest) {
@@ -21,18 +70,30 @@ export async function GET(req: NextRequest) {
     const showNsfw = searchParams.get("showNsfw") === "true";
     const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "24", 10)));
     const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10));
+    // Optional explicit id list, used to resolve a shared compare selection
+    // (?ids=a,b) whose items are not on the current page of results.
+    const idsParam = (searchParams.get("ids") || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
 
     const buildWhere = async (includeNsfwFilter: boolean) => {
       let where: any = sql`true` as any;
 
+      if (idsParam.length) {
+        where = and(where, inArray(mpItems.id as any, idsParam as any) as any);
+      }
+
       if (categoryId) {
-        const itemIdRows = await db
+        // A parent category holds the items of everything beneath it. The
+        // item ids are matched with a subquery so the category list stays
+        // the only parameter - a parent can carry thousands of items.
+        const subtreeIds = await resolveSubtreeIds(categoryId);
+        const itemIds = db
           .select({ itemId: mpItemCategories.itemId })
           .from(mpItemCategories)
-          .where(eq(mpItemCategories.categoryId as any, categoryId as any) as any);
-        const ids = itemIdRows.map((r: any) => r.itemId);
-        if (!ids.length) return null;
-        where = and(where, inArray(mpItems.id as any, ids as any) as any);
+          .where(inArray(mpItemCategories.categoryId as any, subtreeIds as any) as any);
+        where = and(where, inArray(mpItems.id as any, itemIds as any) as any);
       }
 
       if (q) {
@@ -54,6 +115,18 @@ export async function GET(req: NextRequest) {
 
       if (includeNsfwFilter) {
         where = and(where, sql`coalesce(${mpItems.isNsfw}, false) = false` as any);
+      } else {
+        // An item filed under a category marked as adult stays hidden until
+        // the visitor asks for it, whatever the item's own flag says.
+        const adultItemIds = db
+          .select({ itemId: mpItemCategories.itemId })
+          .from(mpItemCategories)
+          .innerJoin(
+            mpCategories,
+            eq(mpItemCategories.categoryId as any, mpCategories.id as any) as any,
+          )
+          .where(eq(mpCategories.isNsfw as any, true) as any);
+        where = and(where, notInArray(mpItems.id as any, adultItemIds as any) as any);
       }
 
       return where;

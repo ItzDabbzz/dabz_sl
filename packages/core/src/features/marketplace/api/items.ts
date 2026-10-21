@@ -14,23 +14,11 @@ import {
     notInArray,
 } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { requirePermission } from "@/server/auth/guards";
-import { requireUserFromRequest } from "@/server/auth/session";
+import { requireStaff } from "@/server/auth/guards";
 import { resolveCategoryPath } from "./category-paths";
 import {
     normalizePath,
 } from "@/features/marketplace/shared/category-path";
-import {
-    isConfiguredAdminId,
-    isPrivilegedMarketplaceRole,
-} from "@/server/auth/roles";
-
-function isPrivileged(user: any): boolean {
-    return (
-        isPrivilegedMarketplaceRole((user as any).role) ||
-        isConfiguredAdminId((user as any).id)
-    );
-}
 
 function isMissingColumnError(error: unknown) {
     const candidate = error as { code?: string; cause?: { code?: string } };
@@ -92,7 +80,7 @@ async function updateMarketplaceItem(
 
 export async function GET(req: NextRequest) {
     try {
-        const user = await requireUserFromRequest(req);
+        await requireStaff(req);
         const { searchParams } = new URL(req.url);
         const categoryId = searchParams.get("categoryId");
         const q = (searchParams.get("q") || "").trim();
@@ -121,9 +109,8 @@ export async function GET(req: NextRequest) {
                   .filter(Boolean)
             : [];
 
-        let where = isPrivileged(user)
-            ? undefined
-            : and(eq(mpItems.ownerUserId as any, user.id as any) as any);
+        // Staff manage the whole catalogue, so every item is in scope.
+        let where = undefined;
 
         // Filter by specific ids (batch view)
         if (idList.length) {
@@ -274,8 +261,7 @@ export async function GET(req: NextRequest) {
 // Import items and attach categories
 export async function POST(req: NextRequest) {
     try {
-        await requirePermission("marketplace.edit", req.headers as any);
-        const user = await requireUserFromRequest(req);
+        const user = await requireStaff(req);
         const body = await req.json();
         const items: any[] = Array.isArray(body?.items) ? body.items : [];
         const assign: Array<{
@@ -321,6 +307,9 @@ export async function POST(req: NextRequest) {
                 images: it.images || [],
                 price: it.price || null,
                 creator: it.creator || null,
+                // The account that sold it, so a creator's page can find
+                // their own products.
+                soldBy: it.soldBy || null,
                 store: it.store || null,
                 permissions: it.permissions || null,
                 description: it.description || null,
@@ -390,10 +379,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
-        const user = await requireUserFromRequest(req);
-        if (!isPrivileged(user)) {
-            await requirePermission("marketplace.moderate", req.headers as any);
-        }
+        await requireStaff(req);
         const body = await req.json();
         const id = body?.id as string | undefined;
         const ids = Array.isArray(body?.ids)
@@ -445,8 +431,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
     try {
-        await requirePermission("marketplace.admin", req.headers as any);
-        const user = await requireUserFromRequest(req);
+        await requireStaff(req);
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
         const idsParam = (searchParams.get("ids") || "").trim();
@@ -476,21 +461,11 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
         if (ids.length) {
-            const privileged = isPrivileged(user);
-            const ownedRows = privileged
-                ? await db
-                      .select({ id: mpItems.id })
-                      .from(mpItems)
-                      .where(inArray(mpItems.id as any, ids as any) as any)
-                : await db
-                      .select({ id: mpItems.id })
-                      .from(mpItems)
-                      .where(
-                          and(
-                              inArray(mpItems.id as any, ids as any) as any,
-                              eq(mpItems.ownerUserId as any, user.id as any) as any,
-                          ) as any,
-                      );
+            // Staff manage the whole catalogue, so every named item is in scope.
+            const ownedRows = await db
+                .select({ id: mpItems.id })
+                .from(mpItems)
+                .where(inArray(mpItems.id as any, ids as any) as any);
             const ownedIds = ownedRows.map((row: any) => row.id);
             if (!ownedIds.length) {
                 return NextResponse.json({ deleted: 0 });

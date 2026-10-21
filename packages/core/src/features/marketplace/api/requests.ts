@@ -5,12 +5,12 @@ import { db } from "@/server/db/client";
 import { mpItemCategories, mpItemRequests, mpItems } from "@/schemas/sl-schema";
 import { desc, eq, ilike, or, and } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { requirePermission } from "@/server/auth/guards";
+import { requireStaff } from "@/server/auth/guards";
 import { requireUserFromRequest } from "@/server/auth/session";
 
 export async function GET(req: NextRequest) {
   try {
-    await requirePermission("marketplace.requests", req.headers as any);
+    await requireStaff(req);
 
     const { searchParams } = new URL(req.url);
     const status = (searchParams.get("status") || "pending").toLowerCase();
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    await requirePermission("marketplace.requests", req.headers as any);
+    await requireStaff(req);
     const user = await requireUserFromRequest(req);
     const body = await req.json();
     const singleId = body?.id as string | undefined;

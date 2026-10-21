@@ -32,6 +32,7 @@ import {
     fetchInternalApi,
     fetchInternalApiJson,
 } from "@/server/services/internal-api";
+import { DashboardPage } from "@/features/dashboard/components/page";
 
 async function updateMasterObject(id: string, body: Record<string, unknown>) {
     await fetchInternalApi(
@@ -287,11 +288,16 @@ export default async function EditObjectPage(props: {
     const ok = searchParams?.ok || undefined;
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
+        <DashboardPage
+            title="Edit Master Object"
+            crumbs={[
+                { label: "Console", href: "/dashboard" },
+                { label: "SL Data" },
+                { label: "Master Objects", href: "/dashboard/database/objects" },
+                { label: "Edit Master Object" },
+            ]}
+        >
             <ActionToast ok={ok} />
-            <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold">Edit Master Object</h1>
-            </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
                 {/* Main column */}
@@ -546,6 +552,6 @@ export default async function EditObjectPage(props: {
                     </Card>
                 </div>
             </div>
-        </div>
+        </DashboardPage>
     );
 }

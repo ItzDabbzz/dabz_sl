@@ -26,6 +26,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DashboardPage as ConsolePage,
+  StatCard,
+} from "@/features/dashboard/components/page";
+import {
+  Boxes,
+  Server,
+  FileDiff,
+  BadgeCheck,
+  Webhook,
+  ShoppingBag,
+  Tag,
+  Package,
+  Activity,
+} from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth.api
@@ -147,80 +162,64 @@ export default async function DashboardPage() {
     new Intl.NumberFormat("en-US").format(Number(n || 0));
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Platform Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
-            Overview of objects, instances, webhooks, and live SL signals.
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <ConsolePage
+      title="Platform Dashboard"
+      description="Overview of objects, instances, webhooks, and live SL signals."
+      crumbs={[
+        { label: "Console", href: "/dashboard" },
+        { label: "Overview" },
+      ]}
+      actions={
+        <>
           <Button asChild variant="outline">
             <Link href="/api-docs">API Docs</Link>
           </Button>
           <Button asChild>
             <Link href="/dashboard/database/objects">New Master Object</Link>
           </Button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {/* KPIs */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Master Objects</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">{formatNum(moCount)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Instances</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">{formatNum(instCount)}</div>
-            <div className="mt-2 h-16">
-              <MiniArea id="inst-mini" data={instSeries} />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Configs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">{formatNum(cfgCount)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Entitlements</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">{formatNum(entCount)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Webhooks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">{formatNum(hookCount)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Deliveries</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">{formatNum(delivCount)}</div>
-            <div className="mt-2 h-16">
-              <MiniArea id="deliv-mini" data={deliverySeries} />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <StatCard
+          label="Master Objects"
+          value={formatNum(moCount)}
+          icon={<Boxes className="h-4 w-4" />}
+        />
+        <StatCard
+          label="Instances"
+          value={formatNum(instCount)}
+          icon={<Server className="h-4 w-4" />}
+        >
+          <div className="mt-2 h-12">
+            <MiniArea id="inst-mini" data={instSeries} />
+          </div>
+        </StatCard>
+        <StatCard
+          label="Configs"
+          value={formatNum(cfgCount)}
+          icon={<FileDiff className="h-4 w-4" />}
+        />
+        <StatCard
+          label="Entitlements"
+          value={formatNum(entCount)}
+          icon={<BadgeCheck className="h-4 w-4" />}
+        />
+        <StatCard
+          label="Webhooks"
+          value={formatNum(hookCount)}
+          icon={<Webhook className="h-4 w-4" />}
+        />
+        <StatCard
+          label="Deliveries"
+          value={formatNum(delivCount)}
+          icon={<Activity className="h-4 w-4" />}
+        >
+          <div className="mt-2 h-12">
+            <MiniArea id="deliv-mini" data={deliverySeries} />
+          </div>
+        </StatCard>
       </div>
 
       {/* Activity chart */}
@@ -229,7 +228,7 @@ export default async function DashboardPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Activity (last 14 days)</CardTitle>
-              <Badge variant="outline" className="text-[10px]">Daily totals</Badge>
+              <Badge variant="outline">Daily totals</Badge>
             </div>
             <CardDescription>Webhook deliveries and audit events</CardDescription>
           </CardHeader>
@@ -242,7 +241,7 @@ export default async function DashboardPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Live Second Life</CardTitle>
-              <Badge variant="secondary" className="text-[10px]">Snapshot</Badge>
+              <Badge variant="secondary">Snapshot</Badge>
             </div>
             <CardDescription>In-world users and L$ rate</CardDescription>
           </CardHeader>
@@ -258,8 +257,8 @@ export default async function DashboardPage() {
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <Badge variant="outline" className="text-[10px]">Updated {timeAgoUnix(live.home?.inworld_updated_unix || live.home?.exchange_rate_updated_unix)}</Badge>
-              <Badge variant="outline" className="text-[10px]">LindeX {timeAgoUnix(live.lindex?.updated_unix)}</Badge>
+              <Badge variant="outline">Updated {timeAgoUnix(live.home?.inworld_updated_unix || live.home?.exchange_rate_updated_unix)}</Badge>
+              <Badge variant="outline">LindeX {timeAgoUnix(live.lindex?.updated_unix)}</Badge>
             </div>
             <div className="pt-1 text-right">
               <a
@@ -277,34 +276,24 @@ export default async function DashboardPage() {
 
       {/* Marketplace mini */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Marketplace Items</CardTitle>
-            <CardDescription>Imported listings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">{formatNum(mpStats.totalItems)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Categorized</CardTitle>
-            <CardDescription>Items linked to categories</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">{formatNum(mpStats.itemsWithCategories)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Needs Review</CardTitle>
-            <CardDescription>Uncategorized items</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">{formatNum(mpStats.uncategorizedItems)}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Last change {mpStats.lastItemUpdateIso ? new Date(mpStats.lastItemUpdateIso).toLocaleString() : "—"}</div>
-          </CardContent>
-        </Card>
+        <StatCard
+          label="Marketplace Items"
+          value={formatNum(mpStats.totalItems)}
+          hint="Imported listings"
+          icon={<ShoppingBag className="h-4 w-4" />}
+        />
+        <StatCard
+          label="Categorized"
+          value={formatNum(mpStats.itemsWithCategories)}
+          hint="Items linked to categories"
+          icon={<Tag className="h-4 w-4" />}
+        />
+        <StatCard
+          label="Needs Review"
+          value={formatNum(mpStats.uncategorizedItems)}
+          hint={`Last change ${mpStats.lastItemUpdateIso ? new Date(mpStats.lastItemUpdateIso).toLocaleString() : "—"}`}
+          icon={<Package className="h-4 w-4" />}
+        />
       </div>
 
       {/* Recent activity */}
@@ -352,34 +341,43 @@ export default async function DashboardPage() {
 
       {/* Quick links */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="hover:bg-muted/40 transition-colors">
-          <CardHeader>
-            <CardTitle>Master Objects</CardTitle>
-            <CardDescription>Create and manage templates</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="secondary"><Link href="/dashboard/database/objects">Open</Link></Button>
-          </CardContent>
-        </Card>
-        <Card className="hover:bg-muted/40 transition-colors">
-          <CardHeader>
-            <CardTitle>Instances</CardTitle>
-            <CardDescription>Search and monitor instances</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="secondary"><Link href="/dashboard/database/instances">Open</Link></Button>
-          </CardContent>
-        </Card>
-        <Card className="hover:bg-muted/40 transition-colors">
-          <CardHeader>
-            <CardTitle>Webhooks</CardTitle>
-            <CardDescription>Manage and inspect deliveries</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="secondary"><Link href="/dashboard/webhooks">Open</Link></Button>
-          </CardContent>
-        </Card>
+        {[
+          {
+            href: "/dashboard/database/objects",
+            title: "Master Objects",
+            description: "Create and manage templates",
+            icon: Boxes,
+          },
+          {
+            href: "/dashboard/database/instances",
+            title: "Instances",
+            description: "Search and monitor instances",
+            icon: Server,
+          },
+          {
+            href: "/dashboard/webhooks",
+            title: "Webhooks",
+            description: "Manage and inspect deliveries",
+            icon: Webhook,
+          },
+        ].map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="flex items-center gap-3 rounded-lg border bg-card p-4 transition-colors hover:bg-muted/40"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <link.icon className="h-4 w-4" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">{link.title}</span>
+              <span className="block truncate text-xs text-muted-foreground">
+                {link.description}
+              </span>
+            </span>
+          </Link>
+        ))}
       </div>
-    </div>
+    </ConsolePage>
   );
 }

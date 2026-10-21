@@ -4,11 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { mpCategories, mpItemCategories } from "@/schemas/sl-schema";
 import { eq } from "drizzle-orm";
-import { requireUserFromRequest } from "@/server/auth/session";
-import {
-  isConfiguredAdminId,
-  isPrivilegedMarketplaceRole,
-} from "@/server/auth/roles";
+import { requireStaff } from "@/server/auth/guards";
 import { normalizePath } from "@/features/marketplace/shared/category-path";
 
 // Fetch existing categories for an item
@@ -18,14 +14,7 @@ export async function GET(
 ) {
   try {
     const { id } = await ctx.params;
-    const user = await requireUserFromRequest(req);
-    const privileged =
-      isPrivilegedMarketplaceRole((user as any).role) ||
-      isConfiguredAdminId((user as any).id);
-
-    if (!privileged) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
-    }
+    await requireStaff(req);
 
     const rows = await db
       .select({
@@ -62,14 +51,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await ctx.params;
-    const user = await requireUserFromRequest(req);
-    const privileged =
-      isPrivilegedMarketplaceRole((user as any).role) ||
-      isConfiguredAdminId((user as any).id);
-
-    if (!privileged) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
-    }
+    await requireStaff(req);
 
     const body = await req.json();
     const categoryIds: string[] = Array.isArray(body?.categoryIds)

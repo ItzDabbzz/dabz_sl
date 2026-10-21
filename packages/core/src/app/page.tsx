@@ -94,6 +94,9 @@ export default async function Home() {
                                 <Link href="/marketplace">Marketplace</Link>
                             </Button>
                             <Button asChild>
+                                <Link href="/creators">Creators</Link>
+                            </Button>
+                            <Button asChild>
                                 <Link href="/blog">Blog</Link>
                             </Button>
                             <Button asChild variant="outline">

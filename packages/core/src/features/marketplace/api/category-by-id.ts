@@ -5,7 +5,7 @@ import { db } from "@/server/db/client";
 import { mpCategories, mpItemCategories } from "@/schemas/sl-schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { requirePermission } from "@/server/auth/guards";
+import { requireStaff } from "@/server/auth/guards";
 import {
   normalizePath,
   pathKey,
@@ -14,7 +14,7 @@ import {
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    await requirePermission("marketplace.moderate", req.headers as any);
+    await requireStaff(req);
     const { id } = await ctx.params;
     const body = await req.json();
 
@@ -40,6 +40,47 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     }
 
     const samePath = pathKey(currentPath) === pathKey(nextPath);
+
+    // The NSFW flag can be set on its own, without touching the path.
+    const wantsNsfw =
+      typeof body?.isNsfw === "boolean" ? body.isNsfw : null;
+
+    if (wantsNsfw !== null && wantsNsfw !== (current.isNsfw ?? false)) {
+      // The flag follows the branch: marking a parent covers everything
+      // beneath it, so the rule is one thing rather than per-node.
+      const branch = await db
+        .select({ id: mpCategories.id, path: mpCategories.path })
+        .from(mpCategories)
+        .where(
+          eq(mpCategories.ownerUserId as any, current.ownerUserId as any) as any,
+        );
+      const prefixKey = pathKey(currentPath);
+      for (const row of branch) {
+        const rowPath = normalizePath(row.path as unknown as string[]);
+        const inBranch =
+          pathKey(rowPath.slice(0, currentPath.length)) === prefixKey;
+        if (!inBranch) continue;
+        await db
+          .update(mpCategories)
+          .set({ isNsfw: wantsNsfw } as any)
+          .where(eq(mpCategories.id as any, row.id as any) as any);
+      }
+      revalidateTag("marketplace:stats", {});
+      if (samePath) {
+        const [updated] = await db
+          .select()
+          .from(mpCategories)
+          .where(eq(mpCategories.id as any, id as any) as any);
+        return NextResponse.json({
+          item: {
+            id: updated.id,
+            path: normalizePath(updated.path as unknown as string[]),
+            isNsfw: updated.isNsfw ?? false,
+          },
+          updatedBranch: true,
+        });
+      }
+    }
 
     // Renaming onto a path that already exists is a move, not a rename.
     //
@@ -132,7 +173,11 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
     revalidateTag("marketplace:stats", {});
     return NextResponse.json({
-      item: { id: row.id, path: normalizePath(row.path as unknown as string[]) },
+      item: {
+        id: row.id,
+        path: normalizePath(row.path as unknown as string[]),
+        isNsfw: row.isNsfw ?? false,
+      },
       movedDescendants: moved.length,
     });
   } catch (e: any) {
@@ -146,7 +191,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
 export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    await requirePermission("marketplace.moderate", req.headers as any);
+    await requireStaff(req);
     const { id } = await ctx.params;
     // Remove mappings first, then delete the category
     await db.delete(mpItemCategories as any).where(eq(mpItemCategories.categoryId as any, id as any) as any);

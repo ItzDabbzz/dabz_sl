@@ -293,6 +293,51 @@
     background-color: color-mix(in oklch, var(--border), black 10%);
 }
 
+/* Scrollbars, site-wide.
+ *
+ * A scroll area should look the same wherever it appears, so the styling
+ * is global rather than something each screen has to remember. The thumb
+ * is a thin, rounded bar in the border colour that warms up on hover.
+ */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+    border: 2px solid transparent; /* creates inset look */
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklch, var(--border), var(--foreground) 30%);
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* A Radix scroll area draws its own scrollbar, so the native one is
+ * hidden - otherwise the two sit side by side. */
+[data-radix-scroll-area-viewport] {
+    scrollbar-width: none;
+}
+
+[data-radix-scroll-area-viewport]::-webkit-scrollbar {
+    display: none;
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;

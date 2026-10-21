@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,9 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/features/dashboard/components/page";
+import { client } from "@/features/auth/client";
+import { isStaffUser } from "@/features/auth/permissions/staff";
 
 type Category = { id: string; path: string[] };
 
@@ -93,13 +96,41 @@ export default function Page() {
 
   const canCreate = !loading && !!title.trim() && !!url.trim();
 
+  // Adding to the catalogue is staff work - the same rule the API applies.
+  const { data: session, isPending } = client.useSession();
+  if (!isPending && !isStaffUser(session?.user)) {
+    return (
+      <div className="space-y-4">
+        <PageHeader
+          title="New Marketplace Item"
+          crumbs={[
+            { label: "Console", href: "/dashboard" },
+            { label: "Marketplace" },
+            { label: "New Item" },
+          ]}
+        />
+        <div className="rounded-lg border p-6">
+          <p className="mb-1 text-sm font-medium">Staff only</p>
+          <p className="text-sm text-muted-foreground">
+            Adding items to the marketplace catalogue is for staff.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      <PageHeader
+        title="New Marketplace Item"
+        crumbs={[
+          { label: "Console", href: "/dashboard" },
+          { label: "Marketplace" },
+          { label: "New Item" },
+        ]}
+      />
       <Card>
-        <CardHeader>
-          <CardTitle>New Marketplace Item</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3">
+        <CardContent className="grid gap-3 pt-6">
           <div>
             <div className="text-xs mb-1">Title</div>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />

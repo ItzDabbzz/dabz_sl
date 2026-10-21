@@ -303,6 +303,15 @@ export const mpCategories = pgTable(
      */
     path: text("path").array().notNull().default(sql`'{}'::text[]`),
 
+    /**
+     * Whether this category holds adult material.
+     *
+     * A category marked here is hidden from the public marketplace unless
+     * the visitor turns the NSFW filter on. The items inside it follow the
+     * same rule.
+     */
+    isNsfw: boolean("is_nsfw").notNull().default(false),
+
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -343,6 +352,13 @@ export const mpItems = pgTable(
     images: jsonb("images").$type<string[]>(),
     price: text("price"), // in L$
     creator: jsonb("creator").$type<{ name: string; link: string }>(),
+    /**
+     * The Second Life account that sold the item.
+     *
+     * This is the avatar name, not the store brand: it is what a creator
+     * proves they own, and it is how their products are recognised.
+     */
+    soldBy: text("sold_by"),
     store: text("store"),
     permissions: jsonb("permissions").$type<{ copy: string; modify: string; transfer: string }>(),
     description: text("description"),
