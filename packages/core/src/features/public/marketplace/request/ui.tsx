@@ -14,6 +14,30 @@ import { cn } from "@/lib/utils";
 // Minimal local types (align with Explorer)
  type Category = { id: string; primary: string; sub: string };
 
+/**
+ * A line of help under a field.
+ *
+ * These live outside the form on purpose: a component defined during
+ * render is a new component on every render, which throws away its
+ * state and defeats memoisation.
+ */
+function Help({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[11px] text-muted-foreground mt-1 flex items-start gap-1">
+      <Info className="h-3 w-3 mt-[2px]" /> {children}
+    </p>
+  );
+}
+
+/** The mark that says whether a required field is filled in. */
+function Req({ ok }: { ok: boolean }) {
+  return (
+    <span className={cn("ml-1 text-[10px]", ok ? "text-green-600" : "text-red-600")}>
+      {ok ? "✓" : "*"}
+    </span>
+  );
+}
+
 export default function PublicRequestForm() {
   const [loading, setLoading] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
@@ -124,14 +148,6 @@ export default function PublicRequestForm() {
       setLoading(false);
     }
   }
-
-  const Help = ({ children }: { children: any }) => (
-    <p className="text-[11px] text-muted-foreground mt-1 flex items-start gap-1"><Info className="h-3 w-3 mt-[2px]" /> {children}</p>
-  );
-
-  const Req = ({ ok }: { ok: boolean }) => (
-    <span className={cn("ml-1 text-[10px]", ok ? "text-green-600" : "text-red-600")}>{ok ? "✓" : "*"}</span>
-  );
 
   return (
     <Card>
