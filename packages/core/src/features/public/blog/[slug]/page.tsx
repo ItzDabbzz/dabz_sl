@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { TableOfContents, TocItem } from "@/features/public/blog/components/toc";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SanctumBg from "@/features/public/home/components/sanctum-bg";
+import { PublicHeader } from "@/components/shared/public-header";
 
 export const revalidate = 60; // ISR
 
@@ -126,6 +127,7 @@ export default async function BlogPostPage({
             <div className="fixed inset-0 -z-10">
                 <SanctumBg />
             </div>
+            <PublicHeader />
             <div className="relative mx-auto max-w-8xl px-6 py-10">
                 {/* Floating back button */}
                 <Button

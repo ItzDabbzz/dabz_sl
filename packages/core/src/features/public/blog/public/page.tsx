@@ -11,6 +11,7 @@ import { and, desc, eq, inArray, sql, or, ilike } from "drizzle-orm";
 import { Suspense } from "react";
 import Link from "next/link";
 import { CategorySidebar } from "@/features/public/blog/components/category-sidebar";
+import { PublicHeader } from "@/components/shared/public-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -272,12 +273,14 @@ export default async function PublicBlogIndex({
   const recentPosts = posts.slice(0, 10);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-10">
-      <div className="mb-6 flex items-center gap-3">
-        <Link href="/blog" className="text-sm text-muted-foreground hover:underline">My Feed</Link>
-        <span className="text-sm">/</span>
-        <span className="text-sm font-medium">Public</span>
-      </div>
+    <div className="min-h-screen">
+      <PublicHeader />
+      <div className="mx-auto max-w-6xl px-6 py-10">
+    <div className="mb-6 flex items-center gap-3">
+      <Link href="/blog" className="text-sm text-muted-foreground hover:underline">My Feed</Link>
+      <span className="text-sm">/</span>
+      <span className="text-sm font-medium">Public</span>
+    </div>
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
         <aside className="lg:col-span-3 xl:col-span-3">
           <div className="sticky top-24 space-y-4">
@@ -389,7 +392,6 @@ export default async function PublicBlogIndex({
                 <Link href="/blog/public" className="text-sm text-muted-foreground hover:underline">Clear filters</Link>
               ) : null}
               <Link href="/blog/rss" className="text-sm text-muted-foreground hover:underline">RSS</Link>
-              <Link href="/" className="hidden lg:inline-flex text-sm text-muted-foreground hover:text-foreground">← Back Home</Link>
             </div>
           </header>
 
@@ -514,6 +516,7 @@ export default async function PublicBlogIndex({
             </nav>
           ) : null}
         </main>
+      </div>
       </div>
     </div>
   );

@@ -40,6 +40,7 @@ import {
     PlusCircle,
     SlidersHorizontal,
     SearchX,
+    Users,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -573,6 +574,7 @@ export default function ClientExplorer() {
                                     <SlidersHorizontal className="h-4 w-4 mr-2" /> Browse
                                 </Button>
                                 <Button variant="outline" size="sm" onClick={() => router.push("/")}> <Home className="h-4 w-4 mr-2" /> Home </Button>
+                                <Button variant="outline" size="sm" onClick={() => router.push("/creators")}> <Users className="h-4 w-4 mr-2" /> Creators </Button>
                             </div>
                             <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[220px]">
                                 <Label htmlFor="mp-search" className="sr-only">Search items</Label>

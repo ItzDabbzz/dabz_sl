@@ -13,6 +13,7 @@ import {
 import { getOptionalSession } from "@/server/auth/session";
 import { postPath } from "@/features/creator/blog/server/handle";
 import { getManagedOrgIds } from "@/features/creator/profiles/server/ownership";
+import { PublicHeader } from "@/components/shared/public-header";
 
 export const revalidate = 60;
 
@@ -35,9 +36,10 @@ export default async function CreatorPage({
     // A page that is not published yet is a draft: its owner may look at
     // it, nobody else may. A team page is owned by the organization, so
     // the viewer is one of the people who run it.
+    const session = await getOptionalSession();
+    const viewer = (session as any)?.user ?? null;
+
     if (!profile.published) {
-        const session = await getOptionalSession();
-        const viewer = (session as any)?.user;
         if (!viewer) return notFound();
 
         if (profile.ownerType === "user") {
@@ -48,6 +50,16 @@ export default async function CreatorPage({
         }
     }
 
+    /**
+     * Whether the viewer is the one behind the page. The owner is told
+     * what to do next; a visitor is not.
+     */
+    const isOwner = profile.ownerType === "user"
+        ? viewer?.id === profile.ownerId
+        : viewer
+          ? (await getManagedOrgIds(viewer.id)).includes(profile.ownerId)
+          : false;
+
     const [items, posts] = await Promise.all([
         getProfileItems(profile.id),
         getProfilePosts(profile.ownerType, profile.ownerId),
@@ -56,7 +68,9 @@ export default async function CreatorPage({
     const initials = profile.displayName.trim().slice(0, 2).toUpperCase();
 
     return (
-        <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+        <div className="min-h-screen">
+            <PublicHeader />
+            <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
             {/* Header */}
             <header className="overflow-hidden rounded-xl border bg-card">
                 {profile.bannerUrl ? (
@@ -192,6 +206,15 @@ export default async function CreatorPage({
                                 {profile.verifiedAccounts.length
                                     ? "No products found for the verified accounts yet."
                                     : "No products yet. Once a Second Life account is verified, the products sold under it appear here."}
+                                {isOwner ? (
+                                    <div className="mt-4">
+                                        <Button asChild size="sm">
+                                            <Link href="/dashboard/profile">
+                                                Claim a Second Life account
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                ) : null}
                             </CardContent>
                         </Card>
                     )}
@@ -241,6 +264,7 @@ export default async function CreatorPage({
                         </Card>
                     )}
                 </section>
+            </div>
             </div>
         </div>
     );

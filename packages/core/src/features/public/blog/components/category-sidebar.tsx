@@ -42,16 +42,7 @@ export function CategorySidebar({
         <aside className="w-full max-w-full">
             <Card>
                 <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm">Categories</CardTitle>
-                        <Button
-                            asChild
-                            variant="link"
-                            className="h-auto p-0 text-xs"
-                        >
-                            <Link href="/">← Back Home</Link>
-                        </Button>
-                    </div>
+                    <CardTitle className="text-sm">Categories</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap gap-2">

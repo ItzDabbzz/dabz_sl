@@ -16,6 +16,7 @@ import {
     type DirectoryCreator,
     type DirectorySort,
 } from "./server/directory";
+import { PublicHeader } from "@/components/shared/public-header";
 
 export const metadata = {
     title: "Creators",
@@ -179,7 +180,9 @@ export default async function CreatorsDirectoryPage({
     };
 
     return (
-        <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+        <div className="min-h-screen">
+            <PublicHeader />
+            <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
             {/* Header */}
             <header className="space-y-4">
                 <div className="space-y-1">
@@ -296,6 +299,7 @@ export default async function CreatorsDirectoryPage({
                     creators, {directory.perPage} to a page.
                 </p>
             ) : null}
+            </div>
         </div>
     );
 }
